@@ -420,7 +420,7 @@ export default function HomePage() {
               </Button>
               <Button asChild>
                 <Link href="/login">
-                  Sign up with GitHub
+                  Sign in
                 </Link>
               </Button>
             </div>

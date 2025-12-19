@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   FlaskConical,
-  Github,
   LogOut,
   User,
   LayoutDashboard,
@@ -137,9 +136,10 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button size="sm" onClick={() => signIn("github")}>
-              <Github className="mr-2 h-4 w-4" />
-              Sign in
+            <Button size="sm" asChild>
+              <Link href="/login">
+                Sign in
+              </Link>
             </Button>
           )}
         </div>
