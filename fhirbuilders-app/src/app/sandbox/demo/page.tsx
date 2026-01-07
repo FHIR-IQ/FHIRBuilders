@@ -26,7 +26,14 @@ import {
   Heart,
   Thermometer,
   Eye,
+  AlertTriangle,
+  ShieldCheck,
+  Zap,
+  BookOpen,
+  Code,
+  ShieldAlert,
 } from "lucide-react";
+import { detectMedicationConflicts, type MedConflict } from "@/lib/medplum";
 
 // Demo sandbox configuration
 const DEMO_SANDBOX = {
@@ -165,6 +172,34 @@ const SAMPLE_PATIENTS = [
       { type: "Nephrology Visit", date: "2023-12-15", provider: "Dr. Kim", reason: "CKD follow-up" },
     ],
   },
+  {
+    id: "patient-004",
+    name: "Thomas B. Anderson (High Risk)",
+    gender: "Male",
+    birthDate: "1942-03-10",
+    age: 82,
+    address: "Brookline, MA",
+    conditions: [
+      { name: "Heart Failure", status: "active", onset: "2018-05-20", code: "84114007" },
+      { name: "Hyperlipidemia", status: "active", onset: "2010-11-25", code: "55822004" },
+      { name: "Hypertension", status: "active", onset: "2008-01-15", code: "38341003" },
+    ],
+    medications: [
+      { name: "Warfarin 5mg", dosage: "Daily (adjusted)", status: "active", prescriber: "Dr. Singh" },
+      { name: "Aspirin 325mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 1
+      { name: "Lisinopril 20mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 2 (Allergy)
+      { name: "Atorvastatin 80mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen" },
+      { name: "Simvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 3
+    ],
+    observations: [
+      { type: "INR", value: "3.2", date: "2024-01-18", status: "high" },
+      { type: "Blood Pressure", value: "152/94 mmHg", date: "2024-01-18", status: "high" },
+      { type: "Potassium", value: "5.1 mEq/L", date: "2024-01-12", status: "high" },
+    ],
+    encounters: [
+      { type: "Urgent Care", date: "2024-01-18", provider: "MGH Urgent Care", reason: "Shortness of breath" },
+    ],
+  },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -177,6 +212,153 @@ const STATUS_COLORS: Record<string, string> = {
   active: "bg-green-100 text-green-800",
 };
 
+const AUDIT_LOGIC = `
+// Clinical Audit Logic (Simulated)
+// 1. Duplicate Therapy Detection: Checks for multiple meds in same class (e.g. Statins)
+// 2. Drug-Drug Interaction: References FDA cross-interaction table (e.g. Warfarin + NSAID)
+// 3. Allergy Matching: Cross-checks Active Meds against AllergyIntolerance resources
+// 4. Lab-Medication Conflict: Checks for contradictions with latest Observation (e.g. Potassium + ACEI)
+`.trim();
+
+const MedRecDashboard = ({ patient, conflicts, onRunAudit, isAnalyzing }: any) => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <ShieldCheck className="h-6 w-6 text-green-600" />
+            AI Medication Audit
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Automated conflict detection and reconciliation assistant
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const win = window.open("", "_blank");
+              if (win) {
+                win.document.write(`<pre>${AUDIT_LOGIC}</pre>`);
+                win.document.title = "Audit Logic | FHIRBuilders";
+              }
+            }}
+          >
+            <Code className="mr-2 h-4 w-4" />
+            View Logic
+          </Button>
+          <Button
+            onClick={onRunAudit}
+            disabled={isAnalyzing}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            {isAnalyzing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Zap className="mr-2 h-4 w-4" />
+            )}
+            Run Audit
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Conflict Analysis */}
+        <Card className="border-amber-200 bg-amber-50/30">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              Potential Risks
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {conflicts.length > 0 ? (
+              conflicts.map((c: any) => (
+                <div key={c.id} className="p-4 rounded-lg bg-white border border-amber-200 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant={c.severity === "high" ? "destructive" : "secondary"}>
+                      {c.type.toUpperCase()}
+                    </Badge>
+                    <span className="text-xs font-medium text-amber-700">Severity: {c.severity}</span>
+                  </div>
+                  <p className="text-sm font-medium">{c.description}</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="flex gap-2">
+                      {c.resources.map((rId: string) => (
+                        <Badge key={rId} variant="outline" className="text-[10px] font-mono whitespace-nowrap">
+                          {rId}
+                        </Badge>
+                      ))}
+                    </div>
+                    {c.evidence && (
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 italic">
+                        <BookOpen className="h-3 w-3" />
+                        {c.evidence}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                {isAnalyzing ? (
+                  <p className="text-muted-foreground italic">Analyzing FHIR resources...</p>
+                ) : (
+                  <p className="text-muted-foreground">No conflicts detected. Run audit to refresh.</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Medication List Comparison */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Pill className="h-5 w-5 text-primary" />
+              Reconciliation List
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {patient.medications.map((med: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div>
+                    <div className="font-medium text-sm">{med.name}</div>
+                    <div className="text-xs text-muted-foreground">{med.dosage}</div>
+                  </div>
+                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                    Verified
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Analytics Insights */}
+      <Card className="bg-slate-900 text-slate-100">
+        <CardContent className="py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-lg bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+              <Activity className="h-6 w-6 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm text-blue-400 font-semibold tracking-wider uppercase">Clinical Insight</p>
+              <p className="font-medium">Combined medication load shows increased risk for renal stress (eGFR: 45).</p>
+            </div>
+          </div>
+          <Button variant="outline" className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10">
+            View Analytics
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export default function DemoSandboxPage() {
   const [query, setQuery] = useState("/Patient");
   const [method, setMethod] = useState("GET");
@@ -185,6 +367,24 @@ export default function DemoSandboxPage() {
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState<"api" | "visual">("visual");
   const [selectedPatient, setSelectedPatient] = useState(SAMPLE_PATIENTS[0]);
+  const [useCaseMode, setUseCaseMode] = useState<"standard" | "medrec">("standard");
+  const [conflicts, setConflicts] = useState<MedConflict[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+
+  const handleRunMedRec = async () => {
+    setIsAnalyzing(true);
+    setConflicts([]);
+
+    // Use the mock service from medplum.ts
+    const results = await detectMedicationConflicts(
+      selectedPatient.id,
+      selectedPatient.medications
+    );
+
+    setConflicts(results);
+    setIsAnalyzing(false);
+  };
 
   const fullUrl = `${DEMO_SANDBOX.baseUrl}${query}`;
 
@@ -255,6 +455,10 @@ export default function DemoSandboxPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+              <ShieldAlert className="h-3 w-3" />
+              Synthetic Data
+            </Badge>
             <Badge variant="secondary">Demo Mode</Badge>
             <Button variant="outline" asChild>
               <Link href="/login">
@@ -295,26 +499,53 @@ export default function DemoSandboxPage() {
         </CardContent>
       </Card>
 
-      {/* View Mode Toggle */}
-      <div className="flex items-center gap-4 mb-6">
-        <span className="text-sm font-medium">View:</span>
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === "visual" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("visual")}
-          >
-            <Eye className="mr-2 h-4 w-4" />
-            Visual Explorer
-          </Button>
-          <Button
-            variant={viewMode === "api" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("api")}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            API Explorer
-          </Button>
+      {/* View Mode & Use Case Toggle */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium">View:</span>
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "visual" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("visual")}
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Visual Explorer
+            </Button>
+            <Button
+              variant={viewMode === "api" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("api")}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              API Explorer
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium text-amber-600 flex items-center gap-1">
+            <Zap className="h-4 w-4" />
+            Use Case:
+          </span>
+          <div className="flex gap-2 border border-amber-500/30 p-1 rounded-lg bg-amber-500/5">
+            <Button
+              variant={useCaseMode === "standard" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setUseCaseMode("standard")}
+              className="text-xs h-8"
+            >
+              Standard
+            </Button>
+            <Button
+              variant={useCaseMode === "medrec" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setUseCaseMode("medrec")}
+              className="text-xs h-8"
+            >
+              MedRec AI
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -333,11 +564,10 @@ export default function DemoSandboxPage() {
                   <button
                     key={patient.id}
                     onClick={() => setSelectedPatient(patient)}
-                    className={`w-full text-left p-3 rounded-lg transition-colors ${
-                      selectedPatient.id === patient.id
-                        ? "bg-primary/10 border border-primary/50"
-                        : "hover:bg-muted"
-                    }`}
+                    className={`w-full text-left p-3 rounded-lg transition-colors ${selectedPatient.id === patient.id
+                      ? "bg-primary/10 border border-primary/50"
+                      : "hover:bg-muted"
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
@@ -393,322 +623,432 @@ export default function DemoSandboxPage() {
               </CardContent>
             </Card>
 
-            {/* Vitals/Observations */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">Recent Observations</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {selectedPatient.observations.map((obs, i) => (
-                    <div key={i} className="p-3 rounded-lg border bg-card">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">{obs.type}</span>
-                        <Badge variant="secondary" className={`text-xs ${STATUS_COLORS[obs.status]}`}>
-                          {obs.status}
-                        </Badge>
-                      </div>
-                      <div className="text-xl font-bold">{obs.value}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{obs.date}</div>
+            {useCaseMode === "standard" ? (
+              <>
+                {/* Vitals/Observations */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">Recent Observations</CardTitle>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {selectedPatient.observations.map((obs, i) => (
+                        <div key={i} className="p-3 rounded-lg border bg-card">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium">{obs.type}</span>
+                            <Badge variant="secondary" className={`text-xs ${STATUS_COLORS[obs.status]}`}>
+                              {obs.status}
+                            </Badge>
+                          </div>
+                          <div className="text-xl font-bold">{obs.value}</div>
+                          <div className="text-xs text-muted-foreground mt-1">{obs.date}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Conditions */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Stethoscope className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Active Conditions</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {selectedPatient.conditions.map((condition, i) => (
-                      <div key={i} className="flex items-start justify-between p-3 rounded-lg border">
-                        <div>
-                          <div className="font-medium text-sm">{condition.name}</div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Since {condition.onset}
+                <div className="grid gap-6 lg:grid-cols-2">
+                  {/* Conditions */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <Stethoscope className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">Active Conditions</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {selectedPatient.conditions.map((condition, i) => (
+                          <div key={i} className="flex items-start justify-between p-3 rounded-lg border">
+                            <div>
+                              <div className="font-medium text-sm">{condition.name}</div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Since {condition.onset}
+                              </div>
+                            </div>
+                            <Badge variant="secondary" className={`text-xs ${STATUS_COLORS[condition.status] || "bg-muted"}`}>
+                              {condition.status}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Medications */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <Pill className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">Active Medications</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {selectedPatient.medications.map((med, i) => (
+                          <div key={i} className="p-3 rounded-lg border">
+                            <div className="font-medium text-sm">{med.name}</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {med.dosage} • {med.prescriber}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Recent Encounters */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">Recent Encounters</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {selectedPatient.encounters.map((encounter, i) => (
+                        <div key={i} className="flex items-center gap-4 p-3 rounded-lg border">
+                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <Calendar className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-sm">{encounter.type}</span>
+                              <span className="text-xs text-muted-foreground">{encounter.date}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {encounter.provider} • {encounter.reason}
+                            </div>
                           </div>
                         </div>
-                        <Badge variant="secondary" className={`text-xs ${STATUS_COLORS[condition.status]}`}>
-                          {condition.status}
-                        </Badge>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <MedRecDashboard
+                patient={selectedPatient}
+                conflicts={conflicts}
+                onRunAudit={handleRunMedRec}
+                isAnalyzing={isAnalyzing}
+              />
+            )}
+
+            {/* Link to API View */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Want to see the raw FHIR data?</p>
+                      <p className="text-sm text-muted-foreground">
+                        Switch to API Explorer to see the JSON
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setViewMode("api")}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      View JSON
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Medications */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Pill className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Active Medications</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {selectedPatient.medications.map((med, i) => (
-                      <div key={i} className="p-3 rounded-lg border">
-                        <div className="font-medium text-sm">{med.name}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {med.dosage} • {med.prescriber}
-                        </div>
-                      </div>
-                    ))}
+              <Card className="border-green-200 bg-green-50/50">
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-green-800">Ready to build for real?</p>
+                      <p className="text-sm text-green-700/80">
+                        Export this setup to your Medplum project
+                      </p>
+                    </div>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700"
+                      size="sm"
+                      onClick={() => setShowExportDialog(true)}
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Export
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Recent Encounters */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">Recent Encounters</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {selectedPatient.encounters.map((encounter, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 rounded-lg border">
-                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                        <Calendar className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-sm">{encounter.type}</span>
-                          <span className="text-xs text-muted-foreground">{encounter.date}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {encounter.provider} • {encounter.reason}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Link to API View */}
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Want to see the raw FHIR data?</p>
-                    <p className="text-sm text-muted-foreground">
-                      Switch to API Explorer to see the JSON and make queries
-                    </p>
-                  </div>
-                  <Button variant="outline" onClick={() => setViewMode("api")}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    View as JSON
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </div>
+        </div>
+      )}
+
+      {/* Export to Medplum Dialog Placeholder */}
+      {showExportDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <Card className="w-full max-w-lg shadow-2xl">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">Export to Medplum</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setShowExportDialog(false)}>
+                  <Check className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardDescription>
+                Follow these steps to migrate your FHIR configuration to a production environment.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted border space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs shrink-0 mt-0.5">1</div>
+                  <div>
+                    <p className="text-sm font-medium">Create a Medplum Account</p>
+                    <p className="text-xs text-muted-foreground">Sign up at medplum.com if you haven't already.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs shrink-0 mt-0.5">2</div>
+                  <div>
+                    <p className="text-sm font-medium">Run the Migration Script</p>
+                    <p className="text-xs text-muted-foreground">Use our CLI tool to push these resources to your project.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-zinc-950 p-3 rounded font-mono text-xs text-zinc-300">
+                npx fhirbuilders-cli export --project YOUR_PROJECT_ID
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Button className="w-full bg-green-600 hover:bg-green-700">
+                  <Save className="mr-2 h-4 w-4" />
+                  Download Configuration (JSON)
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => setShowExportDialog(false)}>
+                  Close
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* API Explorer View */}
       {viewMode === "api" && (
-      <div className="grid lg:grid-cols-4 gap-6">
-        {/* Quick Queries Sidebar */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Quick Queries</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {QUICK_QUERIES.map((q) => (
-                <button
-                  key={q.path}
-                  onClick={() => handleQuickQuery(q)}
-                  className="w-full text-left p-2 rounded hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs font-mono">
-                      {q.method}
-                    </Badge>
-                    <span className="text-sm font-medium">{q.label}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{q.description}</p>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Resources Reference */}
-          <Card className="mt-4">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Available Resources</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1 text-sm">
-                {["Patient", "Observation", "Condition", "Procedure", "MedicationRequest", "Encounter", "DiagnosticReport", "AllergyIntolerance"].map((r) => (
+        <div className="grid lg:grid-cols-4 gap-6">
+          {/* Quick Queries Sidebar */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Quick Queries</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {QUICK_QUERIES.map((q) => (
                   <button
-                    key={r}
-                    onClick={() => setQuery(`/${r}`)}
-                    className="block w-full text-left px-2 py-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    key={q.path}
+                    onClick={() => handleQuickQuery(q)}
+                    className="w-full text-left p-2 rounded hover:bg-muted transition-colors"
                   >
-                    {r}
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs font-mono">
+                        {q.method}
+                      </Badge>
+                      <span className="text-sm font-medium">{q.label}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{q.description}</p>
                   </button>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
 
-        {/* Main Explorer Area */}
-        <div className="lg:col-span-3">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">API Explorer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Query Input */}
-              <div className="flex gap-2 mb-4">
-                <select
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value)}
-                  className="px-3 py-2 rounded border bg-background text-sm font-mono"
-                  aria-label="HTTP method"
-                >
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="PUT">PUT</option>
-                  <option value="DELETE">DELETE</option>
-                </select>
-                <div className="flex-1 flex items-center bg-muted rounded px-3">
-                  <span className="text-sm text-muted-foreground font-mono">
-                    {DEMO_SANDBOX.baseUrl}
-                  </span>
-                  <Input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="border-0 bg-transparent focus-visible:ring-0 font-mono"
-                    placeholder="/Patient"
-                  />
+            {/* Resources Reference */}
+            <Card className="mt-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Available Resources</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 text-sm">
+                  {["Patient", "Observation", "Condition", "Procedure", "MedicationRequest", "Encounter", "DiagnosticReport", "AllergyIntolerance"].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setQuery(`/${r}`)}
+                      className="block w-full text-left px-2 py-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {r}
+                    </button>
+                  ))}
                 </div>
-                <Button onClick={handleExecute} disabled={isLoading}>
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Play className="mr-2 h-4 w-4" />
-                      Send
-                    </>
-                  )}
-                </Button>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
 
-              {/* Response Area */}
-              <Tabs defaultValue="response" className="w-full">
-                <TabsList>
-                  <TabsTrigger value="response">Response</TabsTrigger>
-                  <TabsTrigger value="headers">Headers</TabsTrigger>
-                  <TabsTrigger value="curl">cURL</TabsTrigger>
-                </TabsList>
+          {/* Main Explorer Area */}
+          <div className="lg:col-span-3">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">API Explorer</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Query Input */}
+                <div className="flex gap-2 mb-4">
+                  <select
+                    value={method}
+                    onChange={(e) => setMethod(e.target.value)}
+                    className="px-3 py-2 rounded border bg-background text-sm font-mono"
+                    aria-label="HTTP method"
+                  >
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                  </select>
+                  <div className="flex-1 flex items-center bg-muted rounded px-3">
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {DEMO_SANDBOX.baseUrl}
+                    </span>
+                    <Input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="border-0 bg-transparent focus-visible:ring-0 font-mono"
+                      placeholder="/Patient"
+                    />
+                  </div>
+                  <Button onClick={handleExecute} disabled={isLoading}>
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        Send
+                      </>
+                    )}
+                  </Button>
+                </div>
 
-                <TabsContent value="response" className="mt-4">
-                  {response ? (
+                {/* Response Area */}
+                <Tabs defaultValue="response" className="w-full">
+                  <TabsList>
+                    <TabsTrigger value="response">Response</TabsTrigger>
+                    <TabsTrigger value="headers">Headers</TabsTrigger>
+                    <TabsTrigger value="curl">cURL</TabsTrigger>
+                    <TabsTrigger value="snippet">Snippet</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="response" className="mt-4">
+                    {response ? (
+                      <div className="relative">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => handleCopy(response)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono max-h-[500px]">
+                          {response}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="bg-muted rounded p-8 text-center">
+                        <p className="text-muted-foreground">
+                          Click "Send" to execute the query
+                        </p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="headers" className="mt-4">
+                    <div className="bg-muted rounded p-4 font-mono text-sm space-y-1">
+                      <div><span className="text-muted-foreground">Content-Type:</span> application/fhir+json</div>
+                      <div><span className="text-muted-foreground">Accept:</span> application/fhir+json</div>
+                      <div><span className="text-muted-foreground">Authorization:</span> Bearer [your-token]</div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="curl" className="mt-4">
                     <div className="relative">
                       <Button
                         variant="ghost"
                         size="sm"
                         className="absolute top-2 right-2"
-                        onClick={() => handleCopy(response)}
+                        onClick={() => handleCopy(`curl -X ${method} "${fullUrl}" \\\n  -H "Content-Type: application/fhir+json" \\\n  -H "Authorization: Bearer YOUR_TOKEN"`)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono">
+                        {`curl -X ${method} "${fullUrl}" \\
+  -H "Content-Type: application/fhir+json" \\
+  -H "Authorization: Bearer YOUR_TOKEN"`}
+                      </pre>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="snippet" className="mt-4">
+                    <div className="relative">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => handleCopy(`const fhirData = ${response || "{}"};`)}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
                       <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono max-h-[500px]">
-                        {response}
+                        {`// Code Snippet (Generated)
+const fetchFhirData = async () => {
+  const response = await fetch('${fullUrl}');
+  const data = await response.json();
+  return data;
+};
+
+// Resulting Data Structure:
+const result = ${response ? response.substring(0, 500) + (response.length > 500 ? "..." : "") : "{}"};`}
                       </pre>
                     </div>
-                  ) : (
-                    <div className="bg-muted rounded p-8 text-center">
-                      <p className="text-muted-foreground">
-                        Click "Send" to execute the query
-                      </p>
-                    </div>
-                  )}
-                </TabsContent>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
 
-                <TabsContent value="headers" className="mt-4">
-                  <div className="bg-muted rounded p-4 font-mono text-sm space-y-1">
-                    <div><span className="text-muted-foreground">Content-Type:</span> application/fhir+json</div>
-                    <div><span className="text-muted-foreground">Accept:</span> application/fhir+json</div>
-                    <div><span className="text-muted-foreground">Authorization:</span> Bearer [your-token]</div>
+            {/* Demo Notice */}
+            <Card className="mt-4 border-amber-500/50 bg-amber-500/5">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-amber-600">Demo Mode</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      This is a demo sandbox with simulated responses.{" "}
+                      <Link href="/login" className="text-primary hover:underline">
+                        Sign up
+                      </Link>{" "}
+                      to get a real FHIR endpoint with persistent data.
+                    </p>
                   </div>
-                </TabsContent>
-
-                <TabsContent value="curl" className="mt-4">
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => handleCopy(`curl -X ${method} "${fullUrl}" \\\n  -H "Content-Type: application/fhir+json" \\\n  -H "Authorization: Bearer YOUR_TOKEN"`)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono">
-{`curl -X ${method} "${fullUrl}" \\
-  -H "Content-Type: application/fhir+json" \\
-  -H "Authorization: Bearer YOUR_TOKEN"`}
-                    </pre>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          {/* Demo Notice */}
-          <Card className="mt-4 border-amber-500/50 bg-amber-500/5">
-            <CardContent className="py-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-amber-600">Demo Mode</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    This is a demo sandbox with simulated responses.{" "}
-                    <Link href="/login" className="text-primary hover:underline">
-                      Sign up
-                    </Link>{" "}
-                    to get a real FHIR endpoint with persistent data.
-                  </p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Code Examples */}
-          <Card className="mt-4">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Use in Your App</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="javascript">
-                <TabsList>
-                  <TabsTrigger value="javascript">JavaScript</TabsTrigger>
-                  <TabsTrigger value="python">Python</TabsTrigger>
-                  <TabsTrigger value="curl">cURL</TabsTrigger>
-                </TabsList>
+            {/* Code Examples */}
+            <Card className="mt-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Use in Your App</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="javascript">
+                  <TabsList>
+                    <TabsTrigger value="javascript">JavaScript</TabsTrigger>
+                    <TabsTrigger value="python">Python</TabsTrigger>
+                    <TabsTrigger value="curl">cURL</TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="javascript" className="mt-4">
-                  <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono">
-{`// Using fetch
+                  <TabsContent value="javascript" className="mt-4">
+                    <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono">
+                      {`// Using fetch
 const response = await fetch('${DEMO_SANDBOX.baseUrl}/Patient', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -717,12 +1057,12 @@ const response = await fetch('${DEMO_SANDBOX.baseUrl}/Patient', {
 });
 const patients = await response.json();
 console.log(patients.entry);`}
-                  </pre>
-                </TabsContent>
+                    </pre>
+                  </TabsContent>
 
-                <TabsContent value="python" className="mt-4">
-                  <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono">
-{`import requests
+                  <TabsContent value="python" className="mt-4">
+                    <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono">
+                      {`import requests
 
 response = requests.get(
     '${DEMO_SANDBOX.baseUrl}/Patient',
@@ -733,21 +1073,21 @@ response = requests.get(
 )
 patients = response.json()
 print(patients['entry'])`}
-                  </pre>
-                </TabsContent>
+                    </pre>
+                  </TabsContent>
 
-                <TabsContent value="curl" className="mt-4">
-                  <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono">
-{`curl "${DEMO_SANDBOX.baseUrl}/Patient" \\
+                  <TabsContent value="curl" className="mt-4">
+                    <pre className="bg-zinc-900 text-zinc-100 p-4 rounded overflow-x-auto text-sm font-mono">
+                      {`curl "${DEMO_SANDBOX.baseUrl}/Patient" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/fhir+json"`}
-                  </pre>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+                    </pre>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
       )}
     </div>
   );

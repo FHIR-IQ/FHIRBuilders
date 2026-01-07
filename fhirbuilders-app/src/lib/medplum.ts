@@ -37,6 +37,7 @@ export const FHIR_RESOURCES = [
   "Coverage",
   "Claim",
   "ExplanationOfBenefit",
+  "MedicationStatement",
 ] as const;
 
 export type FHIRResource = (typeof FHIR_RESOURCES)[number];
@@ -66,6 +67,72 @@ export interface SandboxConfig {
   name: string;
   patientCount: number;
   modules: SyntheaModule[];
+}
+
+export interface MedConflict {
+  id: string;
+  type: "interaction" | "duplicate" | "allergy";
+  severity: "high" | "moderate" | "low";
+  description: string;
+  resources: string[]; // FHIR Resource IDs
+  evidence?: string; // Clinical citation or rule
+}
+
+/**
+ * Mock AI service to detect medication conflicts.
+ * In a real app, this would call an LLM or a clinical rules engine.
+ */
+export async function detectMedicationConflicts(
+  patientId: string,
+  medications: any[]
+): Promise<MedConflict[]> {
+  console.log(`Analyzing medications for patient ${patientId}...`);
+
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  const conflicts: MedConflict[] = [];
+
+  // Logic: Simple mock rules for demo purposes
+  const medNames = medications.map(m => m.name.toLowerCase());
+
+  // Rule 1: Duplicate Detection (e.g., two types of statins)
+  if (medNames.some(n => n.includes("atorvastatin")) && medNames.some(n => n.includes("simvastatin"))) {
+    conflicts.push({
+      id: "c1",
+      type: "duplicate",
+      severity: "high",
+      description: "Duplicate therapy detected: Two different HMG-CoA reductase inhibitors (statins) prescribed.",
+      resources: ["med-1", "med-4"],
+      evidence: "FDA Class Warning: Statin Duplication"
+    });
+  }
+
+  // Rule 2: Interaction Detection (e.g., Warfarin and Aspirin)
+  if (medNames.some(n => n.includes("warfarin")) && medNames.some(n => n.includes("aspirin"))) {
+    conflicts.push({
+      id: "c2",
+      type: "interaction",
+      severity: "moderate",
+      description: "Potential interaction: Combined use of Warfarin and Aspirin increases bleeding risk.",
+      resources: ["med-2", "med-5"],
+      evidence: "Clinical Ref: Beers Criteria v4"
+    });
+  }
+
+  // Rule 3: Known Allergy (Mocking an allergy to lisinopril)
+  if (medNames.some(n => n.includes("lisinopril"))) {
+    conflicts.push({
+      id: "c3",
+      type: "allergy",
+      severity: "high",
+      description: "Allergy Alert: Patient has a documented allergy to ACE inhibitors (Lisinopril).",
+      resources: ["med-3"],
+      evidence: "AllergyIntolerance Record #4451"
+    });
+  }
+
+  return conflicts;
 }
 
 export async function createSandboxProject(
