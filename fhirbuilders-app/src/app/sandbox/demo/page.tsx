@@ -38,6 +38,8 @@ import {
   Sparkles,
   Info,
   Trash2,
+  X,
+  Bell,
 } from "lucide-react";
 import { useEffect } from "react";
 import { detectMedicationConflicts, type MedConflict } from "@/lib/medplum";
@@ -367,30 +369,42 @@ const MedRecDashboard = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {patient.medications.length > 0 ? (
+              {isAnalyzing ? (
+                // Skeleton Loaders for Delight
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-muted/20 animate-pulse">
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
+                    </div>
+                    <div className="h-4 bg-muted rounded w-16" />
+                  </div>
+                ))
+              ) : patient.medications.length > 0 ? (
                 patient.medications.map((med: any, i: number) => {
                   const isConflicting = conflicts.some(c => c.resources.includes(med.id));
                   return (
                     <div
                       key={i}
-                      className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${isConflicting ? "border-amber-300 bg-amber-50" : "bg-card"
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-300 ${isConflicting ? "border-amber-300 bg-amber-50 shadow-inner" : "bg-card px-4"
                         }`}
                     >
                       <div>
                         <div className="font-medium text-sm flex items-center gap-2">
                           {med.name}
-                          {isConflicting && <AlertCircle className="h-3 w-3 text-amber-600" />}
+                          {isConflicting && <AlertCircle className="h-3 w-3 text-amber-600 animate-bounce" />}
                         </div>
                         <div className="text-xs text-muted-foreground">{med.dosage}</div>
                       </div>
-                      <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-                        Verified
+                      <Badge variant="outline" className={isConflicting ? "bg-amber-100/50 text-amber-700" : "text-green-600 border-green-200 bg-green-50"}>
+                        {isConflicting ? "Flagged" : "Verified"}
                       </Badge>
                     </div>
                   );
                 })
               ) : (
-                <div className="text-center py-8 text-muted-foreground italic text-sm bg-muted/30 rounded-lg border border-dashed">
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground italic text-sm bg-muted/10 rounded-xl border border-dashed animate-in fade-in zoom-in duration-500">
+                  <Pill className="h-8 w-8 mb-2 opacity-20" />
                   No active medications found for reconciliation.
                 </div>
               )}
@@ -435,6 +449,7 @@ export default function DemoSandboxPage() {
   const [showAiSettings, setShowAiSettings] = useState(false);
   const [userApiKey, setUserApiKey] = useState<string>("");
   const [tempApiKey, setTempApiKey] = useState<string>("");
+  const [notification, setNotification] = useState<{ message: string; type: "error" | "success" | "info" } | null>(null);
 
   // Load API key from localStorage on mount
   useEffect(() => {
@@ -449,6 +464,8 @@ export default function DemoSandboxPage() {
     localStorage.setItem("fhirbuilders_anthropic_key", tempApiKey);
     setUserApiKey(tempApiKey);
     setShowAiSettings(false);
+    setNotification({ message: "AI Settings saved successfully!", type: "success" });
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const handleClearApiKey = () => {
@@ -490,7 +507,8 @@ export default function DemoSandboxPage() {
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
-      alert(`AI Analysis Error: ${error.message}`);
+      setNotification({ message: `AI Analysis failed: ${error.message}`, type: "error" });
+      setTimeout(() => setNotification(null), 5000);
     } finally {
       setIsAnalyzing(false);
     }
@@ -592,6 +610,26 @@ export default function DemoSandboxPage() {
           </div>
         </div>
       </div>
+
+      {/* Premium Notification Toast */}
+      {notification && (
+        <div
+          className={`mb-6 p-4 rounded-xl border flex items-center justify-between shadow-xl animate-in slide-in-from-top-4 duration-300 ${notification.type === "error" ? "bg-red-50 border-red-200 text-red-800" :
+              notification.type === "success" ? "bg-green-50 border-green-200 text-green-800" :
+                "bg-blue-50 border-blue-200 text-blue-800"
+            }`}
+        >
+          <div className="flex items-center gap-3">
+            {notification.type === "error" ? <AlertCircle className="h-5 w-5" /> :
+              notification.type === "success" ? <ShieldCheck className="h-5 w-5" /> :
+                <Bell className="h-5 w-5" />}
+            <span className="font-medium">{notification.message}</span>
+          </div>
+          <button onClick={() => setNotification(null)} className="hover:opacity-70 transition-opacity">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Sandbox Info Card */}
       <Card className="mb-6">
