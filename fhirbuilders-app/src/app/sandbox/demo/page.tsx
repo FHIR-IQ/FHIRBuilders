@@ -32,7 +32,14 @@ import {
   BookOpen,
   Code,
   ShieldAlert,
+  Settings,
+  Key,
+  BrainCircuit,
+  Sparkles,
+  Info,
+  Trash2,
 } from "lucide-react";
+import { useEffect } from "react";
 import { detectMedicationConflicts, type MedConflict } from "@/lib/medplum";
 
 // Demo sandbox configuration
@@ -96,9 +103,9 @@ const SAMPLE_PATIENTS = [
       { name: "Hyperlipidemia", status: "active", onset: "2019-11-08", code: "55822004" },
     ],
     medications: [
-      { name: "Metformin 500mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Chen" },
-      { name: "Lisinopril 10mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen" },
-      { name: "Atorvastatin 20mg", dosage: "Once daily at bedtime", status: "active", prescriber: "Dr. Patel" },
+      { id: "med-101", name: "Metformin 500mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Chen" },
+      { id: "med-102", name: "Lisinopril 10mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen" },
+      { id: "med-103", name: "Atorvastatin 20mg", dosage: "Once daily at bedtime", status: "active", prescriber: "Dr. Patel" },
     ],
     observations: [
       { type: "Blood Pressure", value: "138/88 mmHg", date: "2024-01-15", status: "high" },
@@ -125,8 +132,8 @@ const SAMPLE_PATIENTS = [
       { name: "Seasonal Allergies", status: "active", onset: "2010-03-15", code: "232347008" },
     ],
     medications: [
-      { name: "Albuterol Inhaler", dosage: "As needed", status: "active", prescriber: "Dr. Williams" },
-      { name: "Fluticasone Nasal Spray", dosage: "Once daily", status: "active", prescriber: "Dr. Williams" },
+      { id: "med-201", name: "Albuterol Inhaler", dosage: "As needed", status: "active", prescriber: "Dr. Williams" },
+      { id: "med-202", name: "Fluticasone Nasal Spray", dosage: "Once daily", status: "active", prescriber: "Dr. Williams" },
     ],
     observations: [
       { type: "Blood Pressure", value: "118/76 mmHg", date: "2024-01-12", status: "normal" },
@@ -153,11 +160,11 @@ const SAMPLE_PATIENTS = [
       { name: "Chronic Kidney Disease Stage 3", status: "active", onset: "2020-08-10", code: "709044004" },
     ],
     medications: [
-      { name: "Aspirin 81mg", dosage: "Once daily", status: "active", prescriber: "Dr. Martinez" },
-      { name: "Metoprolol 50mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Martinez" },
-      { name: "Apixaban 5mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Martinez" },
-      { name: "Metformin 1000mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Lee" },
-      { name: "Atorvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Martinez" },
+      { id: "med-301", name: "Aspirin 81mg", dosage: "Once daily", status: "active", prescriber: "Dr. Martinez" },
+      { id: "med-302", name: "Metoprolol 50mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Martinez" },
+      { id: "med-303", name: "Apixaban 5mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Martinez" },
+      { id: "med-304", name: "Metformin 1000mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Lee" },
+      { id: "med-305", name: "Atorvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Martinez" },
     ],
     observations: [
       { type: "Blood Pressure", value: "145/92 mmHg", date: "2024-01-14", status: "high" },
@@ -185,11 +192,11 @@ const SAMPLE_PATIENTS = [
       { name: "Hypertension", status: "active", onset: "2008-01-15", code: "38341003" },
     ],
     medications: [
-      { name: "Warfarin 5mg", dosage: "Daily (adjusted)", status: "active", prescriber: "Dr. Singh" },
-      { name: "Aspirin 325mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 1
-      { name: "Lisinopril 20mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 2 (Allergy)
-      { name: "Atorvastatin 80mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen" },
-      { name: "Simvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 3
+      { id: "med-401", name: "Warfarin 5mg", dosage: "Daily (adjusted)", status: "active", prescriber: "Dr. Singh" },
+      { id: "med-402", name: "Aspirin 325mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 1
+      { id: "med-403", name: "Lisinopril 20mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 2 (Allergy)
+      { id: "med-404", name: "Atorvastatin 80mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen" },
+      { id: "med-405", name: "Simvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 3
     ],
     observations: [
       { type: "INR", value: "3.2", date: "2024-01-18", status: "high" },
@@ -198,6 +205,22 @@ const SAMPLE_PATIENTS = [
     ],
     encounters: [
       { type: "Urgent Care", date: "2024-01-18", provider: "MGH Urgent Care", reason: "Shortness of breath" },
+    ],
+  },
+  {
+    id: "patient-005",
+    name: "Baby Jane Doe (Newborn)",
+    gender: "Female",
+    birthDate: "2024-01-20",
+    age: 0,
+    address: "Boston, MA",
+    conditions: [],
+    medications: [],
+    observations: [
+      { type: "Weight", value: "7 lbs 8 oz", date: "2024-01-20", status: "normal" },
+    ],
+    encounters: [
+      { type: "Birth", date: "2024-01-20", provider: "MGH L&D", reason: "Standard delivery" },
     ],
   },
 ];
@@ -220,7 +243,19 @@ const AUDIT_LOGIC = `
 // 4. Lab-Medication Conflict: Checks for contradictions with latest Observation (e.g. Potassium + ACEI)
 `.trim();
 
-const MedRecDashboard = ({ patient, conflicts, onRunAudit, isAnalyzing }: any) => {
+const MedRecDashboard = ({
+  patient,
+  conflicts,
+  onRunAudit,
+  isAnalyzing,
+  hasApiKey
+}: {
+  patient: any;
+  conflicts: MedConflict[];
+  onRunAudit: () => void;
+  isAnalyzing: boolean;
+  hasApiKey: boolean;
+}) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -228,10 +263,20 @@ const MedRecDashboard = ({ patient, conflicts, onRunAudit, isAnalyzing }: any) =
           <h3 className="text-xl font-bold flex items-center gap-2">
             <ShieldCheck className="h-6 w-6 text-green-600" />
             AI Medication Audit
+            {conflicts.length > 0 && (
+              <Badge variant="destructive" className="ml-2 animate-in fade-in zoom-in duration-300">
+                {conflicts.length} Risks Detected
+              </Badge>
+            )}
           </h3>
-          <p className="text-sm text-muted-foreground">
-            Automated conflict detection and reconciliation assistant
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-sm text-muted-foreground">
+              Automated conflict detection and reconciliation assistant
+            </p>
+            <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+              {hasApiKey ? "Claude 3.5 Sonnet (Live)" : "Mock AI Mode"}
+            </Badge>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button
@@ -240,8 +285,8 @@ const MedRecDashboard = ({ patient, conflicts, onRunAudit, isAnalyzing }: any) =
             onClick={() => {
               const win = window.open("", "_blank");
               if (win) {
-                win.document.write(`<pre>${AUDIT_LOGIC}</pre>`);
-                win.document.title = "Audit Logic | FHIRBuilders";
+                win.document.write(`<html><head><title>Audit Logic | FHIRBuilders</title><style>body{font-family:sans-serif;padding:2rem;line-height:1.6;background:#f9fafb;}pre{background:#1e293b;color:#f1f5f9;padding:1rem;border-radius:0.5rem;overflow-x:auto;}</style></head><body><h1>Clinical Audit Logic</h1><p>The following rules are applied during the medication reconciliation audit:</p><pre>${AUDIT_LOGIC}</pre></body></html>`);
+                win.document.close();
               }
             }}
           >
@@ -322,17 +367,33 @@ const MedRecDashboard = ({ patient, conflicts, onRunAudit, isAnalyzing }: any) =
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {patient.medications.map((med: any, i: number) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <div className="font-medium text-sm">{med.name}</div>
-                    <div className="text-xs text-muted-foreground">{med.dosage}</div>
-                  </div>
-                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-                    Verified
-                  </Badge>
+              {patient.medications.length > 0 ? (
+                patient.medications.map((med: any, i: number) => {
+                  const isConflicting = conflicts.some(c => c.resources.includes(med.id));
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${isConflicting ? "border-amber-300 bg-amber-50" : "bg-card"
+                        }`}
+                    >
+                      <div>
+                        <div className="font-medium text-sm flex items-center gap-2">
+                          {med.name}
+                          {isConflicting && <AlertCircle className="h-3 w-3 text-amber-600" />}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{med.dosage}</div>
+                      </div>
+                      <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                        Verified
+                      </Badge>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-muted-foreground italic text-sm bg-muted/30 rounded-lg border border-dashed">
+                  No active medications found for reconciliation.
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -371,19 +432,68 @@ export default function DemoSandboxPage() {
   const [conflicts, setConflicts] = useState<MedConflict[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showAiSettings, setShowAiSettings] = useState(false);
+  const [userApiKey, setUserApiKey] = useState<string>("");
+  const [tempApiKey, setTempApiKey] = useState<string>("");
+
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    const savedKey = localStorage.getItem("fhirbuilders_anthropic_key");
+    if (savedKey) {
+      setUserApiKey(savedKey);
+      setTempApiKey(savedKey);
+    }
+  }, []);
+
+  const handleSaveApiKey = () => {
+    localStorage.setItem("fhirbuilders_anthropic_key", tempApiKey);
+    setUserApiKey(tempApiKey);
+    setShowAiSettings(false);
+  };
+
+  const handleClearApiKey = () => {
+    localStorage.removeItem("fhirbuilders_anthropic_key");
+    setUserApiKey("");
+    setTempApiKey("");
+  };
 
   const handleRunMedRec = async () => {
     setIsAnalyzing(true);
     setConflicts([]);
 
-    // Use the mock service from medplum.ts
-    const results = await detectMedicationConflicts(
-      selectedPatient.id,
-      selectedPatient.medications
-    );
+    try {
+      if (userApiKey) {
+        // Use real AI proxy
+        const response = await fetch("/api/ai/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            medications: selectedPatient.medications,
+            userApiKey: userApiKey,
+          }),
+        });
 
-    setConflicts(results);
-    setIsAnalyzing(false);
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || "AI Analysis failed");
+        }
+
+        const data = await response.json();
+        setConflicts(data.conflicts);
+      } else {
+        // Fallback to mock service
+        const results = await detectMedicationConflicts(
+          selectedPatient.id,
+          selectedPatient.medications
+        );
+        setConflicts(results);
+      }
+    } catch (error: any) {
+      console.error("Analysis error:", error);
+      alert(`AI Analysis Error: ${error.message}`);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const fullUrl = `${DEMO_SANDBOX.baseUrl}${query}`;
@@ -395,6 +505,11 @@ export default function DemoSandboxPage() {
   };
 
   const handleExecute = async () => {
+    if (!query || query === "/") {
+      setResponse(JSON.stringify({ error: "No resource path specified. Try /Patient or /Observation" }, null, 2));
+      return;
+    }
+
     setIsLoading(true);
     // Simulate API call with sample data
     await new Promise((resolve) => setTimeout(resolve, 800));
@@ -460,10 +575,18 @@ export default function DemoSandboxPage() {
               Synthetic Data
             </Badge>
             <Badge variant="secondary">Demo Mode</Badge>
-            <Button variant="outline" asChild>
+            <Button
+              variant="outline"
+              onClick={() => setShowAiSettings(true)}
+              className={userApiKey ? "border-blue-500 text-blue-600 hover:bg-blue-50" : ""}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              AI Settings
+            </Button>
+            <Button variant="outline" asChild title="Save this sandbox configuration to your account for future use">
               <Link href="/login">
                 <Save className="mr-2 h-4 w-4" />
-                Save Sandbox
+                Save Meta
               </Link>
             </Button>
           </div>
@@ -738,6 +861,7 @@ export default function DemoSandboxPage() {
                 conflicts={conflicts}
                 onRunAudit={handleRunMedRec}
                 isAnalyzing={isAnalyzing}
+                hasApiKey={!!userApiKey}
               />
             )}
 
@@ -764,18 +888,19 @@ export default function DemoSandboxPage() {
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-green-800">Ready to build for real?</p>
+                      <p className="font-medium text-green-800">Ready to move to production?</p>
                       <p className="text-sm text-green-700/80">
-                        Export this setup to your Medplum project
+                        Migrate this setup to a real Medplum project
                       </p>
                     </div>
                     <Button
                       className="bg-green-600 hover:bg-green-700"
                       size="sm"
+                      title="Export this data and setup to a production Medplum instance"
                       onClick={() => setShowExportDialog(true)}
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
-                      Export
+                      Deploy
                     </Button>
                   </div>
                 </CardContent>
@@ -931,10 +1056,22 @@ export default function DemoSandboxPage() {
                 {/* Response Area */}
                 <Tabs defaultValue="response" className="w-full">
                   <TabsList>
-                    <TabsTrigger value="response">Response</TabsTrigger>
-                    <TabsTrigger value="headers">Headers</TabsTrigger>
-                    <TabsTrigger value="curl">cURL</TabsTrigger>
-                    <TabsTrigger value="snippet">Snippet</TabsTrigger>
+                    <div className="flex gap-2">
+                      <TabsTrigger value="response">Response</TabsTrigger>
+                      <TabsTrigger value="headers">Headers</TabsTrigger>
+                      <TabsTrigger value="curl">cURL</TabsTrigger>
+                      <TabsTrigger value="snippet">Snippet</TabsTrigger>
+                    </div>
+                    {response && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setResponse(null)}
+                        className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Clear
+                      </Button>
+                    )}
                   </TabsList>
 
                   <TabsContent value="response" className="mt-4">
@@ -955,7 +1092,7 @@ export default function DemoSandboxPage() {
                     ) : (
                       <div className="bg-muted rounded p-8 text-center">
                         <p className="text-muted-foreground">
-                          Click "Send" to execute the query
+                          Click &quot;Send&quot; to execute the query
                         </p>
                       </div>
                     )}
@@ -1022,10 +1159,10 @@ const result = ${response ? response.substring(0, 500) + (response.length > 500 
                   <div>
                     <p className="font-medium text-amber-600">Demo Mode</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      This is a demo sandbox with simulated responses.{" "}
-                      <Link href="/login" className="text-primary hover:underline">
+                      This is a demo sandbox with simulated responses.
+                      <Link href="/login" className="text-primary hover:underline ml-1">
                         Sign up
-                      </Link>{" "}
+                      </Link>
                       to get a real FHIR endpoint with persistent data.
                     </p>
                   </div>
@@ -1087,6 +1224,79 @@ print(patients['entry'])`}
               </CardContent>
             </Card>
           </div>
+        </div>
+      )}
+
+      {/* AI Settings Dialog */}
+      {showAiSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <Card className="w-full max-w-md mx-4 shadow-2xl animate-in zoom-in-95 duration-200">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <BrainCircuit className="h-6 w-6 text-blue-600" />
+                  AI Settings
+                </CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setShowAiSettings(false)}>
+                  <Check className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardDescription>
+                Bring Your Own AI (BYOAI) configuration
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800 flex gap-2">
+                <Info className="h-5 w-5 shrink-0" />
+                <p>
+                  By providing your own API key, you enable real clinical analysis powered by Claude 3.5 Sonnet.
+                  Your key is stored <strong>only in this browser</strong> and is never sent to our database.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  Anthropic API Key
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="password"
+                    placeholder="sk-ant-..."
+                    value={tempApiKey}
+                    onChange={(e) => setTempApiKey(e.target.value)}
+                    className="flex-1"
+                  />
+                  {userApiKey && (
+                    <Button variant="outline" size="icon" onClick={handleClearApiKey} title="Clear Key">
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Get a key at <a href="https://console.anthropic.com/" target="_blank" rel="noreferrer" className="text-primary hover:underline">console.anthropic.com</a>
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  onClick={handleSaveApiKey}
+                  className="bg-blue-600 hover:bg-blue-700 w-full"
+                  disabled={!tempApiKey}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {userApiKey ? "Update API Key" : "Connect Claude AI"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowAiSettings(false)}
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

@@ -1,18 +1,21 @@
 import { MedplumClient } from "@medplum/core";
 
-// Server-side Medplum client (for API routes)
 export function createMedplumClient() {
+  const isServer = typeof window === "undefined";
+  // Safely access process if defined
+  const safeEnv = (key: string) => (typeof process !== "undefined" && process.env) ? process.env[key] : undefined;
+
   return new MedplumClient({
-    baseUrl: process.env.MEDPLUM_BASE_URL || "https://api.medplum.com/",
-    clientId: process.env.MEDPLUM_CLIENT_ID,
-    clientSecret: process.env.MEDPLUM_CLIENT_SECRET,
+    baseUrl: (isServer ? safeEnv("MEDPLUM_BASE_URL") : undefined) || "https://api.medplum.com/",
+    clientId: isServer ? safeEnv("MEDPLUM_CLIENT_ID") : undefined,
+    clientSecret: isServer ? safeEnv("MEDPLUM_CLIENT_SECRET") : undefined,
   });
 }
 
 // Client-side Medplum client configuration
 export const medplumConfig = {
-  baseUrl: process.env.NEXT_PUBLIC_MEDPLUM_BASE_URL || "https://api.medplum.com/",
-  clientId: process.env.NEXT_PUBLIC_MEDPLUM_CLIENT_ID,
+  baseUrl: (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_MEDPLUM_BASE_URL : undefined) || "https://api.medplum.com/",
+  clientId: typeof process !== "undefined" ? process.env.NEXT_PUBLIC_MEDPLUM_CLIENT_ID : undefined,
 };
 
 // FHIR Resource Types commonly used
@@ -78,13 +81,22 @@ export interface MedConflict {
   evidence?: string; // Clinical citation or rule
 }
 
+export interface MedicationResource {
+  id: string;
+  name: string;
+  dosage: string;
+  status: string;
+  prescribers?: string;
+  [key: string]: any;
+}
+
 /**
  * Mock AI service to detect medication conflicts.
  * In a real app, this would call an LLM or a clinical rules engine.
  */
 export async function detectMedicationConflicts(
   patientId: string,
-  medications: any[]
+  medications: MedicationResource[]
 ): Promise<MedConflict[]> {
   console.log(`Analyzing medications for patient ${patientId}...`);
 
@@ -94,6 +106,8 @@ export async function detectMedicationConflicts(
   const conflicts: MedConflict[] = [];
 
   // Logic: Simple mock rules for demo purposes
+  const getMedId = (namePart: string) => medications.find(m => m.name.toLowerCase().includes(namePart.toLowerCase()))?.id || "unknown";
+
   const medNames = medications.map(m => m.name.toLowerCase());
 
   // Rule 1: Duplicate Detection (e.g., two types of statins)
@@ -103,7 +117,7 @@ export async function detectMedicationConflicts(
       type: "duplicate",
       severity: "high",
       description: "Duplicate therapy detected: Two different HMG-CoA reductase inhibitors (statins) prescribed.",
-      resources: ["med-1", "med-4"],
+      resources: [getMedId("atorvastatin"), getMedId("simvastatin")],
       evidence: "FDA Class Warning: Statin Duplication"
     });
   }
@@ -115,7 +129,7 @@ export async function detectMedicationConflicts(
       type: "interaction",
       severity: "moderate",
       description: "Potential interaction: Combined use of Warfarin and Aspirin increases bleeding risk.",
-      resources: ["med-2", "med-5"],
+      resources: [getMedId("warfarin"), getMedId("aspirin")],
       evidence: "Clinical Ref: Beers Criteria v4"
     });
   }
@@ -127,7 +141,7 @@ export async function detectMedicationConflicts(
       type: "allergy",
       severity: "high",
       description: "Allergy Alert: Patient has a documented allergy to ACE inhibitors (Lisinopril).",
-      resources: ["med-3"],
+      resources: [getMedId("lisinopril")],
       evidence: "AllergyIntolerance Record #4451"
     });
   }
@@ -140,11 +154,13 @@ export async function createSandboxProject(
   config: SandboxConfig
 ): Promise<{ projectId: string; baseUrl: string }> {
   // This would integrate with Medplum's project creation API
-  // For now, return placeholder - actual implementation depends on Medplum setup
+  const isServer = typeof window === "undefined";
+  const baseUrl = (isServer ? process.env.MEDPLUM_BASE_URL : undefined) || "https://api.medplum.com";
+
   console.log("Creating sandbox with config:", config);
 
   return {
     projectId: `sandbox-${Date.now()}`,
-    baseUrl: `${process.env.MEDPLUM_BASE_URL}/fhir/R4`,
+    baseUrl: `${baseUrl}/fhir/R4`,
   };
 }
