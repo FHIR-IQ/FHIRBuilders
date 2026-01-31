@@ -31,7 +31,9 @@ import {
   Wand2,
   LayoutTemplate,
   Zap,
+  MessageSquare,
 } from "lucide-react"
+import { ChannelsPanel } from "@/components/openclaw/channels-panel"
 
 // Template definitions matching the backend
 const TEMPLATES = [
@@ -276,6 +278,7 @@ export default function OpenClawPage() {
         </div>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Describe your healthcare app idea and watch AI build it for you.
+          Connect it to Slack, Discord, WhatsApp, and more.
           Powered by Claude + Medplum + FHIR.
         </p>
       </div>
@@ -582,7 +585,7 @@ export default function OpenClawPage() {
 
           {/* Generated Code Preview */}
           {result.generatedCode && allFiles.length > 0 && (
-            <Card>
+            <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Code className="h-5 w-5" />
@@ -651,6 +654,11 @@ export default function OpenClawPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Messaging Channels Integration */}
+          <div className="mb-6">
+            <ChannelsPanel generatedAppId={result.id} />
+          </div>
         </>
       )}
 
@@ -661,12 +669,13 @@ export default function OpenClawPage() {
             <CardTitle>How OpenClaw Works</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
               {[
                 { icon: Sparkles, label: "Describe", text: "Tell us your app idea" },
                 { icon: Zap, label: "Analyze", text: "We detect FHIR resources" },
                 { icon: Wand2, label: "Generate", text: "AI creates your code" },
                 { icon: ExternalLink, label: "Deploy", text: "Launch to sandbox" },
+                { icon: MessageSquare, label: "Connect", text: "Link messaging apps" },
                 { icon: ArrowRight, label: "Iterate", text: "Refine with feedback" },
               ].map((step, i) => (
                 <div key={i} className="text-center">

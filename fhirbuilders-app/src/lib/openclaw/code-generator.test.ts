@@ -326,7 +326,7 @@ This code includes...`
         components: [],
         pages: [],
         apiRoutes: []
-      } as GeneratedCodeOutput
+      } as unknown as GeneratedCodeOutput
 
       const result = validateGeneratedCode(code)
 

@@ -82,3 +82,38 @@ export {
   type OrchestratorResult,
   type GenerationStartData
 } from './orchestrator'
+
+// Messaging Channels (multi-platform integration)
+export {
+  ChannelType,
+  ChannelStatus,
+  MessageDirection,
+  validateChannelConfig,
+  generateWebhookUrl,
+  generateWebhookSecret,
+  getChannelDisplayInfo,
+  parseInboundMessage,
+  formatOutboundMessage,
+  type SlackConfig,
+  type DiscordConfig,
+  type WhatsAppConfig,
+  type TeamsConfig,
+  type EmailConfig,
+  type WebChatConfig,
+  type SmsConfig,
+  type TelegramConfig,
+  type ChannelConfig,
+  type UnifiedMessage,
+  type ChannelDisplayInfo
+} from './channels'
+
+// Message Handler (AI-powered message processing)
+export {
+  processMessage,
+  processPendingMessages,
+  linkAppToChannel,
+  unlinkAppFromChannel,
+  type MessageHandlerDeps,
+  type ProcessMessageInput,
+  type ProcessMessageResult
+} from './message-handler'
