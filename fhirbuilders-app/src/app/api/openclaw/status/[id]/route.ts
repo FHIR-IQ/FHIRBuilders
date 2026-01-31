@@ -2,12 +2,11 @@
  * OpenClaw Status API
  *
  * GET /api/openclaw/status/:id
- * Returns the status of a generation request.
+ * Returns the status of a generation request including generated code when complete.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getGenerationStatus } from '@/lib/openclaw/generation-service'
 
 export async function GET(
   request: NextRequest,
@@ -23,26 +22,40 @@ export async function GET(
       )
     }
 
-    // Get status using service
-    const result = await getGenerationStatus(id, { prisma })
+    // Get generation from database
+    const generation = await prisma.generatedApp.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        fhirResources: true,
+        generatedCode: true,
+        sandboxUrl: true,
+        githubRepoUrl: true,
+        errorMessage: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
 
-    if (!result.success) {
+    if (!generation) {
       return NextResponse.json(
-        { error: result.error },
+        { error: 'Generation not found' },
         { status: 404 }
       )
     }
 
-    // Return status response
+    // Return status response with generated code if complete
     return NextResponse.json({
-      id: result.data?.id,
-      status: result.data?.status,
-      fhirResources: result.data?.fhirResources,
-      sandboxUrl: result.data?.sandboxUrl,
-      githubRepoUrl: result.data?.githubRepoUrl,
-      errorMessage: result.data?.errorMessage,
-      createdAt: result.data?.createdAt,
-      updatedAt: result.data?.updatedAt
+      id: generation.id,
+      status: generation.status,
+      fhirResources: generation.fhirResources,
+      generatedCode: generation.generatedCode,
+      sandboxUrl: generation.sandboxUrl,
+      githubRepoUrl: generation.githubRepoUrl,
+      errorMessage: generation.errorMessage,
+      createdAt: generation.createdAt,
+      updatedAt: generation.updatedAt
     })
 
   } catch (error) {

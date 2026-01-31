@@ -44,3 +44,41 @@ export {
   type GenerationData,
   type StatusUpdateOptions
 } from './generation-service'
+
+// Code Generator (Claude AI integration)
+export {
+  generateAppCode,
+  buildSystemPrompt,
+  parseGeneratedCode,
+  validateGeneratedCode,
+  type GeneratedFile,
+  type GeneratedCodeOutput,
+  type CodeGeneratorDeps,
+  type CodeGenerationInput,
+  type CodeGenerationResult,
+  type ValidationResult as CodeValidationResult
+} from './code-generator'
+
+// Code Templates
+export {
+  getTemplate,
+  getTemplateForResources,
+  getAllTemplates,
+  applyTemplate,
+  type TemplateFile,
+  type AppTemplate,
+  type TemplateOptions,
+  type AppliedTemplate
+} from './templates'
+
+// Generation Orchestrator (async workflow)
+export {
+  startGeneration,
+  processGeneration,
+  runGeneration,
+  type OrchestratorDeps,
+  type GenerationJob,
+  type StartGenerationInput,
+  type OrchestratorResult,
+  type GenerationStartData
+} from './orchestrator'

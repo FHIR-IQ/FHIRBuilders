@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -19,17 +19,17 @@ import {
   LayoutDashboard,
   Menu,
   FolderOpen,
-  Sparkles,
   BookOpen,
+  Wand2,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 // Navigation - balanced for different personas
 const navigation = [
   { title: "Learn", href: "/learn", icon: BookOpen },
+  { title: "OpenClaw", href: "/openclaw", icon: Wand2, highlight: true },
   { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical },
   { title: "Projects", href: "/projects", icon: FolderOpen },
-  { title: "Early Access", href: "/early-access", icon: Sparkles, highlight: true },
 ];
 
 export function Header() {

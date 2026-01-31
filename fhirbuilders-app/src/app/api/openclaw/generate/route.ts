@@ -3,12 +3,20 @@
  *
  * POST /api/openclaw/generate
  * Creates a new app generation from a natural language prompt.
+ * Starts async code generation with Claude AI.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { createGeneration } from '@/lib/openclaw/generation-service'
+import Anthropic from '@anthropic-ai/sdk'
+import { startGeneration, processGeneration } from '@/lib/openclaw/orchestrator'
+import { getTemplate } from '@/lib/openclaw/templates'
+
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { prompt } = body
+    const { prompt, templateId } = body
 
     if (!prompt) {
       return NextResponse.json(
@@ -33,27 +41,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create generation using service
-    const result = await createGeneration(
-      {
-        prompt,
-        userId: session.user.id
-      },
-      { prisma }
-    )
+    // Build enhanced prompt with template context
+    let enhancedPrompt = prompt
+    if (templateId) {
+      const template = getTemplate(templateId)
+      if (template) {
+        enhancedPrompt = `${prompt}\n\nUse this template style: ${template.name} - ${template.description}`
+      }
+    }
 
-    if (!result.success) {
+    // Create generation record
+    const result = await startGeneration({
+      prompt: enhancedPrompt,
+      userId: session.user.id,
+      deps: { prisma, anthropic }
+    })
+
+    if (!result.success || !result.data) {
       return NextResponse.json(
-        { error: result.error },
+        { error: result.error || 'Failed to start generation' },
         { status: 400 }
       )
     }
 
-    // Return success response
+    // Start async code generation (fire and forget)
+    processGeneration(
+      {
+        id: result.data.id,
+        prompt: enhancedPrompt,
+        fhirResources: result.data.fhirResources,
+        userId: session.user.id
+      },
+      { prisma, anthropic }
+    ).catch((err) => {
+      console.error('Background generation failed:', err)
+    })
+
+    // Return immediate response with generation ID
     return NextResponse.json({
-      id: result.data?.id,
-      status: result.data?.status,
-      fhirResources: result.data?.fhirResources,
+      id: result.data.id,
+      status: result.data.status,
+      fhirResources: result.data.fhirResources,
       message: 'Generation started. Poll /api/openclaw/status/:id for updates.'
     })
 
