@@ -72,6 +72,7 @@ model User {
   upvotes       Upvote[]
   comments      Comment[]
   integrations  Integration[]
+  generatedApps GeneratedApp[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -151,6 +152,7 @@ model App {
   upvotes       Upvote[]
   ratings       Rating[]
   comments      Comment[]
+  generatedApp  GeneratedApp?
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -446,6 +448,51 @@ enum IntegrationType {
   GITHUB
   HUGGINGFACE
   ZULIP
+}
+
+// ============================================
+// OpenClaw - AI App Generation
+// ============================================
+
+enum GenerationStatus {
+  PENDING       // Just created, waiting to start
+  ANALYZING     // Analyzing prompt, detecting FHIR resources
+  GENERATING    // Generating code with Claude
+  DEPLOYING     // Deploying to sandbox
+  COMPLETED     // Successfully generated and deployed
+  FAILED        // Generation or deployment failed
+}
+
+model GeneratedApp {
+  id              String   @id @default(cuid())
+
+  // Link to marketplace (optional, created after successful generation)
+  appId           String?  @unique
+  app             App?     @relation(fields: [appId], references: [id])
+
+  // Generation input
+  prompt          String   @db.Text
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  // Generation output
+  status          GenerationStatus @default(PENDING)
+  fhirResources   String[]  // ["Patient", "MedicationRequest", "MedicationStatement"]
+  generatedCode   Json?     // Stored code snippets and file structure
+
+  // Deployment info
+  githubRepoUrl   String?
+  sandboxUrl      String?
+  medplumProjectId String?
+
+  // Error tracking
+  errorMessage    String?  @db.Text
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
 
 // ============================================

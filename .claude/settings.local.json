@@ -12,7 +12,17 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc --noEmit)",
       "Bash(npx next build --webpack)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd FHIRBuilders MVP with persona-based UX\n\nImplements beta test recommendations for multi-persona support:\n\n- /learn page: FHIR education for healthcare leaders & learners\n- /projects: Problem-first project cards with \"Looking For\" tags\n- /sandbox: Visual patient explorer alongside API explorer\n- /get-started: Persona-based onboarding flow\n- /early-access: Enhanced signup with persona & collaboration matching\n- Homepage: Use case library and persona cards\n\nFeatures:\n- Next.js 14 with TypeScript and Tailwind CSS\n- Prisma ORM with PostgreSQL for waitlist/user data\n- NextAuth.js with GitHub OAuth\n- Medplum SDK integration for FHIR backend\n- shadcn/ui component library\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run test:run:*)",
+      "Bash(npm run lint)",
+      "Bash(npx next build:*)",
+      "Bash(set NEXT_TURBOPACK=0)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
