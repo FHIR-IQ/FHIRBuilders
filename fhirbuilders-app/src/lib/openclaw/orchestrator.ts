@@ -5,7 +5,7 @@
  * between database operations, Claude API, and status updates.
  */
 
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient, Prisma } from '@prisma/client'
 import type Anthropic from '@anthropic-ai/sdk'
 import { detectFhirResources } from './fhir-resources'
 import { validateGeneratedAppInput, GenerationStatus, type GenerationStatusType } from './schema'
@@ -127,7 +127,7 @@ async function updateStatus(
     data.errorMessage = options.errorMessage
   }
   if (options?.generatedCode) {
-    data.generatedCode = options.generatedCode as unknown as Record<string, unknown>
+    data.generatedCode = options.generatedCode as unknown as Prisma.InputJsonValue
   }
 
   await deps.prisma.generatedApp.update({
@@ -197,7 +197,7 @@ export async function processGeneration(
     await deps.prisma.generatedApp.update({
       where: { id },
       data: {
-        generatedCode: generationResult.data as unknown as Record<string, unknown>
+        generatedCode: generationResult.data as unknown as Prisma.InputJsonValue
       }
     })
 
