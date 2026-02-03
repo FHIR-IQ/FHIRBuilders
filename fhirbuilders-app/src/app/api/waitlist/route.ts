@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting (5 requests per minute)
+  const rateLimitResult = applyRateLimit(request, "waitlist");
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const body = await request.json();
     const { email, persona, building, painPoint, lookingFor, canInterview } = body;

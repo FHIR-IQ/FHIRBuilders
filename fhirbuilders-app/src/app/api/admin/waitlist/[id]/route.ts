@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
-// PATCH - Update a waitlist entry
+// PATCH - Update a waitlist entry (ADMIN ONLY)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Verify admin authentication
+  const authResult = await requireAdminAuth();
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -50,11 +57,17 @@ export async function PATCH(
   }
 }
 
-// GET - Get a single waitlist entry
+// GET - Get a single waitlist entry (ADMIN ONLY)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Verify admin authentication
+  const authResult = await requireAdminAuth();
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
   try {
     const { id } = await params;
     const entry = await prisma.waitlist.findUnique({
@@ -78,11 +91,17 @@ export async function GET(
   }
 }
 
-// DELETE - Remove a waitlist entry
+// DELETE - Remove a waitlist entry (ADMIN ONLY)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Verify admin authentication
+  const authResult = await requireAdminAuth();
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
   try {
     const { id } = await params;
     await prisma.waitlist.delete({

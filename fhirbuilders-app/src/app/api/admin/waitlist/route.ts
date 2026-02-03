@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
-// GET - List all waitlist entries
+// GET - List all waitlist entries (ADMIN ONLY)
 export async function GET() {
+  // Verify admin authentication
+  const authResult = await requireAdminAuth();
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
   try {
     const entries = await prisma.waitlist.findMany({
       orderBy: [
