@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { applyRateLimit } from "@/lib/rate-limit";
 import { Persona } from "@prisma/client";
 
 // GET - Fetch current user's profile
@@ -46,6 +47,10 @@ export async function GET() {
 
 // PATCH - Update user profile
 export async function PATCH(request: NextRequest) {
+  // Apply rate limiting (20 requests per minute)
+  const rateLimitResult = applyRateLimit(request, "api");
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const session = await auth();
 

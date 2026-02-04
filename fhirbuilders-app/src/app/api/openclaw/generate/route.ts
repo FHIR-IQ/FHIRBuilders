@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { applyRateLimit } from '@/lib/rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 import { startGeneration, processGeneration } from '@/lib/openclaw/orchestrator'
 import { getTemplate } from '@/lib/openclaw/templates'
@@ -19,6 +20,10 @@ const anthropic = new Anthropic({
 })
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting (10 requests per minute)
+  const rateLimitResult = applyRateLimit(request, "generate");
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     // Check authentication
     const session = await auth()

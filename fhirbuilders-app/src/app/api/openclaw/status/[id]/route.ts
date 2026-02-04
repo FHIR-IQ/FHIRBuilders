@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(
@@ -13,6 +14,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const session = await auth()
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please sign in.' },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
 
     if (!id) {
@@ -22,11 +33,12 @@ export async function GET(
       )
     }
 
-    // Get generation from database
+    // Get generation from database - include userId for ownership check
     const generation = await prisma.generatedApp.findUnique({
       where: { id },
       select: {
         id: true,
+        userId: true,
         status: true,
         fhirResources: true,
         generatedCode: true,
@@ -45,7 +57,15 @@ export async function GET(
       )
     }
 
-    // Return status response with generated code if complete
+    // Verify ownership - users can only view their own generations
+    if (generation.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Forbidden. You can only view your own generations.' },
+        { status: 403 }
+      )
+    }
+
+    // Return status response with generated code if complete (exclude userId)
     return NextResponse.json({
       id: generation.id,
       status: generation.status,
@@ -55,7 +75,7 @@ export async function GET(
       githubRepoUrl: generation.githubRepoUrl,
       errorMessage: generation.errorMessage,
       createdAt: generation.createdAt,
-      updatedAt: generation.updatedAt
+      updatedAt: generation.updatedAt,
     })
 
   } catch (error) {
