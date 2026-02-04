@@ -2,20 +2,28 @@ import Anthropic from "@anthropic-ai/sdk";
 import { MedicationResource, MedConflict } from "./medplum";
 
 const DEFAULT_PROMPT = `
-You are a clinical pharmacist AI. Analyze the following medication list for a patient and identify:
+You are a clinical pharmacist AI with expertise in FHIR R4 medication resources.
+
+Analyze the following medication list for a patient and identify:
 1. Potential drug-drug interactions.
 2. Duplicate therapies (medications in the same class).
 3. Potential allergies or sensitivities (if any are apparent).
 4. Lab-medication conflicts (e.g., potassium-sparing drugs with high potassium labs).
 
+Context:
+- Medications are FHIR R4 MedicationRequest resources coded with RxNorm (http://www.nlm.nih.gov/research/umls/rxnorm)
+- MedicationRequest.status values: active | on-hold | cancelled | completed | entered-in-error | stopped | draft | unknown
+- Resource references use FHIR format: "MedicationRequest/{id}"
+- Drug interaction findings align with FHIR DetectedIssue resource (severity: high | moderate | low)
+
 Format your response as a JSON array of objects following this TypeScript interface:
 interface MedConflict {
   id: string; // unique short ID like 'c1'
   type: "interaction" | "duplicate" | "allergy";
-  severity: "high" | "moderate" | "low";
+  severity: "high" | "moderate" | "low"; // FHIR DetectedIssue.severity
   description: string; // detailed clinical explanation
-  resources: string[]; // IDs of the medications involved
-  evidence?: string; // Clinical citation or rule (e.g. "Beers Criteria")
+  resources: string[]; // FHIR references: e.g. "MedicationRequest/med-101"
+  evidence?: string; // Clinical citation (e.g. "Beers Criteria", "ISMP High-Alert List")
 }
 
 Return ONLY the JSON array.
@@ -31,7 +39,7 @@ export async function analyzeMedicationsWithClaude(
     });
 
     const medListString = medications
-        .map((m) => `- ${m.name} (${m.dosage}), ID: ${m.id}`)
+        .map((m) => `- ${m.name} (${m.dosage}), ID: MedicationRequest/${m.id}${m.rxNormCode ? `, RxNorm: ${m.rxNormCode}` : ''}`)
         .join("\n");
 
     const response = await anthropic.messages.create({

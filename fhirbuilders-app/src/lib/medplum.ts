@@ -72,81 +72,60 @@ export interface SandboxConfig {
   modules: SyntheaModule[];
 }
 
+/**
+ * Authoritative FHIR R4 coding system URIs
+ * @see https://www.hl7.org/fhir/R4/terminologies-systems.html
+ */
+export const FHIR_CODING_SYSTEMS = {
+  LOINC: 'http://loinc.org',
+  SNOMED_CT: 'http://snomed.info/sct',
+  RXNORM: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+  ICD10: 'http://hl7.org/fhir/sid/icd-10',
+  UCUM: 'http://unitsofmeasure.org',
+  CONDITION_CLINICAL: 'http://terminology.hl7.org/CodeSystem/condition-clinical',
+  CONDITION_VERIFICATION: 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
+  OBSERVATION_CATEGORY: 'http://terminology.hl7.org/CodeSystem/observation-category',
+  V3_ACT_CODE: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+} as const;
+
+/**
+ * FHIR R4 MedicationRequest.status value set
+ * @see http://hl7.org/fhir/R4/valueset-medicationrequest-status.html
+ */
+export type MedicationRequestStatus =
+  | 'active'
+  | 'on-hold'
+  | 'cancelled'
+  | 'completed'
+  | 'entered-in-error'
+  | 'stopped'
+  | 'draft'
+  | 'unknown';
+
+/**
+ * FHIR R4 DetectedIssue.severity value set
+ * @see http://hl7.org/fhir/R4/valueset-detectedissue-severity.html
+ */
+export type DetectedIssueSeverity = 'high' | 'moderate' | 'low';
+
 export interface MedConflict {
   id: string;
   type: "interaction" | "duplicate" | "allergy";
-  severity: "high" | "moderate" | "low";
+  severity: DetectedIssueSeverity;
   description: string;
-  resources: string[]; // FHIR Resource IDs
-  evidence?: string; // Clinical citation or rule
+  /** FHIR reference format: e.g., "MedicationRequest/med-101" */
+  resources: string[];
+  evidence?: string;
 }
 
 export interface MedicationResource {
   id: string;
   name: string;
   dosage: string;
-  status: string;
+  status: MedicationRequestStatus;
   prescribers?: string;
-  [key: string]: any;
-}
-
-/**
- * Mock AI service to detect medication conflicts.
- * In a real app, this would call an LLM or a clinical rules engine.
- */
-export async function detectMedicationConflicts(
-  patientId: string,
-  medications: MedicationResource[]
-): Promise<MedConflict[]> {
-  console.log(`Analyzing medications for patient ${patientId}...`);
-
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  const conflicts: MedConflict[] = [];
-
-  // Logic: Simple mock rules for demo purposes
-  const getMedId = (namePart: string) => medications.find(m => m.name.toLowerCase().includes(namePart.toLowerCase()))?.id || "unknown";
-
-  const medNames = medications.map(m => m.name.toLowerCase());
-
-  // Rule 1: Duplicate Detection (e.g., two types of statins)
-  if (medNames.some(n => n.includes("atorvastatin")) && medNames.some(n => n.includes("simvastatin"))) {
-    conflicts.push({
-      id: "c1",
-      type: "duplicate",
-      severity: "high",
-      description: "Duplicate therapy detected: Two different HMG-CoA reductase inhibitors (statins) prescribed.",
-      resources: [getMedId("atorvastatin"), getMedId("simvastatin")],
-      evidence: "FDA Class Warning: Statin Duplication"
-    });
-  }
-
-  // Rule 2: Interaction Detection (e.g., Warfarin and Aspirin)
-  if (medNames.some(n => n.includes("warfarin")) && medNames.some(n => n.includes("aspirin"))) {
-    conflicts.push({
-      id: "c2",
-      type: "interaction",
-      severity: "moderate",
-      description: "Potential interaction: Combined use of Warfarin and Aspirin increases bleeding risk.",
-      resources: [getMedId("warfarin"), getMedId("aspirin")],
-      evidence: "Clinical Ref: Beers Criteria v4"
-    });
-  }
-
-  // Rule 3: Known Allergy (Mocking an allergy to lisinopril)
-  if (medNames.some(n => n.includes("lisinopril"))) {
-    conflicts.push({
-      id: "c3",
-      type: "allergy",
-      severity: "high",
-      description: "Allergy Alert: Patient has a documented allergy to ACE inhibitors (Lisinopril).",
-      resources: [getMedId("lisinopril")],
-      evidence: "AllergyIntolerance Record #4451"
-    });
-  }
-
-  return conflicts;
+  rxNormCode?: string;
+  [key: string]: unknown;
 }
 
 export async function createSandboxProject(

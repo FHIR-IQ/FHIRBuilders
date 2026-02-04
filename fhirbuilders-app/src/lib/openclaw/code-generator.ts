@@ -85,11 +85,56 @@ ${fhirResources.map(r => `- ${r}`).join('\n')}
 - Tailwind CSS for styling
 - FHIR R4 specification
 
+## FHIR R4 Required Fields Reference
+When generating code that creates or validates FHIR resources, use these authoritative required fields:
+- Patient: No required fields (all optional)
+- Observation: status (required), code (required)
+- Encounter: status (required), class (required — uses Coding, not CodeableConcept)
+- Condition: subject (required)
+- MedicationRequest: status (required), intent (required), medication[x] (required), subject (required)
+- Appointment: status (required), participant (required)
+- AllergyIntolerance: patient (required)
+- DiagnosticReport: status (required), code (required)
+
+## FHIR R4 Value Sets
+Use these exact values for status fields:
+- MedicationRequest.status: active | on-hold | cancelled | completed | entered-in-error | stopped | draft | unknown
+- Observation.status: registered | preliminary | final | amended | corrected | cancelled | entered-in-error | unknown
+- Encounter.status: planned | arrived | triaged | in-progress | onleave | finished | cancelled | entered-in-error | unknown
+- Appointment.status: proposed | pending | booked | arrived | fulfilled | cancelled | noshow | entered-in-error | checked-in | waitlist
+- Condition.clinicalStatus: active | recurrence | relapse | inactive | remission | resolved
+- Patient.gender: male | female | other | unknown
+
+## FHIR Coding Systems (authoritative URIs)
+- LOINC: http://loinc.org (lab tests, vitals, clinical observations)
+- SNOMED CT: http://snomed.info/sct (clinical terms, diagnoses, procedures)
+- RxNorm: http://www.nlm.nih.gov/research/umls/rxnorm (medications)
+- ICD-10: http://hl7.org/fhir/sid/icd-10 (diagnosis coding for billing)
+- UCUM: http://unitsofmeasure.org (units of measure)
+- Condition clinical status: http://terminology.hl7.org/CodeSystem/condition-clinical
+- Observation category: http://terminology.hl7.org/CodeSystem/observation-category
+
+## Common LOINC Codes for Vitals
+- Heart Rate: 8867-4
+- Systolic Blood Pressure: 8480-6
+- Diastolic Blood Pressure: 8462-4
+- Body Temperature: 8310-5
+- Oxygen Saturation (SpO2): 2708-6
+- Body Weight: 29463-7
+- Body Height: 8302-2
+- Blood Pressure Panel: 55284-4
+
+## FHIR Error Handling
+- Use OperationOutcome for error responses with issue.severity and issue.code
+- Use HTTP 422 (Unprocessable Entity) for validation failures (missing required fields, invalid enums)
+- Use HTTP 412 (Precondition Failed) for ETag/version mismatch
+- CodeableConcept fields should always include both .coding[].code and .coding[].display
+
 ## Code Requirements
 1. Use TypeScript with proper FHIR types from @medplum/fhirtypes
 2. Use @medplum/react components where possible (ResourceTable, CodeableConceptDisplay, etc.)
 3. Handle loading and error states gracefully
-4. Include proper FHIR resource validation
+4. Include proper FHIR resource validation using the required fields above
 5. Use "use client" directive for interactive components
 6. Follow Next.js App Router conventions
 

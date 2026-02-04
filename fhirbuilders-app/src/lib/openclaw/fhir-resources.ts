@@ -28,7 +28,7 @@ export const FHIR_USE_CASES: Record<string, FhirUseCase> = {
       'refill'
     ],
     resources: ['MedicationRequest', 'MedicationStatement', 'Medication'],
-    description: 'Track prescriptions and medication adherence'
+    description: 'Track prescriptions and medication adherence (coded with RxNorm: http://www.nlm.nih.gov/research/umls/rxnorm). Required fields: status, intent, medication[x], subject'
   },
   appointments: {
     keywords: [
@@ -57,7 +57,7 @@ export const FHIR_USE_CASES: Record<string, FhirUseCase> = {
       'cholesterol'
     ],
     resources: ['Observation', 'DiagnosticReport', 'Specimen'],
-    description: 'View and track laboratory results'
+    description: 'View and track laboratory results (coded with LOINC: http://loinc.org). Common codes: HbA1c (4548-4), LDL (2089-1), Glucose (2345-7), eGFR (33914-3)'
   },
   conditions: {
     keywords: [
@@ -71,7 +71,7 @@ export const FHIR_USE_CASES: Record<string, FhirUseCase> = {
       'illness'
     ],
     resources: ['Condition'],
-    description: 'Track patient health conditions and diagnoses'
+    description: 'Track patient health conditions and diagnoses (coded with SNOMED CT: http://snomed.info/sct, ICD-10: http://hl7.org/fhir/sid/icd-10). Required fields: subject'
   },
   'care-team': {
     keywords: [
@@ -115,7 +115,7 @@ export const FHIR_USE_CASES: Record<string, FhirUseCase> = {
       'respiratory'
     ],
     resources: ['Observation'],
-    description: 'Record and view vital signs'
+    description: 'Record and view vital signs (coded with LOINC: http://loinc.org). Common codes: Heart Rate (8867-4), Blood Pressure (55284-4), Body Temp (8310-5), SpO2 (2708-6)'
   },
   allergies: {
     keywords: [

@@ -61,13 +61,14 @@ const SAMPLE_RESOURCES = {
     id: "example-obs-1",
     status: "final",
     code: { coding: [{ system: "http://loinc.org", code: "8867-4", display: "Heart rate" }] },
-    valueQuantity: { value: 72, unit: "beats/minute" },
+    subject: { reference: "Patient/example-patient-1" },
+    valueQuantity: { value: 72, unit: "beats/minute", system: "http://unitsofmeasure.org", code: "/min" },
     effectiveDateTime: "2024-01-15T10:30:00Z",
   },
   Condition: {
     resourceType: "Condition",
     id: "example-condition-1",
-    clinicalStatus: { coding: [{ code: "active" }] },
+    clinicalStatus: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-clinical", code: "active", display: "Active" }] },
     code: { coding: [{ system: "http://snomed.info/sct", code: "44054006", display: "Type 2 diabetes mellitus" }] },
     subject: { reference: "Patient/example-patient-1" },
     onsetDateTime: "2020-06-15",
@@ -99,16 +100,16 @@ const SAMPLE_PATIENTS = [
       { name: "Hyperlipidemia", status: "active", onset: "2019-11-08", code: "55822004" },
     ],
     medications: [
-      { id: "med-101", name: "Metformin 500mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Chen" },
-      { id: "med-102", name: "Lisinopril 10mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen" },
-      { id: "med-103", name: "Atorvastatin 20mg", dosage: "Once daily at bedtime", status: "active", prescriber: "Dr. Patel" },
+      { id: "med-101", name: "Metformin 500mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Chen", rxNormCode: "860975" },
+      { id: "med-102", name: "Lisinopril 10mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen", rxNormCode: "314076" },
+      { id: "med-103", name: "Atorvastatin 20mg", dosage: "Once daily at bedtime", status: "active", prescriber: "Dr. Patel", rxNormCode: "259255" },
     ],
     observations: [
-      { type: "Blood Pressure", value: "138/88 mmHg", date: "2024-01-15", status: "high" },
-      { type: "Heart Rate", value: "72 bpm", date: "2024-01-15", status: "normal" },
-      { type: "HbA1c", value: "7.2%", date: "2024-01-10", status: "elevated" },
-      { type: "LDL Cholesterol", value: "110 mg/dL", date: "2024-01-10", status: "borderline" },
-      { type: "Weight", value: "195 lbs", date: "2024-01-15", status: "normal" },
+      { type: "Blood Pressure", value: "138/88 mmHg", date: "2024-01-15", status: "high", loincCode: "55284-4" },
+      { type: "Heart Rate", value: "72 bpm", date: "2024-01-15", status: "normal", loincCode: "8867-4" },
+      { type: "HbA1c", value: "7.2%", date: "2024-01-10", status: "elevated", loincCode: "4548-4" },
+      { type: "LDL Cholesterol", value: "110 mg/dL", date: "2024-01-10", status: "borderline", loincCode: "2089-1" },
+      { type: "Weight", value: "195 lbs", date: "2024-01-15", status: "normal", loincCode: "29463-7" },
     ],
     encounters: [
       { type: "Office Visit", date: "2024-01-15", provider: "Dr. Chen", reason: "Diabetes follow-up" },
@@ -128,14 +129,14 @@ const SAMPLE_PATIENTS = [
       { name: "Seasonal Allergies", status: "active", onset: "2010-03-15", code: "232347008" },
     ],
     medications: [
-      { id: "med-201", name: "Albuterol Inhaler", dosage: "As needed", status: "active", prescriber: "Dr. Williams" },
-      { id: "med-202", name: "Fluticasone Nasal Spray", dosage: "Once daily", status: "active", prescriber: "Dr. Williams" },
+      { id: "med-201", name: "Albuterol Inhaler", dosage: "As needed", status: "active", prescriber: "Dr. Williams", rxNormCode: "245314" },
+      { id: "med-202", name: "Fluticasone Nasal Spray", dosage: "Once daily", status: "active", prescriber: "Dr. Williams", rxNormCode: "895994" },
     ],
     observations: [
-      { type: "Blood Pressure", value: "118/76 mmHg", date: "2024-01-12", status: "normal" },
-      { type: "Heart Rate", value: "68 bpm", date: "2024-01-12", status: "normal" },
-      { type: "Peak Flow", value: "420 L/min", date: "2024-01-12", status: "normal" },
-      { type: "SpO2", value: "98%", date: "2024-01-12", status: "normal" },
+      { type: "Blood Pressure", value: "118/76 mmHg", date: "2024-01-12", status: "normal", loincCode: "55284-4" },
+      { type: "Heart Rate", value: "68 bpm", date: "2024-01-12", status: "normal", loincCode: "8867-4" },
+      { type: "Peak Flow", value: "420 L/min", date: "2024-01-12", status: "normal", loincCode: "19935-6" },
+      { type: "SpO2", value: "98%", date: "2024-01-12", status: "normal", loincCode: "2708-6" },
     ],
     encounters: [
       { type: "Office Visit", date: "2024-01-12", provider: "Dr. Williams", reason: "Asthma check-up" },
@@ -156,18 +157,18 @@ const SAMPLE_PATIENTS = [
       { name: "Chronic Kidney Disease Stage 3", status: "active", onset: "2020-08-10", code: "709044004" },
     ],
     medications: [
-      { id: "med-301", name: "Aspirin 81mg", dosage: "Once daily", status: "active", prescriber: "Dr. Martinez" },
-      { id: "med-302", name: "Metoprolol 50mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Martinez" },
-      { id: "med-303", name: "Apixaban 5mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Martinez" },
-      { id: "med-304", name: "Metformin 1000mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Lee" },
-      { id: "med-305", name: "Atorvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Martinez" },
+      { id: "med-301", name: "Aspirin 81mg", dosage: "Once daily", status: "active", prescriber: "Dr. Martinez", rxNormCode: "243670" },
+      { id: "med-302", name: "Metoprolol 50mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Martinez", rxNormCode: "866924" },
+      { id: "med-303", name: "Apixaban 5mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Martinez", rxNormCode: "1364430" },
+      { id: "med-304", name: "Metformin 1000mg", dosage: "Twice daily", status: "active", prescriber: "Dr. Lee", rxNormCode: "861004" },
+      { id: "med-305", name: "Atorvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Martinez", rxNormCode: "259255" },
     ],
     observations: [
-      { type: "Blood Pressure", value: "145/92 mmHg", date: "2024-01-14", status: "high" },
-      { type: "Heart Rate", value: "78 bpm (irregular)", date: "2024-01-14", status: "abnormal" },
-      { type: "eGFR", value: "45 mL/min", date: "2024-01-08", status: "low" },
-      { type: "HbA1c", value: "7.8%", date: "2024-01-08", status: "elevated" },
-      { type: "BNP", value: "280 pg/mL", date: "2024-01-08", status: "elevated" },
+      { type: "Blood Pressure", value: "145/92 mmHg", date: "2024-01-14", status: "high", loincCode: "55284-4" },
+      { type: "Heart Rate", value: "78 bpm (irregular)", date: "2024-01-14", status: "abnormal", loincCode: "8867-4" },
+      { type: "eGFR", value: "45 mL/min", date: "2024-01-08", status: "low", loincCode: "33914-3" },
+      { type: "HbA1c", value: "7.8%", date: "2024-01-08", status: "elevated", loincCode: "4548-4" },
+      { type: "BNP", value: "280 pg/mL", date: "2024-01-08", status: "elevated", loincCode: "42637-9" },
     ],
     encounters: [
       { type: "Cardiology Visit", date: "2024-01-14", provider: "Dr. Martinez", reason: "AFib management" },
@@ -188,16 +189,16 @@ const SAMPLE_PATIENTS = [
       { name: "Hypertension", status: "active", onset: "2008-01-15", code: "38341003" },
     ],
     medications: [
-      { id: "med-401", name: "Warfarin 5mg", dosage: "Daily (adjusted)", status: "active", prescriber: "Dr. Singh" },
-      { id: "med-402", name: "Aspirin 325mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 1
-      { id: "med-403", name: "Lisinopril 20mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 2 (Allergy)
-      { id: "med-404", name: "Atorvastatin 80mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen" },
-      { id: "med-405", name: "Simvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh" }, // Conflict 3
+      { id: "med-401", name: "Warfarin 5mg", dosage: "Daily (adjusted)", status: "active", prescriber: "Dr. Singh", rxNormCode: "855288" },
+      { id: "med-402", name: "Aspirin 325mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh", rxNormCode: "198466" }, // Conflict 1
+      { id: "med-403", name: "Lisinopril 20mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh", rxNormCode: "314077" }, // Conflict 2
+      { id: "med-404", name: "Atorvastatin 80mg", dosage: "Once daily", status: "active", prescriber: "Dr. Chen", rxNormCode: "259255" },
+      { id: "med-405", name: "Simvastatin 40mg", dosage: "Once daily", status: "active", prescriber: "Dr. Singh", rxNormCode: "198211" }, // Conflict 3
     ],
     observations: [
-      { type: "INR", value: "3.2", date: "2024-01-18", status: "high" },
-      { type: "Blood Pressure", value: "152/94 mmHg", date: "2024-01-18", status: "high" },
-      { type: "Potassium", value: "5.1 mEq/L", date: "2024-01-12", status: "high" },
+      { type: "INR", value: "3.2", date: "2024-01-18", status: "high", loincCode: "6301-6" },
+      { type: "Blood Pressure", value: "152/94 mmHg", date: "2024-01-18", status: "high", loincCode: "55284-4" },
+      { type: "Potassium", value: "5.1 mEq/L", date: "2024-01-12", status: "high", loincCode: "2823-3" },
     ],
     encounters: [
       { type: "Urgent Care", date: "2024-01-18", provider: "MGH Urgent Care", reason: "Shortness of breath" },
@@ -213,7 +214,7 @@ const SAMPLE_PATIENTS = [
     conditions: [],
     medications: [],
     observations: [
-      { type: "Weight", value: "7 lbs 8 oz", date: "2024-01-20", status: "normal" },
+      { type: "Weight", value: "7 lbs 8 oz", date: "2024-01-20", status: "normal", loincCode: "29463-7" },
     ],
     encounters: [
       { type: "Birth", date: "2024-01-20", provider: "MGH L&D", reason: "Standard delivery" },

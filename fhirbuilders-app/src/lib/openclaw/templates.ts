@@ -108,7 +108,7 @@ export function MedicationList({ patientId }: MedicationListProps) {
           {medications.map((med) => (
             <li key={med.id} className="py-3">
               <div className="font-medium">
-                {med.medicationCodeableConcept?.text || 'Unknown medication'}
+                {med.medicationCodeableConcept?.text || med.medicationCodeableConcept?.coding?.[0]?.display || 'Unknown medication'}
               </div>
               <div className="text-sm text-gray-500">
                 Status: {med.status}
@@ -135,7 +135,7 @@ interface MedicationCardProps {
 }
 
 export function MedicationCard({ medication, onRefill }: MedicationCardProps) {
-  const name = medication.medicationCodeableConcept?.text || 'Unknown';
+  const name = medication.medicationCodeableConcept?.text || medication.medicationCodeableConcept?.coding?.[0]?.display || 'Unknown';
   const dosage = medication.dosageInstruction?.[0]?.text || 'No dosage info';
   const status = medication.status;
 
@@ -149,7 +149,11 @@ export function MedicationCard({ medication, onRefill }: MedicationCardProps) {
         <span className={\`px-2 py-1 text-xs rounded \${
           status === 'active' ? 'bg-green-100 text-green-800' :
           status === 'completed' ? 'bg-gray-100 text-gray-800' :
-          'bg-yellow-100 text-yellow-800'
+          status === 'on-hold' ? 'bg-yellow-100 text-yellow-800' :
+          status === 'stopped' ? 'bg-orange-100 text-orange-800' :
+          status === 'cancelled' || status === 'entered-in-error' ? 'bg-red-100 text-red-800' :
+          status === 'draft' ? 'bg-blue-100 text-blue-800' :
+          'bg-gray-100 text-gray-600'
         }\`}>
           {status}
         </span>
@@ -538,8 +542,12 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                   </div>
                 </div>
                 <span className={\`self-start px-2 py-1 text-xs rounded \${
-                  apt.status === 'booked' ? 'bg-green-100 text-green-800' :
-                  apt.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  apt.status === 'booked' || apt.status === 'checked-in' ? 'bg-green-100 text-green-800' :
+                  apt.status === 'pending' || apt.status === 'proposed' ? 'bg-yellow-100 text-yellow-800' :
+                  apt.status === 'arrived' ? 'bg-teal-100 text-teal-800' :
+                  apt.status === 'fulfilled' ? 'bg-gray-100 text-gray-800' :
+                  apt.status === 'cancelled' || apt.status === 'noshow' || apt.status === 'entered-in-error' ? 'bg-red-100 text-red-800' :
+                  apt.status === 'waitlist' ? 'bg-purple-100 text-purple-800' :
                   'bg-gray-100 text-gray-800'
                 }\`}>
                   {apt.status}

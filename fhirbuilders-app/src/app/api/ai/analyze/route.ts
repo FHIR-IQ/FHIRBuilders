@@ -10,41 +10,42 @@ import { MedicationResource, MedConflict } from "@/lib/medplum";
  */
 function getMockConflicts(medications: MedicationResource[]): MedConflict[] {
   const conflicts: MedConflict[] = [];
-  const medNames = medications.map((m) => m.name.toLowerCase());
+  const findMed = (term: string) => medications.find((m) => m.name.toLowerCase().includes(term));
+  const fhirRef = (id: string) => `MedicationRequest/${id}`;
 
   // Check for common known interactions
-  if (medNames.includes("warfarin") && medNames.includes("aspirin")) {
-    const warfarin = medications.find((m) => m.name.toLowerCase() === "warfarin");
-    const aspirin = medications.find((m) => m.name.toLowerCase() === "aspirin");
+  const warfarin = findMed("warfarin");
+  const aspirin = findMed("aspirin");
+  if (warfarin && aspirin) {
     conflicts.push({
       id: "c1",
       type: "interaction",
       severity: "high",
       description:
         "Concurrent use of warfarin and aspirin significantly increases the risk of bleeding. Monitor INR closely and watch for signs of hemorrhage.",
-      resources: [warfarin?.id ?? "unknown", aspirin?.id ?? "unknown"],
+      resources: [fhirRef(warfarin.id), fhirRef(aspirin.id)],
       evidence: "ISMP High-Alert Medication List",
     });
   }
 
-  if (medNames.includes("lisinopril") && medNames.includes("potassium chloride")) {
-    const lisinopril = medications.find((m) => m.name.toLowerCase() === "lisinopril");
-    const potassium = medications.find((m) => m.name.toLowerCase() === "potassium chloride");
+  const lisinopril = findMed("lisinopril");
+  const potassium = findMed("potassium");
+  if (lisinopril && potassium) {
     conflicts.push({
       id: "c2",
       type: "interaction",
       severity: "moderate",
       description:
         "ACE inhibitors like lisinopril can increase potassium levels. Combined with potassium supplements, this raises risk of hyperkalemia.",
-      resources: [lisinopril?.id ?? "unknown", potassium?.id ?? "unknown"],
+      resources: [fhirRef(lisinopril.id), fhirRef(potassium.id)],
       evidence: "Lexicomp Drug Interactions",
     });
   }
 
-  // Generic duplicate therapy detection
+  // Generic duplicate therapy detection (HMG-CoA reductase inhibitors)
   const statins = medications.filter((m) =>
-    ["atorvastatin", "simvastatin", "rosuvastatin", "pravastatin"].includes(
-      m.name.toLowerCase()
+    ["atorvastatin", "simvastatin", "rosuvastatin", "pravastatin"].some(
+      (s) => m.name.toLowerCase().includes(s)
     )
   );
   if (statins.length > 1) {
@@ -53,7 +54,7 @@ function getMockConflicts(medications: MedicationResource[]): MedConflict[] {
       type: "duplicate",
       severity: "moderate",
       description: `Duplicate statin therapy detected: ${statins.map((s) => s.name).join(", ")}. Using multiple statins increases risk of myopathy and rhabdomyolysis.`,
-      resources: statins.map((s) => s.id),
+      resources: statins.map((s) => fhirRef(s.id)),
       evidence: "ACC/AHA Lipid Guidelines",
     });
   }
@@ -65,7 +66,7 @@ function getMockConflicts(medications: MedicationResource[]): MedConflict[] {
       type: "interaction",
       severity: "low",
       description: `No critical interactions detected among ${medications.length} medications. This is a demo analysis — use AI-powered analysis for comprehensive clinical review.`,
-      resources: medications.slice(0, 2).map((m) => m.id),
+      resources: medications.slice(0, 2).map((m) => fhirRef(m.id)),
     });
   }
 
