@@ -5,7 +5,8 @@ import { analyzeMedicationsWithClaude } from "@/lib/ai-service";
 import { MedicationResource, MedConflict } from "@/lib/medplum";
 
 /**
- * Generate mock conflicts for demo when no API key is configured.
+ * Generate mock conflicts for demo when no API key is configured
+ * or when user is not authenticated.
  */
 function getMockConflicts(medications: MedicationResource[]): MedConflict[] {
   const conflicts: MedConflict[] = [];
@@ -72,18 +73,13 @@ function getMockConflicts(medications: MedicationResource[]): MedConflict[] {
 }
 
 export async function POST(req: NextRequest) {
-  // Rate limiting
-  const rateLimitResult = applyRateLimit(req, "api");
-  if (rateLimitResult) return rateLimitResult;
-
-  // Authentication
+  // Authentication (optional - anonymous users get mock data)
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json(
-      { error: "Unauthorized. Please sign in." },
-      { status: 401 }
-    );
-  }
+  const isAuthenticated = !!session?.user?.id;
+
+  // Rate limiting - stricter for anonymous
+  const rateLimitResult = applyRateLimit(req, isAuthenticated ? "api" : "demoAnalyze");
+  if (rateLimitResult) return rateLimitResult;
 
   try {
     const body = await req.json();
@@ -96,11 +92,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Use server-side API key only
+    // Anonymous users always get mock data - no real Claude calls
+    if (!isAuthenticated) {
+      const conflicts = getMockConflicts(medications as MedicationResource[]);
+      return NextResponse.json({
+        conflicts,
+        mock: true,
+        message: "Demo mode: Sign in for AI-powered analysis.",
+      });
+    }
+
+    // Authenticated users: use real API key if available, else mock
     const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!apiKey) {
-      // Return mock conflicts for demo purposes
       const conflicts = getMockConflicts(medications as MedicationResource[]);
       return NextResponse.json({
         conflicts,

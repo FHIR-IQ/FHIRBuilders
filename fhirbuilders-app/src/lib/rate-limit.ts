@@ -130,6 +130,10 @@ export const RATE_LIMITS = {
   /** Authenticated endpoints - more lenient */
   api: { windowMs: 60000, maxRequests: 60 }, // 60 per minute
   generate: { windowMs: 60000, maxRequests: 10 }, // 10 per minute (AI is expensive)
+
+  /** Anonymous/demo endpoints - stricter */
+  demoAnalyze: { windowMs: 60000, maxRequests: 10 }, // 10 per minute
+  demoGenerate: { windowMs: 60000, maxRequests: 3 }, // 3 per minute
 } as const;
 
 /**

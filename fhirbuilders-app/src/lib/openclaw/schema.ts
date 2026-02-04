@@ -45,6 +45,7 @@ export interface GeneratedAppOutput {
   id: string
   prompt: string
   userId: string
+  isDemo: boolean
   status: GenerationStatusType
   fhirResources: string[]
   generatedCode: Record<string, unknown> | null

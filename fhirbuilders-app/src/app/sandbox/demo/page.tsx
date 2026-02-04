@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -243,11 +244,13 @@ const MedRecDashboard = ({
   conflicts,
   onRunAudit,
   isAnalyzing,
+  isAuthenticated,
 }: {
   patient: typeof SAMPLE_PATIENTS[number];
   conflicts: MedConflict[];
   onRunAudit: () => void;
   isAnalyzing: boolean;
+  isAuthenticated: boolean;
 }) => {
   return (
     <div className="space-y-6">
@@ -422,6 +425,25 @@ const MedRecDashboard = ({
         </CardContent>
       </Card>
 
+      {/* Sign-in prompt for anonymous users viewing mock results */}
+      {conflicts.length > 0 && !isAuthenticated && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-blue-800">Want AI-powered analysis?</p>
+                <p className="text-sm text-blue-700/80">
+                  Sign in to get real-time AI medication conflict detection with Claude.
+                </p>
+              </div>
+              <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
+                <Link href="/login">Sign In</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Generate Full App CTA */}
       {conflicts.length > 0 && (
         <Card className="border-primary/30 bg-primary/5">
@@ -449,6 +471,7 @@ const MedRecDashboard = ({
 
 function DemoSandboxContent() {
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const [query, setQuery] = useState("/Patient");
   const [method, setMethod] = useState("GET");
   const [isLoading, setIsLoading] = useState(false);
@@ -895,6 +918,7 @@ function DemoSandboxContent() {
                 conflicts={conflicts}
                 onRunAudit={handleRunMedRec}
                 isAnalyzing={isAnalyzing}
+                isAuthenticated={!!session}
               />
             )}
 

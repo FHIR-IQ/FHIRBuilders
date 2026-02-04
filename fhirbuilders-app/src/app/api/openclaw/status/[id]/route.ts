@@ -3,6 +3,7 @@
  *
  * GET /api/openclaw/status/:id
  * Returns the status of a generation request including generated code when complete.
+ * Demo generations are accessible without authentication.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -14,16 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check authentication
     const session = await auth()
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Please sign in.' },
-        { status: 401 }
-      )
-    }
-
     const { id } = await params
 
     if (!id) {
@@ -33,12 +25,13 @@ export async function GET(
       )
     }
 
-    // Get generation from database - include userId for ownership check
+    // Get generation from database
     const generation = await prisma.generatedApp.findUnique({
       where: { id },
       select: {
         id: true,
         userId: true,
+        isDemo: true,
         status: true,
         fhirResources: true,
         generatedCode: true,
@@ -57,15 +50,23 @@ export async function GET(
       )
     }
 
-    // Verify ownership - users can only view their own generations
-    if (generation.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Forbidden. You can only view your own generations.' },
-        { status: 403 }
-      )
+    // For non-demo generations, require auth + ownership
+    if (!generation.isDemo) {
+      if (!session?.user?.id) {
+        return NextResponse.json(
+          { error: 'Unauthorized. Please sign in.' },
+          { status: 401 }
+        )
+      }
+      if (generation.userId !== session.user.id) {
+        return NextResponse.json(
+          { error: 'Forbidden. You can only view your own generations.' },
+          { status: 403 }
+        )
+      }
     }
+    // Demo generations: accessible by anyone with the ID (CUIDs are unguessable)
 
-    // Return status response with generated code if complete (exclude userId)
     return NextResponse.json({
       id: generation.id,
       status: generation.status,
@@ -74,6 +75,7 @@ export async function GET(
       sandboxUrl: generation.sandboxUrl,
       githubRepoUrl: generation.githubRepoUrl,
       errorMessage: generation.errorMessage,
+      isDemo: generation.isDemo,
       createdAt: generation.createdAt,
       updatedAt: generation.updatedAt,
     })

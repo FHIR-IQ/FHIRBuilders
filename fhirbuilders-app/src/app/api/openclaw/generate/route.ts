@@ -4,6 +4,7 @@
  * POST /api/openclaw/generate
  * Creates a new app generation from a natural language prompt.
  * Starts async code generation with Claude AI.
+ * Supports both authenticated and anonymous (demo) users.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -12,6 +13,7 @@ import { prisma } from '@/lib/prisma'
 import { applyRateLimit } from '@/lib/rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 import { startGeneration, processGeneration } from '@/lib/openclaw/orchestrator'
+import { ensureDemoUser } from '@/lib/demo-user'
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -19,21 +21,18 @@ const anthropic = new Anthropic({
 })
 
 export async function POST(request: NextRequest) {
-  // Apply rate limiting (10 requests per minute)
-  const rateLimitResult = applyRateLimit(request, "generate");
-  if (rateLimitResult) return rateLimitResult;
+  // Check authentication (optional - anonymous users get demo mode)
+  const session = await auth()
+  const isAuthenticated = !!session?.user?.id
+
+  // Apply rate limiting - stricter for anonymous
+  const rateLimitResult = applyRateLimit(
+    request,
+    isAuthenticated ? "generate" : "demoGenerate"
+  )
+  if (rateLimitResult) return rateLimitResult
 
   try {
-    // Check authentication
-    const session = await auth()
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Please sign in to generate apps.' },
-        { status: 401 }
-      )
-    }
-
     // Parse request body
     const body = await request.json()
     const { prompt, templateId } = body
@@ -45,10 +44,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Resolve user ID: real user or demo user
+    let effectiveUserId: string
+    let isDemo = false
+
+    if (isAuthenticated && session?.user?.id) {
+      effectiveUserId = session.user.id
+    } else {
+      effectiveUserId = await ensureDemoUser()
+      isDemo = true
+    }
+
     // Create generation record
     const result = await startGeneration({
       prompt,
-      userId: session.user.id,
+      userId: effectiveUserId,
+      isDemo,
       deps: { prisma, anthropic }
     })
 
@@ -60,13 +71,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Start async code generation (fire and forget)
-    // Template resolution happens in the orchestrator
     processGeneration(
       {
         id: result.data.id,
         prompt,
         fhirResources: result.data.fhirResources,
-        userId: session.user.id,
+        userId: effectiveUserId,
         templateId: templateId || undefined,
       },
       { prisma, anthropic }
@@ -79,7 +89,10 @@ export async function POST(request: NextRequest) {
       id: result.data.id,
       status: result.data.status,
       fhirResources: result.data.fhirResources,
-      message: 'Generation started. Poll /api/openclaw/status/:id for updates.'
+      isDemo,
+      message: isDemo
+        ? 'Demo generation started. Sign in to save your apps. Poll /api/openclaw/status/:id for updates.'
+        : 'Generation started. Poll /api/openclaw/status/:id for updates.'
     })
 
   } catch (error) {

@@ -475,6 +475,7 @@ model GeneratedApp {
   prompt          String   @db.Text
   userId          String
   user            User     @relation(fields: [userId], references: [id])
+  isDemo          Boolean  @default(false)
 
   // Generation output
   status          GenerationStatus @default(PENDING)

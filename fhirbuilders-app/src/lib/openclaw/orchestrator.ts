@@ -38,6 +38,7 @@ export interface GenerationJob {
 export interface StartGenerationInput {
   prompt: string
   userId: string
+  isDemo?: boolean
   deps: OrchestratorDeps
 }
 
@@ -88,6 +89,7 @@ export async function startGeneration(
       data: {
         prompt: prompt.trim(),
         userId,
+        isDemo: input.isDemo ?? false,
         status: GenerationStatus.PENDING,
         fhirResources
       }

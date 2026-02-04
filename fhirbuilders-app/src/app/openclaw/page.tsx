@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -122,6 +123,7 @@ interface GenerationResult {
 
 function OpenClawContent() {
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
   const [prompt, setPrompt] = useState("")
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [status, setStatus] = useState<GenerationStatus>("idle")
@@ -350,6 +352,28 @@ function OpenClawContent() {
           Powered by Claude + Medplum + FHIR.
         </p>
       </div>
+
+      {/* Demo Mode Banner for anonymous users */}
+      {status === "idle" && !session && (
+        <Card className="mb-6 border-amber-200 bg-amber-50/50">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                <div>
+                  <p className="font-medium text-amber-800">Demo Mode</p>
+                  <p className="text-sm text-amber-700/80">
+                    You can try OpenClaw without signing in. Sign in to save your generated apps and connect messaging channels.
+                  </p>
+                </div>
+              </div>
+              <Button asChild variant="outline" size="sm" className="shrink-0">
+                <Link href="/login">Sign In</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {status === "idle" && (
         <>
@@ -746,9 +770,49 @@ function OpenClawContent() {
           )}
 
           {/* Messaging Channels Integration */}
-          <div className="mb-6">
-            <ChannelsPanel generatedAppId={result.id} />
-          </div>
+          {session ? (
+            <div className="mb-6">
+              <ChannelsPanel generatedAppId={result.id} />
+            </div>
+          ) : (
+            <Card className="mb-6 border-primary/20 bg-primary/5">
+              <CardContent className="py-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
+                      Connect Messaging Channels
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Sign in to connect your app to Slack, Discord, WhatsApp, and more.
+                    </p>
+                  </div>
+                  <Button asChild>
+                    <Link href="/login">Sign In to Connect</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Post-generation sign-in prompt for anonymous users */}
+          {!session && (
+            <Card className="mb-6 border-green-200 bg-green-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-green-800">Save your work</p>
+                    <p className="text-sm text-green-700/80">
+                      This demo generation will not be saved. Sign in to keep your generated apps and iterate on them.
+                    </p>
+                  </div>
+                  <Button asChild className="bg-green-600 hover:bg-green-700">
+                    <Link href="/login">Sign In to Save</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
 
