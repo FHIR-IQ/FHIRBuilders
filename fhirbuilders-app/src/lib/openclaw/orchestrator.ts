@@ -10,7 +10,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { detectFhirResources } from './fhir-resources'
 import { validateGeneratedAppInput, GenerationStatus, type GenerationStatusType } from './schema'
 import { generateAppCode, type GeneratedCodeOutput } from './code-generator'
-import { getTemplateForResources } from './templates'
+import { getTemplate, getTemplateForResources } from './templates'
 
 /**
  * Orchestrator dependencies
@@ -29,6 +29,7 @@ export interface GenerationJob {
   prompt: string
   fhirResources: string[]
   userId: string
+  templateId?: string
 }
 
 /**
@@ -170,20 +171,25 @@ export async function processGeneration(
     // Step 1: ANALYZING
     await updateStatus(id, GenerationStatus.ANALYZING, deps)
 
-    // Check if there's a matching template
-    const template = getTemplateForResources(fhirResources)
-    const templateContext = template
-      ? `\n\nUse this template style: ${template.name} - ${template.description}`
-      : ''
+    // Resolve template: prefer explicit templateId, fall back to auto-detect
+    const template = job.templateId
+      ? getTemplate(job.templateId)
+      : getTemplateForResources(fhirResources)
+
+    // Extract template files as reference code for Claude
+    const templateFiles: Record<string, string> | undefined = template
+      ? Object.fromEntries(template.files.map(f => [f.path, f.code]))
+      : undefined
 
     // Step 2: GENERATING
     await updateStatus(id, GenerationStatus.GENERATING, deps)
 
-    // Generate code via Claude
+    // Generate code via Claude with template reference
     const generationResult = await generateAppCode({
-      prompt: prompt + templateContext,
+      prompt,
       fhirResources,
-      deps: { anthropic: deps.anthropic }
+      deps: { anthropic: deps.anthropic },
+      templateFiles,
     })
 
     if (!generationResult.success || !generationResult.data) {

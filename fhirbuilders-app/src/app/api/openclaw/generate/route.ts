@@ -12,7 +12,6 @@ import { prisma } from '@/lib/prisma'
 import { applyRateLimit } from '@/lib/rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 import { startGeneration, processGeneration } from '@/lib/openclaw/orchestrator'
-import { getTemplate } from '@/lib/openclaw/templates'
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -46,18 +45,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Build enhanced prompt with template context
-    let enhancedPrompt = prompt
-    if (templateId) {
-      const template = getTemplate(templateId)
-      if (template) {
-        enhancedPrompt = `${prompt}\n\nUse this template style: ${template.name} - ${template.description}`
-      }
-    }
-
     // Create generation record
     const result = await startGeneration({
-      prompt: enhancedPrompt,
+      prompt,
       userId: session.user.id,
       deps: { prisma, anthropic }
     })
@@ -70,12 +60,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Start async code generation (fire and forget)
+    // Template resolution happens in the orchestrator
     processGeneration(
       {
         id: result.data.id,
-        prompt: enhancedPrompt,
+        prompt,
         fhirResources: result.data.fhirResources,
-        userId: session.user.id
+        userId: session.user.id,
+        templateId: templateId || undefined,
       },
       { prisma, anthropic }
     ).catch((err) => {

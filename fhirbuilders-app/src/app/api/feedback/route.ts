@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 interface FeedbackEntry {
   id: string;
@@ -74,6 +75,11 @@ export async function POST(request: NextRequest) {
 
 // GET - Retrieve feedback summary (for admin)
 export async function GET() {
+  const authResult = await requireAdminAuth();
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
   try {
     const feedback: FeedbackEntry[] = await prisma.feedback.findMany({
       orderBy: { createdAt: "desc" },

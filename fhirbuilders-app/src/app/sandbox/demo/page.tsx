@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +24,6 @@ import {
   Pill,
   Stethoscope,
   FileText,
-  Heart,
-  Thermometer,
   Eye,
   AlertTriangle,
   ShieldCheck,
@@ -32,17 +31,11 @@ import {
   BookOpen,
   Code,
   ShieldAlert,
-  Settings,
-  Key,
-  BrainCircuit,
-  Sparkles,
-  Info,
-  Trash2,
   X,
   Bell,
+  ArrowRight,
 } from "lucide-react";
-import { useEffect } from "react";
-import { detectMedicationConflicts, type MedConflict } from "@/lib/medplum";
+import { type MedConflict } from "@/lib/medplum";
 
 // Demo sandbox configuration
 const DEMO_SANDBOX = {
@@ -250,13 +243,11 @@ const MedRecDashboard = ({
   conflicts,
   onRunAudit,
   isAnalyzing,
-  hasApiKey
 }: {
-  patient: any;
+  patient: typeof SAMPLE_PATIENTS[number];
   conflicts: MedConflict[];
   onRunAudit: () => void;
   isAnalyzing: boolean;
-  hasApiKey: boolean;
 }) => {
   return (
     <div className="space-y-6">
@@ -276,7 +267,7 @@ const MedRecDashboard = ({
               Automated conflict detection and reconciliation assistant
             </p>
             <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
-              {hasApiKey ? "Claude 3.5 Sonnet (Live)" : "Mock AI Mode"}
+              AI-Powered Analysis
             </Badge>
           </div>
         </div>
@@ -430,11 +421,34 @@ const MedRecDashboard = ({
           </Button>
         </CardContent>
       </Card>
+
+      {/* Generate Full App CTA */}
+      {conflicts.length > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-lg">Build a Full Medication Management App</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Turn this demo into a deployable FHIR application with OpenClaw AI code generation.
+                </p>
+              </div>
+              <Button asChild className="gap-2">
+                <Link href="/openclaw?template=medication-tracker">
+                  Generate Full App
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
 
-export default function DemoSandboxPage() {
+function DemoSandboxContent() {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("/Patient");
   const [method, setMethod] = useState("GET");
   const [isLoading, setIsLoading] = useState(false);
@@ -446,68 +460,48 @@ export default function DemoSandboxPage() {
   const [conflicts, setConflicts] = useState<MedConflict[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [showAiSettings, setShowAiSettings] = useState(false);
-  const [userApiKey, setUserApiKey] = useState<string>("");
-  const [tempApiKey, setTempApiKey] = useState<string>("");
   const [notification, setNotification] = useState<{ message: string; type: "error" | "success" | "info" } | null>(null);
 
-  // Load API key from localStorage on mount
+  // Handle ?useCase=medrec URL param
   useEffect(() => {
-    const savedKey = localStorage.getItem("fhirbuilders_anthropic_key");
-    if (savedKey) {
-      setUserApiKey(savedKey);
-      setTempApiKey(savedKey);
+    if (searchParams.get("useCase") === "medrec") {
+      setUseCaseMode("medrec");
+      // Select high-risk patient for best demo experience
+      const highRiskPatient = SAMPLE_PATIENTS.find((p) => p.id === "patient-004");
+      if (highRiskPatient) {
+        setSelectedPatient(highRiskPatient);
+      }
     }
-  }, []);
-
-  const handleSaveApiKey = () => {
-    localStorage.setItem("fhirbuilders_anthropic_key", tempApiKey);
-    setUserApiKey(tempApiKey);
-    setShowAiSettings(false);
-    setNotification({ message: "AI Settings saved successfully!", type: "success" });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleClearApiKey = () => {
-    localStorage.removeItem("fhirbuilders_anthropic_key");
-    setUserApiKey("");
-    setTempApiKey("");
-  };
+  }, [searchParams]);
 
   const handleRunMedRec = async () => {
     setIsAnalyzing(true);
     setConflicts([]);
 
     try {
-      if (userApiKey) {
-        // Use real AI proxy
-        const response = await fetch("/api/ai/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            medications: selectedPatient.medications,
-            userApiKey: userApiKey,
-          }),
-        });
+      const res = await fetch("/api/ai/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          medications: selectedPatient.medications,
+        }),
+      });
 
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || "AI Analysis failed");
-        }
-
-        const data = await response.json();
-        setConflicts(data.conflicts);
-      } else {
-        // Fallback to mock service
-        const results = await detectMedicationConflicts(
-          selectedPatient.id,
-          selectedPatient.medications
-        );
-        setConflicts(results);
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "AI Analysis failed");
       }
-    } catch (error: any) {
+
+      const data = await res.json();
+      if (data.mock) {
+        setNotification({ message: data.message, type: "info" });
+        setTimeout(() => setNotification(null), 5000);
+      }
+      setConflicts(data.conflicts);
+    } catch (error: unknown) {
       console.error("Analysis error:", error);
-      setNotification({ message: `AI Analysis failed: ${error.message}`, type: "error" });
+      const message = error instanceof Error ? error.message : "AI Analysis failed";
+      setNotification({ message, type: "error" });
       setTimeout(() => setNotification(null), 5000);
     } finally {
       setIsAnalyzing(false);
@@ -578,13 +572,23 @@ export default function DemoSandboxPage() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
           <Link href="/" className="hover:text-foreground">Home</Link>
           <ChevronRight className="h-4 w-4" />
-          <span>Sandbox</span>
+          <Link href="/sandbox/demo" className="hover:text-foreground">Sandbox</Link>
+          {useCaseMode === "medrec" && (
+            <>
+              <ChevronRight className="h-4 w-4" />
+              <span>Medication Reconciliation</span>
+            </>
+          )}
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Demo Sandbox</h1>
+            <h1 className="text-3xl font-bold">
+              {useCaseMode === "medrec" ? "Medication Reconciliation Demo" : "Demo Sandbox"}
+            </h1>
             <p className="text-muted-foreground mt-1">
-              Explore FHIR R4 with 100 synthetic patients
+              {useCaseMode === "medrec"
+                ? "AI-powered medication conflict detection with FHIR R4 data"
+                : "Explore FHIR R4 with 100 synthetic patients"}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -593,14 +597,6 @@ export default function DemoSandboxPage() {
               Synthetic Data
             </Badge>
             <Badge variant="secondary">Demo Mode</Badge>
-            <Button
-              variant="outline"
-              onClick={() => setShowAiSettings(true)}
-              className={userApiKey ? "border-blue-500 text-blue-600 hover:bg-blue-50" : ""}
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              AI Settings
-            </Button>
             <Button variant="outline" asChild title="Save this sandbox configuration to your account for future use">
               <Link href="/login">
                 <Save className="mr-2 h-4 w-4" />
@@ -899,7 +895,6 @@ export default function DemoSandboxPage() {
                 conflicts={conflicts}
                 onRunAudit={handleRunMedRec}
                 isAnalyzing={isAnalyzing}
-                hasApiKey={!!userApiKey}
               />
             )}
 
@@ -1265,78 +1260,14 @@ print(patients['entry'])`}
         </div>
       )}
 
-      {/* AI Settings Dialog */}
-      {showAiSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <Card className="w-full max-w-md mx-4 shadow-2xl animate-in zoom-in-95 duration-200">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <BrainCircuit className="h-6 w-6 text-blue-600" />
-                  AI Settings
-                </CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => setShowAiSettings(false)}>
-                  <Check className="h-4 w-4" />
-                </Button>
-              </div>
-              <CardDescription>
-                Bring Your Own AI (BYOAI) configuration
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800 flex gap-2">
-                <Info className="h-5 w-5 shrink-0" />
-                <p>
-                  By providing your own API key, you enable real clinical analysis powered by Claude 3.5 Sonnet.
-                  Your key is stored <strong>only in this browser</strong> and is never sent to our database.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Key className="h-4 w-4" />
-                  Anthropic API Key
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="password"
-                    placeholder="sk-ant-..."
-                    value={tempApiKey}
-                    onChange={(e) => setTempApiKey(e.target.value)}
-                    className="flex-1"
-                  />
-                  {userApiKey && (
-                    <Button variant="outline" size="icon" onClick={handleClearApiKey} title="Clear Key">
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  )}
-                </div>
-                <p className="text-[10px] text-muted-foreground">
-                  Get a key at <a href="https://console.anthropic.com/" target="_blank" rel="noreferrer" className="text-primary hover:underline">console.anthropic.com</a>
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2 pt-2">
-                <Button
-                  onClick={handleSaveApiKey}
-                  className="bg-blue-600 hover:bg-blue-700 w-full"
-                  disabled={!tempApiKey}
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  {userApiKey ? "Update API Key" : "Connect Claude AI"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowAiSettings(false)}
-                  className="w-full"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
+  );
+}
+
+export default function DemoSandboxPage() {
+  return (
+    <Suspense fallback={<div className="container py-8"><p>Loading...</p></div>}>
+      <DemoSandboxContent />
+    </Suspense>
   );
 }

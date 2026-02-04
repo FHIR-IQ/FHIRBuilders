@@ -42,6 +42,8 @@ export interface CodeGenerationInput {
   fhirResources: string[]
   deps: CodeGeneratorDeps
   model?: string
+  /** Optional template files to use as reference code examples */
+  templateFiles?: Record<string, string>
 }
 
 /**
@@ -65,8 +67,11 @@ export interface ValidationResult {
 /**
  * Build the system prompt for Claude
  */
-export function buildSystemPrompt(fhirResources: string[]): string {
-  return `You are an expert FHIR healthcare application developer.
+export function buildSystemPrompt(
+  fhirResources: string[],
+  templateFiles?: Record<string, string>
+): string {
+  let prompt = `You are an expert FHIR healthcare application developer.
 You generate React components and API routes for Next.js apps using Medplum.
 
 ## FHIR Resources to use
@@ -122,6 +127,18 @@ Return ONLY valid JSON with this exact structure:
 - Use proper error handling
 - Follow healthcare application best practices
 - Return ONLY the JSON, no explanatory text`
+
+  // Inject template files as reference code
+  if (templateFiles && Object.keys(templateFiles).length > 0) {
+    prompt += `\n\n## Reference Template Code
+Use the following working code as a reference for patterns, style, and FHIR operations.
+Build upon and extend these patterns for the user's specific request.\n`
+    for (const [filePath, code] of Object.entries(templateFiles)) {
+      prompt += `\n### ${filePath}\n\`\`\`tsx\n${code}\n\`\`\`\n`
+    }
+  }
+
+  return prompt
 }
 
 /**
@@ -130,10 +147,10 @@ Return ONLY valid JSON with this exact structure:
 export async function generateAppCode(
   input: CodeGenerationInput
 ): Promise<CodeGenerationResult> {
-  const { prompt, fhirResources, deps, model = 'claude-sonnet-4-20250514' } = input
+  const { prompt, fhirResources, deps, model = 'claude-sonnet-4-20250514', templateFiles } = input
 
   try {
-    const systemPrompt = buildSystemPrompt(fhirResources)
+    const systemPrompt = buildSystemPrompt(fhirResources, templateFiles)
 
     const response = await deps.anthropic.messages.create({
       model,

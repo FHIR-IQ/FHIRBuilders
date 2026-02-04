@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -32,6 +34,10 @@ import {
   LayoutTemplate,
   Zap,
   MessageSquare,
+  Download,
+  ChevronRight,
+  TestTube,
+  Home,
 } from "lucide-react"
 import { ChannelsPanel } from "@/components/openclaw/channels-panel"
 
@@ -114,7 +120,8 @@ interface GenerationResult {
   }
 }
 
-export default function OpenClawPage() {
+function OpenClawContent() {
+  const searchParams = useSearchParams()
   const [prompt, setPrompt] = useState("")
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [status, setStatus] = useState<GenerationStatus>("idle")
@@ -123,6 +130,21 @@ export default function OpenClawPage() {
   const [detectedResources, setDetectedResources] = useState<string[]>([])
   const [copiedFile, setCopiedFile] = useState<string | null>(null)
   const [activeCodeTab, setActiveCodeTab] = useState<string>("components")
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  // Handle ?template= URL param
+  useEffect(() => {
+    const templateParam = searchParams.get("template")
+    if (templateParam) {
+      const template = TEMPLATES.find(t => t.id === templateParam)
+      if (template) {
+        setSelectedTemplate(templateParam)
+        if (!prompt) {
+          setPrompt(`Build a ${template.name.toLowerCase()} app that ${template.description.toLowerCase()}`)
+        }
+      }
+    }
+  }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Client-side resource detection for preview
   useEffect(() => {
@@ -251,6 +273,39 @@ export default function OpenClawPage() {
     }
   }
 
+  async function handleDownload() {
+    if (!result?.generatedCode) return
+    setIsDownloading(true)
+
+    try {
+      const [JSZip, { scaffoldProject }] = await Promise.all([
+        import("jszip").then(m => m.default),
+        import("@/lib/openclaw/scaffold"),
+      ])
+
+      const files = scaffoldProject(result.generatedCode)
+      const zip = new JSZip()
+
+      for (const [path, content] of Object.entries(files)) {
+        zip.file(path, content)
+      }
+
+      const blob = await zip.generateAsync({ type: "blob" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${result.generatedCode.appName || "fhir-app"}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error("Download failed:", err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   function startOver() {
     setStatus("idle")
     setResult(null)
@@ -268,6 +323,19 @@ export default function OpenClawPage() {
 
   return (
     <div className="container mx-auto py-10 max-w-5xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+        <Link href="/" className="hover:text-foreground">Home</Link>
+        <ChevronRight className="h-4 w-4" />
+        <Link href="/openclaw" className="hover:text-foreground">OpenClaw</Link>
+        {selectedTemplate && (
+          <>
+            <ChevronRight className="h-4 w-4" />
+            <span>{TEMPLATES.find(t => t.id === selectedTemplate)?.name}</span>
+          </>
+        )}
+      </div>
+
       {/* Header */}
       <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-3 mb-4">
@@ -563,8 +631,24 @@ export default function OpenClawPage() {
 
               {/* Action Links */}
               <div className="flex gap-4 mt-6 flex-wrap">
+                {result.generatedCode && (
+                  <Button onClick={handleDownload} disabled={isDownloading}>
+                    {isDownloading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="mr-2 h-4 w-4" />
+                    )}
+                    Download Project
+                  </Button>
+                )}
+                <Button variant="outline" asChild>
+                  <Link href="/sandbox/demo?useCase=medrec">
+                    <TestTube className="mr-2 h-4 w-4" />
+                    Try in Sandbox
+                  </Link>
+                </Button>
                 {result.sandboxUrl && (
-                  <Button asChild>
+                  <Button variant="outline" asChild>
                     <a href={result.sandboxUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="mr-2 h-4 w-4" />
                       Open in Sandbox
@@ -579,6 +663,12 @@ export default function OpenClawPage() {
                     </a>
                   </Button>
                 )}
+                <Button variant="ghost" asChild>
+                  <Link href="/">
+                    <Home className="mr-2 h-4 w-4" />
+                    Back to Home
+                  </Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -691,6 +781,14 @@ export default function OpenClawPage() {
         </Card>
       )}
     </div>
+  )
+}
+
+export default function OpenClawPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto py-10 max-w-5xl"><p>Loading...</p></div>}>
+      <OpenClawContent />
+    </Suspense>
   )
 }
 
