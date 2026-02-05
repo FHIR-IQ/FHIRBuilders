@@ -21,12 +21,14 @@ import {
   FolderOpen,
   BookOpen,
   Wand2,
+  HelpCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 // Navigation - balanced for different personas
 const navigation = [
   { title: "Learn", href: "/learn", icon: BookOpen },
+  { title: "FAQ", href: "/faq", icon: HelpCircle },
   { title: "OpenClaw", href: "/openclaw", icon: Wand2, highlight: true },
   { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical },
   { title: "Projects", href: "/projects", icon: FolderOpen },
