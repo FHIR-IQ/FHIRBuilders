@@ -144,6 +144,7 @@ model App {
 
   // AI Tool Integration
   builtWith     String[]  // ["Claude Code", "Cursor", "Lovable"]
+  appType       String?   // "SMART on FHIR", "MCP App", "Mobile App", "Enterprise App", "AI Agent"
 
   // Relationships
   authorId      String

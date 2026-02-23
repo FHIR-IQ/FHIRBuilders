@@ -22,6 +22,12 @@ export function Footer() {
           {/* Links */}
           <div className="flex items-center gap-6 text-sm">
             <Link
+              href="/showcase"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Showcase
+            </Link>
+            <Link
               href="/sandbox/demo"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >

@@ -27,6 +27,7 @@ import {
   ArrowRight,
   User,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 
 // Type definitions based on API response
@@ -235,6 +236,12 @@ export default function DashboardPage() {
               <Link href="/projects/new">
                 <Plus className="mr-2 h-4 w-4" />
                 New Project
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/showcase/submit">
+                <Trophy className="mr-2 h-4 w-4" />
+                Submit to Showcase
               </Link>
             </Button>
           </div>
