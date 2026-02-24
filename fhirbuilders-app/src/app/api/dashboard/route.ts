@@ -11,8 +11,15 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get user's showcase app IDs for activity queries
+    const userApps = await prisma.app.findMany({
+      where: { authorId: session.user.id },
+      select: { id: true },
+    });
+    const userAppIds = userApps.map((a) => a.id);
+
     // Fetch user's data in parallel for performance
-    const [generatedApps, projectMemberships, sandboxes, channels] =
+    const [generatedApps, projectMemberships, sandboxes, channels, recentUpvotes, recentComments] =
       await Promise.all([
         // Generated Apps from OpenClaw
         prisma.generatedApp.findMany({
@@ -75,6 +82,49 @@ export async function GET() {
             status: true,
           },
         }),
+        // Recent upvotes on user's showcase apps
+        userAppIds.length > 0
+          ? prisma.upvote.findMany({
+              where: {
+                appId: { in: userAppIds },
+                userId: { not: session.user.id },
+              },
+              orderBy: { createdAt: "desc" },
+              take: 20,
+              select: {
+                id: true,
+                createdAt: true,
+                user: {
+                  select: { id: true, name: true, image: true },
+                },
+                app: {
+                  select: { id: true, name: true, slug: true },
+                },
+              },
+            })
+          : [],
+        // Recent comments on user's showcase apps
+        userAppIds.length > 0
+          ? prisma.comment.findMany({
+              where: {
+                appId: { in: userAppIds },
+                userId: { not: session.user.id },
+              },
+              orderBy: { createdAt: "desc" },
+              take: 20,
+              select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                user: {
+                  select: { id: true, name: true, image: true },
+                },
+                app: {
+                  select: { id: true, name: true, slug: true },
+                },
+              },
+            })
+          : [],
       ]);
 
     // Calculate stats
@@ -93,12 +143,37 @@ export async function GET() {
       role: pm.role,
     }));
 
+    // Build activity feed: merge upvotes + comments, sort by date
+    const activity = [
+      ...recentUpvotes.map((u) => ({
+        type: "upvote" as const,
+        id: u.id,
+        user: u.user,
+        app: u.app,
+        createdAt: u.createdAt,
+      })),
+      ...recentComments.map((c) => ({
+        type: "comment" as const,
+        id: c.id,
+        user: c.user,
+        app: c.app,
+        content: c.content,
+        createdAt: c.createdAt,
+      })),
+    ]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 20);
+
     return NextResponse.json({
-      stats,
+      stats: {
+        ...stats,
+        showcaseApps: userAppIds.length,
+      },
       generatedApps,
       projects,
       sandboxes,
       channels,
+      activity,
     });
   } catch (error) {
     console.error("Dashboard API error:", error);

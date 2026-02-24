@@ -28,6 +28,8 @@ import {
   User,
   Sparkles,
   Trophy,
+  ArrowUp,
+  Activity,
 } from "lucide-react";
 
 // Type definitions based on API response
@@ -68,6 +70,15 @@ interface Channel {
   status: string;
 }
 
+interface ActivityItem {
+  type: "upvote" | "comment";
+  id: string;
+  user: { id: string; name: string | null; image: string | null };
+  app: { id: string; name: string; slug: string };
+  content?: string;
+  createdAt: string;
+}
+
 interface DashboardData {
   stats: {
     generatedApps: number;
@@ -75,11 +86,13 @@ interface DashboardData {
     projects: number;
     sandboxes: number;
     activeChannels: number;
+    showcaseApps: number;
   };
   generatedApps: GeneratedApp[];
   projects: Project[];
   sandboxes: Sandbox[];
   channels: Channel[];
+  activity: ActivityItem[];
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -163,7 +176,18 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4 mb-8">
+      <div className="grid gap-4 md:grid-cols-5 mb-8">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-yellow-500" />
+              <span className="text-2xl font-bold">
+                {data?.stats.showcaseApps || 0}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">Showcase Apps</p>
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
@@ -249,12 +273,88 @@ export default function DashboardPage() {
       </Card>
 
       {/* Content Tabs */}
-      <Tabs defaultValue="apps" className="space-y-4">
+      <Tabs defaultValue="activity" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="apps">Generated Apps</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
           <TabsTrigger value="sandboxes">Sandboxes</TabsTrigger>
         </TabsList>
+
+        {/* Activity Tab */}
+        <TabsContent value="activity" className="space-y-4">
+          {!data?.activity?.length ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  No activity yet
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  When people upvote or comment on your showcase apps, you&apos;ll see it here.
+                </p>
+                <Button asChild>
+                  <Link href="/showcase/submit">
+                    Submit to Showcase
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            data.activity.map((item) => (
+              <Card key={`${item.type}-${item.id}`}>
+                <CardContent className="py-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-0.5 rounded-full p-1.5 ${
+                      item.type === "upvote"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+                    }`}>
+                      {item.type === "upvote" ? (
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm">
+                        <Link href={`/u/${item.user.id}`} className="font-medium hover:underline">
+                          {item.user.name || "Someone"}
+                        </Link>
+                        {" "}
+                        {item.type === "upvote" ? "upvoted" : "commented on"}
+                        {" "}
+                        <Link href={`/showcase/${item.app.slug}`} className="font-medium hover:underline">
+                          {item.app.name}
+                        </Link>
+                      </p>
+                      {item.type === "comment" && item.content && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          &ldquo;{item.content}&rdquo;
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(item.createdAt).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <Avatar className="h-7 w-7 shrink-0">
+                      <AvatarImage src={item.user.image || ""} />
+                      <AvatarFallback className="text-xs">
+                        {item.user.name?.charAt(0) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
 
         {/* Generated Apps Tab */}
         <TabsContent value="apps" className="space-y-4">

@@ -16,10 +16,15 @@ import {
   BookOpen,
   Calendar,
   Loader2,
-  MessageSquare,
   Star,
   Play,
+  Share2,
+  CheckCircle,
+  Copy,
+  MessageCircle,
 } from "lucide-react";
+import { CommentSection } from "@/components/showcase/comment-section";
+import { RatingSection } from "@/components/showcase/rating-section";
 
 interface AppDetail {
   id: string;
@@ -45,6 +50,7 @@ interface AppDetail {
   hasUpvoted: boolean;
   averageRating: number;
   ratingCount: number;
+  authorId: string;
   author: {
     id: string;
     name: string | null;
@@ -97,10 +103,27 @@ export default function ShowcaseDetailPage() {
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [upvoteCount, setUpvoteCount] = useState(0);
 
+  // Share dialog state
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Crosspost state
+  const [isCrossposting, setIsCrossposting] = useState(false);
+  const [crosspostDone, setCrosspostDone] = useState(false);
+
   useEffect(() => {
     const fetchApp = async () => {
       try {
-        const res = await fetch(`/api/apps/${params.slug}`);
+        // Pass share token if present in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+        const url = token
+          ? `/api/apps/${params.slug}?token=${token}`
+          : `/api/apps/${params.slug}`;
+
+        const res = await fetch(url);
         if (!res.ok) {
           setError("App not found");
           setIsLoading(false);
@@ -128,7 +151,7 @@ export default function ShowcaseDetailPage() {
     // Optimistic
     const wasUpvoted = hasUpvoted;
     setHasUpvoted(!wasUpvoted);
-    setUpvoteCount(prev => prev + (wasUpvoted ? -1 : 1));
+    setUpvoteCount((prev) => prev + (wasUpvoted ? -1 : 1));
 
     try {
       const res = await fetch(`/api/apps/${app.id}/upvote`, { method: "POST" });
@@ -139,8 +162,50 @@ export default function ShowcaseDetailPage() {
       }
     } catch {
       setHasUpvoted(wasUpvoted);
-      setUpvoteCount(prev => prev + (wasUpvoted ? 1 : -1));
+      setUpvoteCount((prev) => prev + (wasUpvoted ? 1 : -1));
     }
+  };
+
+  const handleGenerateShareLink = async () => {
+    if (!app) return;
+    setIsGeneratingLink(true);
+
+    try {
+      const res = await fetch(`/api/apps/${app.id}/share`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setShareUrl(data.shareUrl);
+        setShowShareDialog(true);
+      }
+    } catch {
+      // Silently handle
+    }
+    setIsGeneratingLink(false);
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Fallback
+    }
+  };
+
+  const handleCrosspost = async () => {
+    if (!app) return;
+    setIsCrossposting(true);
+
+    try {
+      const res = await fetch(`/api/apps/${app.id}/crosspost`, { method: "POST" });
+      if (res.ok) {
+        setCrosspostDone(true);
+      }
+    } catch {
+      // Silently handle
+    }
+    setIsCrossposting(false);
   };
 
   if (isLoading) {
@@ -166,6 +231,7 @@ export default function ShowcaseDetailPage() {
   }
 
   const embedUrl = app.videoUrl ? getVideoEmbed(app.videoUrl) : null;
+  const isAuthor = session?.user?.id === app.authorId;
 
   return (
     <div className="container py-12 max-w-4xl">
@@ -265,7 +331,73 @@ export default function ShowcaseDetailPage() {
             </a>
           </Button>
         )}
+
+        {/* Author-only actions */}
+        {isAuthor && (
+          <>
+            <Button
+              variant="outline"
+              onClick={handleGenerateShareLink}
+              disabled={isGeneratingLink}
+            >
+              {isGeneratingLink ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Share2 className="mr-2 h-4 w-4" />
+              )}
+              Share with Stakeholders
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleCrosspost}
+              disabled={isCrossposting || crosspostDone}
+            >
+              {isCrossposting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : crosspostDone ? (
+                <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+              ) : (
+                <MessageCircle className="mr-2 h-4 w-4" />
+              )}
+              {crosspostDone ? "Posted to Zulip" : "Share to FHIR Zulip"}
+            </Button>
+          </>
+        )}
       </div>
+
+      {/* Share Dialog */}
+      {showShareDialog && (
+        <div className="mb-8 p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium">Shareable Link (expires in 7 days)</h3>
+            <button
+              onClick={() => setShowShareDialog(false)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Close
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Share this link with investors, clinicians, or business leaders for feedback.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              readOnly
+              value={shareUrl}
+              aria-label="Shareable link URL"
+              className="flex-1 px-3 py-2 border rounded-md bg-background text-sm font-mono"
+            />
+            <Button size="sm" variant="outline" onClick={handleCopyLink}>
+              {linkCopied ? (
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Video Embed */}
       {embedUrl && (
@@ -283,7 +415,7 @@ export default function ShowcaseDetailPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Description */}
+        {/* Main Content */}
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardContent className="pt-6">
@@ -294,20 +426,10 @@ export default function ShowcaseDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Comments placeholder */}
+          {/* Comments */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-4">
-                <MessageSquare className="h-5 w-5" />
-                <h2 className="text-lg font-semibold">
-                  Discussion ({app._count.comments})
-                </h2>
-              </div>
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Comments coming soon</p>
-                <p className="text-xs mt-1">Share your thoughts on this app</p>
-              </div>
+              <CommentSection appId={app.id} />
             </CardContent>
           </Card>
         </div>
@@ -348,7 +470,7 @@ export default function ShowcaseDetailPage() {
                     FHIR Resources
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {app.fhirResources.map(r => (
+                    {app.fhirResources.map((r) => (
                       <Badge key={r} variant="outline" className="text-xs">
                         {r}
                       </Badge>
@@ -363,7 +485,7 @@ export default function ShowcaseDetailPage() {
                     Built With
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {app.builtWith.map(t => (
+                    {app.builtWith.map((t) => (
                       <Badge key={t} variant="secondary" className="text-xs">
                         {t}
                       </Badge>
@@ -393,6 +515,13 @@ export default function ShowcaseDetailPage() {
                   </span>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Rating Section */}
+          <Card>
+            <CardContent className="pt-6">
+              <RatingSection appId={app.id} authorId={app.authorId} />
             </CardContent>
           </Card>
 

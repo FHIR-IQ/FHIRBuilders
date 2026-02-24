@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { verifyShareToken } from "@/lib/share-token";
 
 // GET - Get a single app by ID or slug
 export async function GET(
@@ -10,6 +11,10 @@ export async function GET(
   try {
     const { id } = await params;
     const session = await auth();
+
+    // Check for share token in query params
+    const shareToken = request.nextUrl.searchParams.get("token");
+    const tokenAppId = shareToken ? verifyShareToken(shareToken) : null;
 
     // Try finding by slug first, then by ID
     const app = await prisma.app.findFirst({
@@ -41,10 +46,13 @@ export async function GET(
       return NextResponse.json({ error: "App not found" }, { status: 404 });
     }
 
-    // Only show non-approved apps to their author
+    // Only show non-approved apps to their author or via valid share token
+    const isAuthor = app.authorId === session?.user?.id;
+    const hasValidToken = tokenAppId === app.id;
     if (
       !["APPROVED", "FEATURED", "SUBMITTED"].includes(app.status) &&
-      app.authorId !== session?.user?.id
+      !isAuthor &&
+      !hasValidToken
     ) {
       return NextResponse.json({ error: "App not found" }, { status: 404 });
     }
