@@ -40,7 +40,7 @@ export default function LoginPage() {
       setError("Invalid email or password");
       setIsLoading(null);
     } else {
-      router.push(callbackUrl);
+      window.location.href = callbackUrl;
     }
   };
 
@@ -65,8 +65,7 @@ export default function LoginPage() {
       setMode("signin");
       setIsLoading(null);
     } else {
-      router.push(callbackUrl);
-      setIsLoading(null);
+      window.location.href = callbackUrl;
     }
   };
 
