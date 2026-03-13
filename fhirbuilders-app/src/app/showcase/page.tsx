@@ -133,8 +133,8 @@ export default function ShowcasePage() {
   const [upvotedIds, setUpvotedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const fetchApps = async () => {
-      setIsLoading(true);
+    const fetchApps = async (silent = false) => {
+      if (!silent) setIsLoading(true);
       try {
         const params = new URLSearchParams({ sort: sortBy });
         if (categoryFilter) params.set("category", categoryFilter);
@@ -145,16 +145,19 @@ export default function ShowcasePage() {
           const data = await response.json();
           if (data.apps && data.apps.length > 0) {
             setApps(data.apps);
-          } else {
+          } else if (!silent) {
             setApps(SAMPLE_APPS);
           }
         }
       } catch {
-        setApps(SAMPLE_APPS);
+        if (!silent) setApps(SAMPLE_APPS);
       }
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     };
+
     fetchApps();
+    const interval = setInterval(() => fetchApps(true), 5000);
+    return () => clearInterval(interval);
   }, [sortBy, categoryFilter, searchQuery]);
 
   const handleUpvote = async (appId: string, e: React.MouseEvent) => {
