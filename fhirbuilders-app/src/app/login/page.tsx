@@ -35,12 +35,17 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setIsLoading("email");
-    const result = await signIn("credentials", { email, password, redirect: false });
-    if (result?.error) {
+    try {
+      const result = await signIn("credentials", { email, password, redirect: false });
+      if (result?.error) {
+        setError("Invalid email or password");
+        setIsLoading(null);
+      } else {
+        window.location.href = callbackUrl;
+      }
+    } catch {
       setError("Invalid email or password");
       setIsLoading(null);
-    } else {
-      window.location.href = callbackUrl;
     }
   };
 
@@ -48,24 +53,35 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setIsLoading("email");
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || "Registration failed");
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Registration failed");
+        setIsLoading(null);
+        return;
+      }
+      const result = await signIn("credentials", { email, password, redirect: false });
+      if (result?.error) {
+        setError("Account created — please sign in");
+        setMode("signin");
+        setIsLoading(null);
+      } else {
+        window.location.href = callbackUrl;
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("created") || msg.includes("register")) {
+        setError("Account created — please sign in");
+        setMode("signin");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
       setIsLoading(null);
-      return;
-    }
-    const result = await signIn("credentials", { email, password, redirect: false });
-    if (result?.error) {
-      setError("Account created — please sign in");
-      setMode("signin");
-      setIsLoading(null);
-    } else {
-      window.location.href = callbackUrl;
     }
   };
 
