@@ -66,6 +66,7 @@ export default function LoginPage() {
       setIsLoading(null);
     } else {
       router.push(callbackUrl);
+      setIsLoading(null);
     }
   };
 
