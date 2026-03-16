@@ -5,7 +5,9 @@ import { authConfig } from "@/lib/auth.config";
 // Prisma Client cannot run in the Vercel Edge runtime — importing the full
 // auth.ts (which includes PrismaAdapter) here causes JWTSessionError on
 // every protected route request.
-export const { auth: middleware } = NextAuth(authConfig);
+// Next.js 16 requires a default export (named const export is not recognized).
+const { auth } = NextAuth(authConfig);
+export default auth;
 
 export const config = {
   matcher: ["/dashboard/:path*", "/profile/:path*", "/admin/:path*"],
