@@ -39,6 +39,11 @@ import {
   ChevronRight,
   TestTube,
   Home,
+  Key,
+  Eye,
+  EyeOff,
+  X,
+  ChevronDown,
 } from "lucide-react"
 import { ChannelsPanel } from "@/components/openclaw/channels-panel"
 
@@ -134,6 +139,56 @@ function OpenClawContent() {
   const [activeCodeTab, setActiveCodeTab] = useState<string>("components")
   const [isDownloading, setIsDownloading] = useState(false)
 
+  // BYOK state
+  const [aiProvider, setAiProvider] = useState<"anthropic" | "openai">("anthropic")
+  const [aiKey, setAiKey] = useState("")
+  const [savedAiKey, setSavedAiKey] = useState<string | null>(null)
+  const [savedAiProvider, setSavedAiProvider] = useState<"anthropic" | "openai">("anthropic")
+  const [showKeyInput, setShowKeyInput] = useState(false)
+  const [showKeyValue, setShowKeyValue] = useState(false)
+  const [keyError, setKeyError] = useState("")
+
+  // Load saved key from localStorage
+  useEffect(() => {
+    try {
+      const key = localStorage.getItem("fhirbuilders_ai_key")
+      const provider = localStorage.getItem("fhirbuilders_ai_provider") as "anthropic" | "openai" | null
+      if (key) {
+        setSavedAiKey(key)
+        setSavedAiProvider(provider ?? "anthropic")
+      }
+    } catch {}
+  }, [])
+
+  function saveAiKey() {
+    setKeyError("")
+    const trimmed = aiKey.trim()
+    if (!trimmed) { setKeyError("Enter an API key"); return }
+    if (aiProvider === "anthropic" && !trimmed.startsWith("sk-ant-")) {
+      setKeyError("Anthropic keys start with sk-ant-"); return
+    }
+    if (aiProvider === "openai" && !trimmed.startsWith("sk-")) {
+      setKeyError("OpenAI keys start with sk-"); return
+    }
+    try {
+      localStorage.setItem("fhirbuilders_ai_key", trimmed)
+      localStorage.setItem("fhirbuilders_ai_provider", aiProvider)
+      setSavedAiKey(trimmed)
+      setSavedAiProvider(aiProvider)
+      setAiKey("")
+      setShowKeyInput(false)
+    } catch {}
+  }
+
+  function clearAiKey() {
+    try {
+      localStorage.removeItem("fhirbuilders_ai_key")
+      localStorage.removeItem("fhirbuilders_ai_provider")
+    } catch {}
+    setSavedAiKey(null)
+    setAiKey("")
+  }
+
   // Handle ?template= URL param
   useEffect(() => {
     const templateParam = searchParams.get("template")
@@ -198,7 +253,9 @@ function OpenClawContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt,
-          templateId: selectedTemplate
+          templateId: selectedTemplate,
+          // Pass BYOK key if user has connected one
+          ...(savedAiKey ? { userApiKey: savedAiKey, userProvider: savedAiProvider } : {}),
         }),
       })
 
@@ -371,6 +428,118 @@ function OpenClawContent() {
                 <Link href="/login">Sign In</Link>
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── AI Provider Connection (BYOK) ── */}
+      {status === "idle" && (
+        <Card className={`mb-6 ${savedAiKey ? "border-violet-200 bg-violet-50/40" : "border-dashed border-2"}`}>
+          <CardContent className="py-4">
+            {savedAiKey ? (
+              /* Connected state */
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center">
+                    <Key className="h-4 w-4 text-violet-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-violet-800 text-sm">
+                      {savedAiProvider === "openai" ? "OpenAI (GPT-4o)" : "Anthropic (Claude)"} connected
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {savedAiKey.slice(0, 12)}••••••••••••
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setShowKeyInput(!showKeyInput)}>
+                    Change
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={clearAiKey}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Disconnected state */
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                    <Key className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Connect your AI provider</p>
+                    <p className="text-xs text-muted-foreground">
+                      Add your Anthropic or OpenAI key to generate apps. Your key is never stored on our servers.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 border-violet-300 text-violet-700 hover:bg-violet-50"
+                  onClick={() => setShowKeyInput(!showKeyInput)}
+                >
+                  <Key className="mr-1.5 h-3.5 w-3.5" />
+                  Connect key
+                  <ChevronDown className={`ml-1 h-3.5 w-3.5 transition-transform ${showKeyInput ? "rotate-180" : ""}`} />
+                </Button>
+              </div>
+            )}
+
+            {/* Expandable key input */}
+            {showKeyInput && (
+              <div className="mt-4 pt-4 border-t space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setAiProvider("anthropic")}
+                    className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${aiProvider === "anthropic" ? "border-violet-400 bg-violet-50 text-violet-700" : "border-border text-muted-foreground hover:border-violet-200"}`}
+                  >
+                    🤖 Anthropic (Claude)
+                  </button>
+                  <button
+                    onClick={() => setAiProvider("openai")}
+                    className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${aiProvider === "openai" ? "border-blue-400 bg-blue-50 text-blue-700" : "border-border text-muted-foreground hover:border-blue-200"}`}
+                  >
+                    🧠 OpenAI (GPT-4o)
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type={showKeyValue ? "text" : "password"}
+                    value={aiKey}
+                    onChange={e => setAiKey(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && saveAiKey()}
+                    placeholder={aiProvider === "anthropic" ? "sk-ant-api03-..." : "sk-proj-..."}
+                    className="w-full rounded-md border px-3 py-2 pr-10 text-sm font-mono bg-background focus:outline-none focus:ring-2 focus:ring-violet-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyValue(!showKeyValue)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showKeyValue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+
+                {keyError && <p className="text-xs text-red-600">{keyError}</p>}
+
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    Stored in browser only. Never sent to our servers without your prompt.{" "}
+                    {aiProvider === "anthropic"
+                      ? <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" className="underline">Get key →</a>
+                      : <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" className="underline">Get key →</a>
+                    }
+                  </p>
+                  <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white" onClick={saveAiKey}>
+                    Save &amp; connect
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

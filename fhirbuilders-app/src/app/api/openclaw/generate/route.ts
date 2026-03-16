@@ -3,31 +3,21 @@
  *
  * POST /api/openclaw/generate
  * Creates a new app generation from a natural language prompt.
- * Starts async code generation with Claude AI.
- * Supports both authenticated and anonymous (demo) users.
+ * Supports BYOK: user-provided Anthropic or OpenAI key, or server ANTHROPIC_API_KEY.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { applyRateLimit } from '@/lib/rate-limit'
-import Anthropic from '@anthropic-ai/sdk'
+import { createAIClient, type AIProvider } from '@/lib/openclaw/ai-client'
 import { startGeneration, processGeneration } from '@/lib/openclaw/orchestrator'
 import { ensureDemoUser } from '@/lib/demo-user'
 
-// Lazy Anthropic client — only instantiated if API key is present
-function getAnthropicClient() {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) return null
-  return new Anthropic({ apiKey })
-}
-
 export async function POST(request: NextRequest) {
-  // Check authentication (optional - anonymous users get demo mode)
   const session = await auth()
   const isAuthenticated = !!session?.user?.id
 
-  // Apply rate limiting - stricter for anonymous
   const rateLimitResult = applyRateLimit(
     request,
     isAuthenticated ? "generate" : "demoGenerate"
@@ -35,27 +25,39 @@ export async function POST(request: NextRequest) {
   if (rateLimitResult) return rateLimitResult
 
   try {
-    // Parse request body
     const body = await request.json()
-    const { prompt, templateId } = body
+    const { prompt, templateId, userApiKey, userProvider } = body
 
     if (!prompt) {
-      return NextResponse.json(
-        { error: 'Prompt is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
     }
 
-    // Require Anthropic API key
-    const anthropic = getAnthropicClient()
-    if (!anthropic) {
+    // Resolve AI key: BYOK takes precedence over server env var
+    let aiKey: string | undefined
+    let aiProvider: AIProvider = "anthropic"
+
+    if (userApiKey && typeof userApiKey === "string" && userApiKey.trim()) {
+      aiKey = userApiKey.trim()
+      aiProvider = userProvider === "openai" ? "openai" : "anthropic"
+    } else if (process.env.ANTHROPIC_API_KEY) {
+      aiKey = process.env.ANTHROPIC_API_KEY
+      aiProvider = "anthropic"
+    }
+
+    if (!aiKey) {
       return NextResponse.json(
-        { error: 'AI code generation is not configured on this deployment. Add ANTHROPIC_API_KEY to your environment variables.' },
+        {
+          error: 'Connect your Anthropic or OpenAI API key to generate apps.',
+          requiresApiKey: true,
+        },
         { status: 503 }
       )
     }
 
-    // Resolve user ID: real user or demo user
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const aiClient = createAIClient(aiProvider, aiKey) as any
+
+    // Resolve user identity
     let effectiveUserId: string
     let isDemo = false
 
@@ -66,12 +68,11 @@ export async function POST(request: NextRequest) {
       isDemo = true
     }
 
-    // Create generation record
     const result = await startGeneration({
       prompt,
       userId: effectiveUserId,
       isDemo,
-      deps: { prisma, anthropic }
+      deps: { prisma, anthropic: aiClient },
     })
 
     if (!result.success || !result.data) {
@@ -81,7 +82,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Start async code generation (fire and forget)
     processGeneration(
       {
         id: result.data.id,
@@ -90,22 +90,20 @@ export async function POST(request: NextRequest) {
         userId: effectiveUserId,
         templateId: templateId || undefined,
       },
-      { prisma, anthropic }
+      { prisma, anthropic: aiClient }
     ).catch((err) => {
       console.error('Background generation failed:', err)
     })
 
-    // Return immediate response with generation ID
     return NextResponse.json({
       id: result.data.id,
       status: result.data.status,
       fhirResources: result.data.fhirResources,
       isDemo,
       message: isDemo
-        ? 'Demo generation started. Sign in to save your apps. Poll /api/openclaw/status/:id for updates.'
-        : 'Generation started. Poll /api/openclaw/status/:id for updates.'
+        ? 'Demo generation started. Sign in to save your apps.'
+        : 'Generation started.',
     })
-
   } catch (error) {
     console.error('OpenClaw generate error:', error)
     return NextResponse.json(
