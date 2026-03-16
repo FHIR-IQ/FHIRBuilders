@@ -1,15 +1,11 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-
-  if (!isLoggedIn) {
-    const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-});
+// Use Edge-compatible auth config (no Prisma) for middleware.
+// Prisma Client cannot run in the Vercel Edge runtime — importing the full
+// auth.ts (which includes PrismaAdapter) here causes JWTSessionError on
+// every protected route request.
+export const { auth: middleware } = NextAuth(authConfig);
 
 export const config = {
   matcher: ["/dashboard/:path*", "/profile/:path*", "/admin/:path*"],

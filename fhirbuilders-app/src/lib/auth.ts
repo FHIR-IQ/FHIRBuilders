@@ -1,23 +1,21 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import GitHub from "next-auth/providers/github";
-import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { authConfig } from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers: [
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    // Override Credentials in authConfig with the real Node.js implementations
+    ...authConfig.providers.filter(
+      (p) => typeof p !== "function" && (p as { id?: string }).id !== "credentials" && (p as { id?: string }).id !== "zulip-fhir"
+    ),
+    // Email/password login
     Credentials({
+      id: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
@@ -34,14 +32,47 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return { id: user.id, name: user.name, email: user.email, image: user.image };
       },
     }),
+    // Sign in with chat.fhir.org (Zulip) account
+    Credentials({
+      id: "zulip-fhir",
+      name: "FHIR Zulip Chat",
+      credentials: {
+        email: { label: "chat.fhir.org Email", type: "email" },
+        password: { label: "Password or API Key", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          // Verify against chat.fhir.org Zulip API
+          const auth = Buffer.from(`${credentials.email}:${credentials.password}`).toString("base64");
+          const res = await fetch("https://chat.fhir.org/api/v1/users/me", {
+            headers: { Authorization: `Basic ${auth}` },
+          });
+          if (!res.ok) return null;
+          const zulipUser = await res.json() as { email: string; full_name: string; avatar_url?: string };
+          if (!zulipUser?.email) return null;
+
+          // Upsert user in our database
+          const email = zulipUser.email.toLowerCase();
+          let user = await prisma.user.findUnique({ where: { email } });
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                name: zulipUser.full_name,
+                email,
+                image: zulipUser.avatar_url ?? null,
+              },
+            });
+          }
+          return { id: user.id, name: user.name, email: user.email, image: user.image };
+        } catch {
+          return null;
+        }
+      },
+    }),
   ],
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
-  },
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
