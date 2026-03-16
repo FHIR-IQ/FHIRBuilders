@@ -149,8 +149,8 @@ const LEARNING_PATH = [
     title: "Connect with Builders",
     time: "2 min",
     description: "Find collaborators or get expert guidance",
-    action: "Join early access",
-    href: "/early-access",
+    action: "Browse the community",
+    href: "/projects",
   },
 ];
 
@@ -195,7 +195,7 @@ export default function LearnPage() {
           </p>
           <div className="flex gap-4 pt-4">
             <Button asChild>
-              <Link href="/early-access">
+              <Link href="/sandbox/demo">
                 Get a Sandbox to Explore
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -408,14 +408,14 @@ export default function LearnPage() {
         </p>
         <div className="flex gap-4 justify-center">
           <Button size="lg" asChild>
-            <Link href="/early-access">
-              Get Early Access
+            <Link href="/sandbox/demo">
+              Try the Sandbox
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link href="/sandbox/demo">
-              Try Demo First
+            <Link href="/projects">
+              Browse the Community
             </Link>
           </Button>
         </div>

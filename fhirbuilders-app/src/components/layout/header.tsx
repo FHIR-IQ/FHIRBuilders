@@ -21,16 +21,14 @@ import {
   FolderOpen,
   BookOpen,
   Wand2,
-  Trophy,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 // Navigation - color-coded by section category
 const navigation = [
-  { title: "Build with AI", href: "/openclaw", icon: Wand2, color: "text-violet-600 hover:text-violet-700", highlight: true },
-  { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical, color: "text-blue-600 hover:text-blue-700" },
   { title: "Projects", href: "/projects", icon: FolderOpen, color: "text-teal-600 hover:text-teal-700" },
-  { title: "Showcase", href: "/showcase", icon: Trophy, color: "text-orange-500 hover:text-orange-600" },
+  { title: "Build with AI", href: "/openclaw", icon: Wand2, color: "text-violet-600 hover:text-violet-700" },
+  { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical, color: "text-blue-600 hover:text-blue-700" },
   { title: "Learn", href: "/learn", icon: BookOpen, color: "text-amber-600 hover:text-amber-700" },
 ];
 
