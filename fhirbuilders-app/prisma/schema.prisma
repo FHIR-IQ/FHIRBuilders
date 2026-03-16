@@ -679,6 +679,11 @@ model SharedProject {
   demoUrl      String?
   tags         String[]
 
+  // Artifact classification
+  artifactType String?  // "App" | "Agent" | "MCP Tool" | "Claude Skill" | "FHIR IG" | "CQL Measure"
+  status       String?  // "concept" | "in-progress" | "live"
+  lookingFor   String[] // ["Technical co-founder", "Clinical advisors", "Funding", "Pilot sites"]
+
   // Author info (pre-auth)
   authorName   String
   authorEmail  String?

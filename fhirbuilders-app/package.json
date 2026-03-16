@@ -15,7 +15,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@auth/prisma-adapter": "^2.11.1",
-    "bcryptjs": "^2.4.3",
     "@medplum/core": "^5.0.10",
     "@medplum/react": "^5.0.10",
     "@prisma/client": "^5.22.0",
@@ -30,6 +29,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@tanstack/react-query": "^5.90.12",
     "@vercel/analytics": "^1.6.1",
+    "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jszip": "^3.10.1",

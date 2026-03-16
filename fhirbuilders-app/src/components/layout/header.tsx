@@ -28,7 +28,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 // Navigation - balanced for different personas
 const navigation = [
   { title: "Showcase", href: "/showcase", icon: Trophy, highlight: true },
-  { title: "OpenClaw", href: "/openclaw", icon: Wand2 },
+  { title: "Build with AI", href: "/openclaw", icon: Wand2 },
   { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical },
   { title: "Learn", href: "/learn", icon: BookOpen },
   { title: "Projects", href: "/projects", icon: FolderOpen },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,14 @@ import {
   BookOpen,
   Wand2,
   TestTube,
+  Bot,
+  Wrench,
+  Globe,
+  MessageCircle,
+  Rss,
+  Linkedin,
+  ArrowUp,
+  ExternalLink,
 } from "lucide-react";
 
 const sampleQueries = [
@@ -102,15 +110,75 @@ const PERSONAS = [
   },
 ];
 
+const COMMUNITY_LINKS = [
+  {
+    title: "FHIR Zulip Chat",
+    description: "The official FHIR community chat — 6,000+ implementers",
+    href: "https://chat.fhir.org",
+    icon: MessageCircle,
+    color: "text-blue-500",
+  },
+  {
+    title: "FHIR Goats on LinkedIn",
+    description: "LinkedIn group for FHIR practitioners and builders",
+    href: "https://www.linkedin.com/groups/12698335/",
+    icon: Linkedin,
+    color: "text-sky-600",
+  },
+  {
+    title: "FHIR Podcast",
+    description: "Weekly conversations with FHIR builders and healthcare innovators",
+    href: "https://fhircast.org/podcast",
+    icon: Rss,
+    color: "text-orange-500",
+  },
+  {
+    title: "FHIRBuilders Substack",
+    description: "Deep dives, patterns, and lessons from building on FHIR",
+    href: "https://fhirbuilders.substack.com",
+    icon: Globe,
+    color: "text-green-600",
+  },
+];
+
+interface FeaturedProject {
+  id: string;
+  title: string;
+  description: string;
+  artifactType?: string | null;
+  upvoteCount: number;
+  authorName: string;
+}
+
+const ARTIFACT_COLORS: Record<string, string> = {
+  "Agent":        "bg-violet-100 text-violet-800",
+  "MCP Tool":     "bg-blue-100 text-blue-800",
+  "Claude Skill": "bg-amber-100 text-amber-800",
+  "App":          "bg-green-100 text-green-800",
+  "CQL Measure":  "bg-teal-100 text-teal-800",
+  "FHIR IG":      "bg-pink-100 text-pink-800",
+};
+
 export default function HomePage() {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
+  const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
+
+  useEffect(() => {
+    fetch("/api/projects?sort=popular")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.projects) {
+          setFeaturedProjects(data.projects.slice(0, 3));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleCreateSandbox = async () => {
     setIsCreating(true);
     analytics.trackSandboxCreate();
     analytics.trackCTA("create_sandbox", "homepage");
-    // For now, redirect to sandbox page - will implement actual creation
     setTimeout(() => {
       router.push("/sandbox/demo");
     }, 1500);
@@ -118,27 +186,27 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section - Single Focus */}
+      {/* Hero Section */}
       <section className="relative overflow-hidden border-b">
         <div className="container py-20 md:py-32">
           <div className="mx-auto max-w-3xl text-center">
             <Badge variant="secondary" className="mb-6">
               <Sparkles className="mr-1 h-3 w-3" />
-              No signup required
+              Agents on FHIR — building the agentic health stack
             </Badge>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              FHIR Data in{" "}
-              <span className="text-primary">30 Seconds</span>
+              The home for{" "}
+              <span className="text-primary">FHIR builders</span>
             </h1>
 
             <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto">
-              Stop setting up infrastructure. Start building.
-              Get a sandbox with 100 synthetic patients instantly.
+              Build, share, and collaborate on AI-powered FHIR apps.
+              Get a sandbox with 100 synthetic patients in 30 seconds.
             </p>
 
-            {/* Primary CTA - The ONE thing */}
-            <div className="mt-10">
+            {/* CTAs */}
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
                 className="h-14 px-8 text-lg"
@@ -158,10 +226,17 @@ export default function HomePage() {
                   </>
                 )}
               </Button>
-              <p className="mt-3 text-sm text-muted-foreground">
-                No credit card. No signup. Just FHIR.
-              </p>
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg" asChild>
+                <Link href="/projects">
+                  <Users className="mr-2 h-5 w-5" />
+                  See Community Projects
+                </Link>
+              </Button>
             </div>
+
+            <p className="mt-3 text-sm text-muted-foreground">
+              No credit card. No signup. Just FHIR.
+            </p>
 
             {/* Quick Stats */}
             <div className="mt-12 flex justify-center gap-8 md:gap-12">
@@ -182,8 +257,113 @@ export default function HomePage() {
         <div className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
       </section>
 
+      {/* Agentic Callout */}
+      <section className="border-b bg-gradient-to-r from-violet-50 via-blue-50 to-teal-50 dark:from-violet-950/20 dark:via-blue-950/20 dark:to-teal-950/20 py-12">
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
+            <div className="text-center mb-8">
+              <Badge className="mb-3 bg-violet-100 text-violet-800 border-violet-200">
+                <Bot className="mr-1 h-3 w-3" />
+                Agentic Healthcare
+              </Badge>
+              <h2 className="text-2xl font-bold">The agentic health stack is being built here</h2>
+              <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
+                From MCP tools that connect Claude to FHIR APIs, to A2A agents that coordinate care —
+                the community is building the infrastructure for AI-native healthcare.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-white/60 dark:bg-black/20 border">
+                <Bot className="h-6 w-6 text-violet-500 mt-0.5 shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-sm">AI Agents</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Autonomous agents that query FHIR APIs, execute CQL measures, and coordinate multi-step clinical workflows
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-white/60 dark:bg-black/20 border">
+                <Wrench className="h-6 w-6 text-blue-500 mt-0.5 shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-sm">MCP Tools</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Model Context Protocol tools that give Claude direct access to FHIR sandboxes, EHRs, and healthcare APIs
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-white/60 dark:bg-black/20 border">
+                <Sparkles className="h-6 w-6 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-sm">Claude Skills</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Reusable Claude skills for clinical summarization, FHIR resource generation, and quality measure evaluation
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="text-center mt-6">
+              <Button variant="outline" asChild>
+                <Link href="/projects?filter=Agent">
+                  Browse agentic projects
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured This Week */}
+      {featuredProjects.length > 0 && (
+        <section className="container py-12">
+          <div className="mx-auto max-w-4xl">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold">Featured this week</h2>
+                <p className="text-sm text-muted-foreground">Most upvoted community projects</p>
+              </div>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/projects">
+                  See all
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {featuredProjects.map((project) => (
+                <Card key={project.id} className="hover:border-primary/40 transition-colors">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {project.artifactType && (
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${ARTIFACT_COLORS[project.artifactType] ?? ""}`}
+                          >
+                            {project.artifactType}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <ArrowUp className="h-3.5 w-3.5" />
+                        {project.upvoteCount}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{project.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{project.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{project.authorName}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* What You Get */}
-      <section className="container py-20">
+      <section className="container py-20 border-t">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-2xl font-bold text-center mb-12">
             What you get, instantly
@@ -223,7 +403,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Who is this for - Persona Cards */}
+      {/* Who is this for */}
       <section className="border-t bg-muted/30 py-20">
         <div className="container">
           <div className="mx-auto max-w-4xl">
@@ -231,7 +411,7 @@ export default function HomePage() {
               Who is this for?
             </h2>
             <p className="text-center text-muted-foreground mb-12">
-              Whether you're building, learning, or leading - we've got you covered
+              Whether you're building, learning, or leading — we've got you covered
             </p>
 
             <div className="grid gap-6 md:grid-cols-3">
@@ -257,7 +437,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Use Cases - Problem First */}
+      {/* Use Cases */}
       <section className="container py-20">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-2xl font-bold text-center mb-4">
@@ -479,53 +659,62 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Use Cases - Keep it Simple */}
+      {/* Community Links */}
       <section className="container py-20">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-center mb-12">
-            Perfect for
+          <h2 className="text-2xl font-bold text-center mb-4">
+            Join the FHIR community
           </h2>
+          <p className="text-center text-muted-foreground mb-12">
+            Connect with thousands of FHIR builders worldwide
+          </p>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {[
-              { title: "Learning FHIR", desc: "Explore the data model without infrastructure headaches" },
-              { title: "Prototyping Apps", desc: "Build your MVP against real FHIR data" },
-              { title: "Testing Integrations", desc: "Validate your FHIR client before production" },
-              { title: "Hackathons", desc: "Get your team started in seconds, not hours" },
-            ].map((item) => (
-              <div key={item.title} className="flex items-start gap-3 p-4 rounded-lg border bg-card">
-                <Check className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
-                <div>
-                  <h3 className="font-medium">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+            {COMMUNITY_LINKS.map((link) => (
+              <a
+                key={link.title}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:border-primary/40 hover:bg-muted/30 transition-colors group"
+              >
+                <link.icon className={`h-6 w-6 mt-0.5 shrink-0 ${link.color}`} />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-sm">{link.title}</h3>
+                    <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{link.description}</p>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Community Section - Minimal */}
+      {/* Perfect For */}
       <section className="border-t bg-muted/30 py-20">
         <div className="container">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-2xl font-bold mb-4">
-              Building something cool?
+          <div className="mx-auto max-w-4xl">
+            <h2 className="text-2xl font-bold text-center mb-12">
+              Perfect for
             </h2>
-            <p className="text-muted-foreground mb-8">
-              Sign up to save your sandbox and share what you're building with the FHIR community.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="outline" asChild>
-                <Link href="/projects">
-                  See community projects
-                </Link>
-              </Button>
-              <Button asChild>
-                <Link href="/login">
-                  Sign in
-                </Link>
-              </Button>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                { title: "Learning FHIR", desc: "Explore the data model without infrastructure headaches" },
+                { title: "Prototyping Apps", desc: "Build your MVP against real FHIR data" },
+                { title: "Testing Integrations", desc: "Validate your FHIR client before production" },
+                { title: "Hackathons", desc: "Get your team started in seconds, not hours" },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-3 p-4 rounded-lg border bg-card">
+                  <Check className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                  <div>
+                    <h3 className="font-medium">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
