@@ -21,17 +21,19 @@ import {
 interface Project {
   id: string;
   title: string;
-  problem: string;
-  solution: string;
+  description: string;
+  // legacy sample fields (may be absent from real DB records)
+  problem?: string;
+  solution?: string;
   repoUrl: string | null;
   demoUrl: string | null;
-  fhirResources: string[];
+  fhirResources?: string[];
   tags: string[];
-  difficulty: "Beginner" | "Intermediate" | "Advanced";
-  lookingFor: string[];
+  difficulty?: "Beginner" | "Intermediate" | "Advanced";
+  lookingFor?: string[];
   authorName: string;
   upvoteCount: number;
-  commentCount: number;
+  commentCount?: number;
   createdAt: string;
 }
 
@@ -40,6 +42,7 @@ const SAMPLE_PROJECTS: Project[] = [
   {
     id: "1",
     title: "FHIR Patient Dashboard",
+    description: "Clinicians waste 20+ minutes per patient reviewing scattered data across multiple systems",
     problem: "Clinicians waste 20+ minutes per patient reviewing scattered data across multiple systems",
     solution: "Unified dashboard pulling Patient, Observations, Conditions, and Medications into one view with smart visualizations",
     repoUrl: "https://github.com/example/fhir-dashboard",
@@ -56,6 +59,7 @@ const SAMPLE_PROJECTS: Project[] = [
   {
     id: "2",
     title: "AI Clinical Summary Agent",
+    description: "Providers spend hours writing and updating clinical documentation, leading to burnout and incomplete records",
     problem: "Providers spend hours writing and updating clinical documentation, leading to burnout and incomplete records",
     solution: "AI agent that auto-generates clinical summaries from FHIR resources, keeping notes current with minimal provider input",
     repoUrl: "https://github.com/example/fhir-ai-summary",
@@ -72,6 +76,7 @@ const SAMPLE_PROJECTS: Project[] = [
   {
     id: "3",
     title: "FHIR to HL7v2 Converter",
+    description: "Legacy systems still speak HL7v2, making FHIR adoption painful for organizations with existing infrastructure",
     problem: "Legacy systems still speak HL7v2, making FHIR adoption painful for organizations with existing infrastructure",
     solution: "Bidirectional converter that translates between FHIR R4 and HL7 v2.x messages, enabling gradual migration",
     repoUrl: "https://github.com/example/fhir-hl7-converter",
@@ -88,6 +93,7 @@ const SAMPLE_PROJECTS: Project[] = [
   {
     id: "4",
     title: "Medication Reconciliation AI",
+    description: "Medication errors from incomplete med lists cost lives and $42B annually in the US alone",
     problem: "Medication errors from incomplete med lists cost lives and $42B annually in the US alone",
     solution: "AI-powered tool comparing medications from different sources, flagging conflicts and duplicates automatically",
     repoUrl: null,
@@ -143,7 +149,7 @@ export default function ProjectsPage() {
               return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
             if (filterLookingFor) {
-              sorted = sorted.filter(p => p.lookingFor.includes(filterLookingFor));
+              sorted = sorted.filter(p => p.lookingFor?.includes(filterLookingFor));
             }
             setProjects(sorted);
           }
@@ -216,7 +222,7 @@ export default function ProjectsPage() {
               key={item}
               variant={filterLookingFor === item ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => setFilterLookingFor(filterLookingFor === item ? null : item)}
+              onClick={() => setFilterLookingFor(filterLookingFor === item ? null : item ?? null)}
             >
               {item}
             </Button>
@@ -236,51 +242,63 @@ export default function ProjectsPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <CardTitle className="text-xl">{project.title}</CardTitle>
-                      <Badge variant="outline" className={DIFFICULTY_COLORS[project.difficulty]}>
-                        {project.difficulty}
-                      </Badge>
+                      {project.difficulty && (
+                        <Badge variant="outline" className={DIFFICULTY_COLORS[project.difficulty]}>
+                          {project.difficulty}
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm">
                         <ArrowUp className="h-4 w-4 mr-1" />
                         {project.upvoteCount}
                       </Button>
-                      <Button variant="ghost" size="sm">
-                        <MessageSquare className="h-4 w-4 mr-1" />
-                        {project.commentCount}
-                      </Button>
+                      {project.commentCount != null && (
+                        <Button variant="ghost" size="sm">
+                          <MessageSquare className="h-4 w-4 mr-1" />
+                          {project.commentCount}
+                        </Button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Problem statement */}
-                  <div className="mb-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Lightbulb className="h-4 w-4 text-amber-500" />
-                      <span className="text-sm font-medium text-amber-600">Problem</span>
+                  {/* Problem / Description */}
+                  {project.problem ? (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Lightbulb className="h-4 w-4 text-amber-500" />
+                        <span className="text-sm font-medium text-amber-600">Problem</span>
+                      </div>
+                      <p className="text-muted-foreground">{project.problem}</p>
                     </div>
-                    <p className="text-muted-foreground">{project.problem}</p>
-                  </div>
+                  ) : (
+                    <p className="text-muted-foreground mb-4">{project.description}</p>
+                  )}
 
-                  {/* Solution */}
-                  <div className="mb-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm font-medium text-green-600">Solution</span>
+                  {/* Solution (sample data only) */}
+                  {project.solution && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-medium text-green-600">Solution</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{project.solution}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{project.solution}</p>
-                  </div>
+                  )}
 
-                  {/* FHIR Resources */}
-                  <div className="mb-4">
-                    <span className="text-xs text-muted-foreground font-medium">FHIR Resources:</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {project.fhirResources.map(resource => (
-                        <Badge key={resource} variant="secondary" className="text-xs">
-                          {resource}
-                        </Badge>
-                      ))}
+                  {/* Tags / FHIR Resources */}
+                  {(project.fhirResources ?? project.tags ?? []).length > 0 && (
+                    <div className="mb-4">
+                      <span className="text-xs text-muted-foreground font-medium">Tags:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {(project.fhirResources ?? project.tags ?? []).map(tag => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Author and links */}
                   <div className="flex items-center justify-between pt-4 border-t">
@@ -312,21 +330,23 @@ export default function ProjectsPage() {
                   </div>
                 </div>
 
-                {/* Looking For sidebar */}
-                <div className="lg:w-48 lg:border-l lg:pl-6">
-                  <span className="text-xs text-muted-foreground font-medium">Looking for:</span>
-                  <div className="flex flex-wrap lg:flex-col gap-2 mt-2">
-                    {project.lookingFor.map(item => (
-                      <Badge
-                        key={item}
-                        variant="secondary"
-                        className={`text-xs ${LOOKING_FOR_COLORS[item] || ''}`}
-                      >
-                        {item}
-                      </Badge>
-                    ))}
+                {/* Looking For sidebar (sample data only) */}
+                {(project.lookingFor ?? []).length > 0 && (
+                  <div className="lg:w-48 lg:border-l lg:pl-6">
+                    <span className="text-xs text-muted-foreground font-medium">Looking for:</span>
+                    <div className="flex flex-wrap lg:flex-col gap-2 mt-2">
+                      {(project.lookingFor ?? []).map(item => (
+                        <Badge
+                          key={item}
+                          variant="secondary"
+                          className={`text-xs ${LOOKING_FOR_COLORS[item] || ''}`}
+                        >
+                          {item}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
