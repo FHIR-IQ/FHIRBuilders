@@ -337,7 +337,7 @@ export default function HomePage() {
                   No setup.
                 </p>
 
-                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <div className="mt-8 flex flex-col sm:flex-row gap-3 flex-wrap">
                   <Button size="lg" className="h-12 px-7 bg-violet-600 hover:bg-violet-700 text-white" asChild>
                     <Link href="/openclaw">
                       <Wand2 className="mr-2 h-5 w-5" />
@@ -358,6 +358,12 @@ export default function HomePage() {
                       <FlaskConical className="mr-2 h-5 w-5" />
                     )}
                     Explore Sandbox
+                  </Button>
+                  <Button size="lg" variant="ghost" className="h-12 px-7 text-teal-700 hover:text-teal-800 hover:bg-teal-50" asChild>
+                    <Link href="/projects">
+                      <FolderOpen className="mr-2 h-5 w-5" />
+                      Browse the Community
+                    </Link>
                   </Button>
                 </div>
 

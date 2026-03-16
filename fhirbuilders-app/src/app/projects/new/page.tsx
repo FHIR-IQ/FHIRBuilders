@@ -96,7 +96,6 @@ export default function NewProjectPage() {
 
       if (response.ok) {
         setFormState("success");
-        setTimeout(() => router.push("/projects"), 1500);
       } else {
         const data = await response.json().catch(() => ({}));
         setErrorMsg(data.error || "Something went wrong. Please try again.");
@@ -109,16 +108,39 @@ export default function NewProjectPage() {
   };
 
   if (formState === "success") {
+    const shareText = `Just shared my FHIR project "${formData.title}" on FHIRBuilders — a community for healthcare AI builders. Check it out!`;
+    const shareUrl = "https://fhir-builders.vercel.app/projects";
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(shareText)}`;
+
     return (
       <div className="container py-20">
         <div className="mx-auto max-w-md text-center">
           <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
             <Check className="h-8 w-8 text-green-600" />
           </div>
-          <h1 className="text-2xl font-bold mb-4">Project Submitted!</h1>
+          <h1 className="text-2xl font-bold mb-2">Project Submitted!</h1>
           <p className="text-muted-foreground mb-8">
-            Thanks for sharing. Redirecting to projects page...
+            Your project is live. Help others find it by sharing with your network.
           </p>
+          <div className="bg-muted/40 rounded-xl p-4 mb-6 text-left">
+            <p className="text-sm text-muted-foreground italic">&ldquo;{shareText}&rdquo;</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+            <Button asChild className="bg-[#1DA1F2] hover:bg-[#1a8fd1] text-white">
+              <a href={twitterUrl} target="_blank" rel="noopener noreferrer">
+                Share on X / Twitter
+              </a>
+            </Button>
+            <Button asChild variant="outline" className="border-[#0A66C2] text-[#0A66C2] hover:bg-blue-50">
+              <a href={linkedinUrl} target="_blank" rel="noopener noreferrer">
+                Share on LinkedIn
+              </a>
+            </Button>
+          </div>
+          <Button variant="ghost" onClick={() => router.push("/projects")}>
+            Browse community projects →
+          </Button>
         </div>
       </div>
     );

@@ -87,6 +87,7 @@ export default function ProjectsPage() {
   const [filterLookingFor, setFilterLookingFor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [upvotedIds, setUpvotedIds] = useState<Set<string>>(new Set());
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
 
   const fetchProjects = useCallback(async () => {
     setIsLoading(true);
@@ -111,6 +112,8 @@ export default function ProjectsPage() {
   const handleUpvote = async (projectId: string) => {
     if (upvotedIds.has(projectId)) return;
     setUpvotedIds((prev) => new Set([...prev, projectId]));
+    setAnimatingIds((prev) => new Set([...prev, projectId]));
+    setTimeout(() => setAnimatingIds((prev) => { const s = new Set(prev); s.delete(projectId); return s; }), 300);
     setProjects((prev) =>
       prev.map((p) => p.id === projectId ? { ...p, upvoteCount: p.upvoteCount + 1 } : p)
     );
@@ -238,6 +241,7 @@ export default function ProjectsPage() {
           {filtered.map((project) => {
             const ArtifactIcon = project.artifactType ? ARTIFACT_ICONS[project.artifactType] : null;
             const hasUpvoted = upvotedIds.has(project.id);
+            const isAnimating = animatingIds.has(project.id);
             return (
               <Card key={project.id} className="overflow-hidden">
                 <CardContent className="p-6">
@@ -269,9 +273,9 @@ export default function ProjectsPage() {
                             size="sm"
                             onClick={() => handleUpvote(project.id)}
                             disabled={hasUpvoted}
-                            className="h-8"
+                            className={`h-8 transition-transform ${isAnimating ? "scale-125" : ""} ${hasUpvoted ? "text-teal-600" : ""}`}
                           >
-                            <ArrowUp className="h-4 w-4 mr-1" />
+                            <ArrowUp className={`h-4 w-4 mr-1 ${hasUpvoted ? "fill-teal-600 text-teal-600" : ""}`} />
                             {project.upvoteCount}
                           </Button>
                           {project.commentCount != null && (
@@ -295,11 +299,16 @@ export default function ProjectsPage() {
                       {/* Tags */}
                       {project.tags.length > 0 && (
                         <div className="mb-4 flex flex-wrap gap-1">
-                          {project.tags.map((tag) => (
+                          {project.tags.slice(0, 4).map((tag) => (
                             <Badge key={tag} variant="secondary" className="text-xs">
                               {tag}
                             </Badge>
                           ))}
+                          {project.tags.length > 4 && (
+                            <Badge variant="outline" className="text-xs text-muted-foreground">
+                              +{project.tags.length - 4} more
+                            </Badge>
+                          )}
                         </div>
                       )}
 
