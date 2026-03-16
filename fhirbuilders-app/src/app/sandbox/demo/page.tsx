@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -471,7 +470,6 @@ const MedRecDashboard = ({
 };
 
 function DemoSandboxContent() {
-  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [query, setQuery] = useState("/Patient");
   const [method, setMethod] = useState("GET");
@@ -486,17 +484,15 @@ function DemoSandboxContent() {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: "error" | "success" | "info" } | null>(null);
 
-  // Handle ?useCase=medrec URL param
+  // Handle ?useCase=medrec URL param (read after mount to avoid Suspense dependency)
   useEffect(() => {
-    if (searchParams.get("useCase") === "medrec") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("useCase") === "medrec") {
       setUseCaseMode("medrec");
-      // Select high-risk patient for best demo experience
       const highRiskPatient = SAMPLE_PATIENTS.find((p) => p.id === "patient-004");
-      if (highRiskPatient) {
-        setSelectedPatient(highRiskPatient);
-      }
+      if (highRiskPatient) setSelectedPatient(highRiskPatient);
     }
-  }, [searchParams]);
+  }, []);
 
   const handleRunMedRec = async () => {
     setIsAnalyzing(true);
@@ -1290,9 +1286,5 @@ print(patients['entry'])`}
 }
 
 export default function DemoSandboxPage() {
-  return (
-    <Suspense fallback={<div className="container py-8"><p>Loading...</p></div>}>
-      <DemoSandboxContent />
-    </Suspense>
-  );
+  return <DemoSandboxContent />;
 }
