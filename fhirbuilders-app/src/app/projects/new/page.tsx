@@ -16,18 +16,27 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+const ARTIFACT_TYPES = [
+  { value: "App", color: "bg-green-100 text-green-800 border-green-200" },
+  { value: "Agent", color: "bg-violet-100 text-violet-800 border-violet-200" },
+  { value: "MCP Tool", color: "bg-blue-100 text-blue-800 border-blue-200" },
+  { value: "Claude Skill", color: "bg-amber-100 text-amber-800 border-amber-200" },
+  { value: "FHIR IG", color: "bg-pink-100 text-pink-800 border-pink-200" },
+  { value: "CQL Measure", color: "bg-teal-100 text-teal-800 border-teal-200" },
+];
+
+const LOOKING_FOR_OPTIONS = [
+  "Technical co-founder",
+  "Clinical advisors",
+  "Funding",
+  "Pilot sites",
+  "Collaborators",
+  "Healthcare domain expert",
+];
+
 const SUGGESTED_TAGS = [
-  "Patient",
-  "Observation",
-  "Condition",
-  "MedicationRequest",
-  "Encounter",
-  "AI",
-  "React",
-  "Python",
-  "Integration",
-  "Clinical",
-  "Analytics",
+  "Patient", "Observation", "Condition", "MedicationRequest", "Encounter",
+  "AI", "React", "Python", "Integration", "Clinical", "Analytics",
 ];
 
 export default function NewProjectPage() {
@@ -41,13 +50,17 @@ export default function NewProjectPage() {
     tags: [] as string[],
     authorName: "",
     authorEmail: "",
+    artifactType: "",
+    status: "concept" as "concept" | "in-progress" | "live",
+    lookingFor: [] as string[],
   });
   const [tagInput, setTagInput] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const addTag = (tag: string) => {
-    const normalizedTag = tag.trim();
-    if (normalizedTag && !formData.tags.includes(normalizedTag) && formData.tags.length < 5) {
-      setFormData({ ...formData, tags: [...formData.tags, normalizedTag] });
+    const t = tag.trim();
+    if (t && !formData.tags.includes(t) && formData.tags.length < 5) {
+      setFormData({ ...formData, tags: [...formData.tags, t] });
       setTagInput("");
     }
   };
@@ -56,8 +69,22 @@ export default function NewProjectPage() {
     setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
   };
 
+  const toggleLookingFor = (option: string) => {
+    setFormData({
+      ...formData,
+      lookingFor: formData.lookingFor.includes(option)
+        ? formData.lookingFor.filter((o) => o !== option)
+        : [...formData.lookingFor, option],
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg("");
+    if (!formData.artifactType) {
+      setErrorMsg("Please select an artifact type.");
+      return;
+    }
     setFormState("loading");
 
     try {
@@ -69,13 +96,14 @@ export default function NewProjectPage() {
 
       if (response.ok) {
         setFormState("success");
-        setTimeout(() => {
-          router.push("/projects");
-        }, 1500);
+        setTimeout(() => router.push("/projects"), 1500);
       } else {
+        const data = await response.json().catch(() => ({}));
+        setErrorMsg(data.error || "Something went wrong. Please try again.");
         setFormState("error");
       }
     } catch {
+      setErrorMsg("Something went wrong. Please try again.");
       setFormState("error");
     }
   };
@@ -99,7 +127,6 @@ export default function NewProjectPage() {
   return (
     <div className="container py-12">
       <div className="mx-auto max-w-2xl">
-        {/* Back link */}
         <Link
           href="/projects"
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-8"
@@ -108,7 +135,6 @@ export default function NewProjectPage() {
           Back to projects
         </Link>
 
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Share Your Project</h1>
           <p className="text-muted-foreground">
@@ -116,12 +142,11 @@ export default function NewProjectPage() {
           </p>
         </div>
 
-        {/* Form */}
         <Card>
           <CardHeader>
             <CardTitle>Project Details</CardTitle>
             <CardDescription>
-              All fields except GitHub repo are optional
+              Title, description, artifact type, and your name are required
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -148,12 +173,80 @@ export default function NewProjectPage() {
                 </label>
                 <textarea
                   id="description"
-                  placeholder="What does your project do? What FHIR resources does it use?"
+                  placeholder="What problem does it solve? What FHIR resources does it use?"
                   required
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full min-h-[120px] px-3 py-2 rounded-lg border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
+              </div>
+
+              {/* Artifact Type */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Artifact Type <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {ARTIFACT_TYPES.map(({ value, color }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, artifactType: value })}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                        formData.artifactType === value
+                          ? `${color} ring-2 ring-offset-1 ring-current`
+                          : "bg-muted text-muted-foreground border-transparent hover:border-border"
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <div className="flex gap-3">
+                  {(["concept", "in-progress", "live"] as const).map((s) => (
+                    <label key={s} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="status"
+                        value={s}
+                        checked={formData.status === s}
+                        onChange={() => setFormData({ ...formData, status: s })}
+                        className="accent-primary"
+                      />
+                      <span className="text-sm capitalize">{s === "in-progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Looking For */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Looking For <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <p className="text-xs text-muted-foreground">What kind of collaborators or support are you seeking?</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {LOOKING_FOR_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => toggleLookingFor(option)}
+                      className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                        formData.lookingFor.includes(option)
+                          ? "bg-teal-100 text-teal-800 border-teal-300"
+                          : "bg-muted text-muted-foreground border-transparent hover:border-border"
+                      }`}
+                    >
+                      {formData.lookingFor.includes(option) && (
+                        <Check className="inline h-3 w-3 mr-1" />
+                      )}
+                      {option}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* GitHub Repo */}
@@ -175,7 +268,7 @@ export default function NewProjectPage() {
               <div className="space-y-2">
                 <label htmlFor="demoUrl" className="text-sm font-medium">
                   <ExternalLink className="inline h-4 w-4 mr-1" />
-                  Demo URL (optional)
+                  Demo URL <span className="text-muted-foreground font-normal">(optional)</span>
                 </label>
                 <Input
                   id="demoUrl"
@@ -188,18 +281,12 @@ export default function NewProjectPage() {
 
               {/* Tags */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Tags (up to 5)
-                </label>
+                <label className="text-sm font-medium">Tags <span className="text-muted-foreground font-normal">(up to 5)</span></label>
                 <div className="flex gap-2 flex-wrap mb-2">
                   {formData.tags.map((tag) => (
                     <Badge key={tag} variant="secondary" className="pl-2 pr-1">
                       {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="ml-1 hover:text-destructive"
-                      >
+                      <button type="button" onClick={() => removeTag(tag)} className="ml-1 hover:text-destructive">
                         <X className="h-3 w-3" />
                       </button>
                     </Badge>
@@ -212,19 +299,11 @@ export default function NewProjectPage() {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addTag(tagInput);
-                      }
+                      if (e.key === "Enter") { e.preventDefault(); addTag(tagInput); }
                     }}
                     disabled={formData.tags.length >= 5}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => addTag(tagInput)}
-                    disabled={formData.tags.length >= 5 || !tagInput.trim()}
-                  >
+                  <Button type="button" variant="outline" onClick={() => addTag(tagInput)} disabled={formData.tags.length >= 5 || !tagInput.trim()}>
                     Add
                   </Button>
                 </div>
@@ -259,9 +338,7 @@ export default function NewProjectPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="authorEmail" className="text-sm font-medium">
-                    Email
-                  </label>
+                  <label htmlFor="authorEmail" className="text-sm font-medium">Email</label>
                   <Input
                     id="authorEmail"
                     type="email"
@@ -269,19 +346,12 @@ export default function NewProjectPage() {
                     value={formData.authorEmail}
                     onChange={(e) => setFormData({ ...formData, authorEmail: e.target.value })}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Not displayed publicly. For follow-ups only.
-                  </p>
+                  <p className="text-xs text-muted-foreground">Not displayed publicly.</p>
                 </div>
               </div>
 
               {/* Submit */}
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={formState === "loading"}
-              >
+              <Button type="submit" size="lg" className="w-full" disabled={formState === "loading"}>
                 {formState === "loading" ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -292,10 +362,8 @@ export default function NewProjectPage() {
                 )}
               </Button>
 
-              {formState === "error" && (
-                <p className="text-sm text-red-500 text-center">
-                  Something went wrong. Please try again.
-                </p>
+              {(formState === "error" || errorMsg) && (
+                <p className="text-sm text-red-500 text-center">{errorMsg || "Something went wrong. Please try again."}</p>
               )}
             </form>
           </CardContent>

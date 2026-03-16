@@ -14,12 +14,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, description, repoUrl, demoUrl, tags, authorName, authorEmail } = body;
+    const { title, description, repoUrl, demoUrl, tags, authorName, authorEmail, artifactType, status, lookingFor } = body;
 
     // Validate required fields
-    if (!title || !description || !authorName) {
+    if (!title || !description || !authorName || !artifactType) {
       return NextResponse.json(
-        { error: "Title, description, and author name are required" },
+        { error: "Title, description, author name, and artifact type are required" },
         { status: 400 }
       );
     }
@@ -49,6 +49,9 @@ export async function POST(request: NextRequest) {
         tags: Array.isArray(tags) ? tags.slice(0, 5) : [],
         authorName: authorName.trim(),
         authorEmail: authorEmail?.trim() || null,
+        artifactType: artifactType?.trim() || null,
+        status: status?.trim() || null,
+        lookingFor: Array.isArray(lookingFor) ? lookingFor : [],
       },
     });
 
