@@ -15,10 +15,12 @@ import Anthropic from '@anthropic-ai/sdk'
 import { startGeneration, processGeneration } from '@/lib/openclaw/orchestrator'
 import { ensureDemoUser } from '@/lib/demo-user'
 
-// Initialize Anthropic client
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+// Lazy Anthropic client — only instantiated if API key is present
+function getAnthropicClient() {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return null
+  return new Anthropic({ apiKey })
+}
 
 export async function POST(request: NextRequest) {
   // Check authentication (optional - anonymous users get demo mode)
@@ -41,6 +43,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Prompt is required' },
         { status: 400 }
+      )
+    }
+
+    // Require Anthropic API key
+    const anthropic = getAnthropicClient()
+    if (!anthropic) {
+      return NextResponse.json(
+        { error: 'AI code generation is not configured on this deployment. Add ANTHROPIC_API_KEY to your environment variables.' },
+        { status: 503 }
       )
     }
 

@@ -36,7 +36,42 @@ import {
   Linkedin,
   ArrowUp,
   ExternalLink,
+  FolderOpen,
+  Trophy,
 } from "lucide-react";
+
+// ── Vega-inspired categorical palette (section-level color coding) ──────────
+// Build with AI → violet  |  Sandbox → blue  |  Projects → teal  |  Learn → amber
+const SECTION_COLORS = {
+  openclaw: {
+    badge: "bg-violet-100 text-violet-700 border-violet-200",
+    accent: "text-violet-600",
+    border: "border-violet-200",
+    bg: "bg-violet-50",
+    icon: "text-violet-500",
+  },
+  sandbox: {
+    badge: "bg-blue-100 text-blue-700 border-blue-200",
+    accent: "text-blue-600",
+    border: "border-blue-200",
+    bg: "bg-blue-50",
+    icon: "text-blue-500",
+  },
+  projects: {
+    badge: "bg-teal-100 text-teal-700 border-teal-200",
+    accent: "text-teal-600",
+    border: "border-teal-200",
+    bg: "bg-teal-50",
+    icon: "text-teal-500",
+  },
+  learn: {
+    badge: "bg-amber-100 text-amber-700 border-amber-200",
+    accent: "text-amber-600",
+    border: "border-amber-200",
+    bg: "bg-amber-50",
+    icon: "text-amber-500",
+  },
+};
 
 const sampleQueries = [
   { label: "Get all patients", query: "GET /Patient" },
@@ -61,7 +96,7 @@ const USE_CASES = [
     difficulty: "Beginner",
   },
   {
-    problem: "Medication errors from incomplete med lists",
+    problem: "Medication errors from incomplete med lists cost $42B/year",
     solution: "Medication Reconciliation",
     description: "AI-powered tool that compares meds from different sources and flags conflicts",
     icon: Pill,
@@ -93,6 +128,7 @@ const PERSONAS = [
     cta: "Learn what FHIR can solve",
     href: "/learn",
     icon: Stethoscope,
+    color: SECTION_COLORS.learn,
   },
   {
     title: "Developer",
@@ -100,13 +136,15 @@ const PERSONAS = [
     cta: "Create sandbox",
     href: "/sandbox/demo",
     icon: Code2,
+    color: SECTION_COLORS.sandbox,
   },
   {
-    title: "Learner",
-    description: "Understand FHIR with hands-on exploration and beginner-friendly guides",
-    cta: "Start learning",
-    href: "/learn",
-    icon: BookOpen,
+    title: "AI Builder",
+    description: "Generate complete FHIR apps from a prompt, then connect to any messaging channel",
+    cta: "Build with AI",
+    href: "/openclaw",
+    icon: Wand2,
+    color: SECTION_COLORS.openclaw,
   },
 ];
 
@@ -159,6 +197,100 @@ const ARTIFACT_COLORS: Record<string, string> = {
   "FHIR IG":      "bg-pink-100 text-pink-800",
 };
 
+// ── OpenClaw mock screenshot (inline SVG-style terminal UI) ──────────────────
+function OpenClawScreenshot() {
+  return (
+    <div className="rounded-xl border shadow-lg overflow-hidden text-left">
+      {/* Window chrome */}
+      <div className="bg-zinc-800 px-4 py-2.5 flex items-center gap-2">
+        <div className="h-3 w-3 rounded-full bg-red-500/80" />
+        <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
+        <div className="h-3 w-3 rounded-full bg-green-500/80" />
+        <span className="ml-3 text-xs text-zinc-400 font-mono">Build with AI — FHIRBuilders</span>
+      </div>
+      {/* Prompt area */}
+      <div className="bg-zinc-900 px-5 py-4 border-b border-zinc-700">
+        <div className="text-xs text-zinc-500 mb-2 font-mono">Prompt</div>
+        <div className="text-sm text-violet-300 font-mono">
+          &quot;Build a medication reconciliation dashboard that flags drug interactions using FHIR MedicationRequest resources&quot;
+        </div>
+      </div>
+      {/* Output area */}
+      <div className="bg-zinc-950 px-5 py-4 space-y-2.5">
+        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+          <span className="text-green-400">✓</span>
+          <span>Detected FHIR resources:</span>
+          <span className="text-blue-300">MedicationRequest, Patient, AllergyIntolerance</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+          <span className="text-green-400">✓</span>
+          <span>Generating Next.js app with Medplum SDK...</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+          <span className="text-green-400">✓</span>
+          <span>Claude analyzed 847 medication interaction patterns</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+          <span className="text-amber-400">→</span>
+          <span className="text-zinc-300">Generated 12 files · TypeScript + React · Ready to deploy</span>
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-xs font-mono">
+          {["pages/index.tsx", "lib/fhir.ts", "components/MedCard.tsx", "lib/interactions.ts", "api/analyze.ts", "package.json"].map((f) => (
+            <div key={f} className="text-zinc-500 flex items-center gap-1">
+              <span className="text-zinc-600">📄</span> {f}
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Action bar */}
+      <div className="bg-zinc-900 px-5 py-3 flex items-center gap-3 border-t border-zinc-700">
+        <div className="h-6 px-3 rounded bg-violet-600 text-xs text-white font-medium flex items-center">Download .zip</div>
+        <div className="h-6 px-3 rounded bg-zinc-700 text-xs text-zinc-300 font-medium flex items-center">View Code</div>
+        <div className="h-6 px-3 rounded bg-zinc-700 text-xs text-zinc-300 font-medium flex items-center">Deploy to Vercel</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Sandbox mock screenshot ──────────────────────────────────────────────────
+function SandboxScreenshot() {
+  return (
+    <div className="rounded-xl border shadow-md overflow-hidden text-left">
+      <div className="bg-zinc-800 px-4 py-2.5 flex items-center gap-2">
+        <div className="h-3 w-3 rounded-full bg-red-500/80" />
+        <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
+        <div className="h-3 w-3 rounded-full bg-green-500/80" />
+        <span className="ml-3 text-xs text-zinc-400 font-mono">FHIR Sandbox — API Explorer</span>
+      </div>
+      <div className="bg-zinc-900 p-4 font-mono text-sm">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-green-400 text-xs">GET</span>
+          <span className="text-blue-300 text-xs">https://api.medplum.com/fhir/R4/MedicationRequest?status=active</span>
+        </div>
+        <div className="text-zinc-600 text-xs mb-2">Response · 200 OK · 47ms</div>
+        <pre className="text-xs text-zinc-400 overflow-hidden">
+{`{
+  "resourceType": "Bundle",
+  "type": "searchset",
+  "total": 8,
+  "entry": [{
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "med-101",
+      "status": "active",
+      "subject": { "reference": "Patient/john-smith" },
+      "medicationCodeableConcept": {
+        "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                     "code": "860975", "display": "Metformin 500mg" }]
+      }
+    }
+  }]
+}`}</pre>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
@@ -168,9 +300,7 @@ export default function HomePage() {
     fetch("/api/projects?sort=popular")
       .then((r) => r.json())
       .then((data) => {
-        if (data.projects) {
-          setFeaturedProjects(data.projects.slice(0, 3));
-        }
+        if (data.projects) setFeaturedProjects(data.projects.slice(0, 3));
       })
       .catch(() => {});
   }, []);
@@ -179,90 +309,104 @@ export default function HomePage() {
     setIsCreating(true);
     analytics.trackSandboxCreate();
     analytics.trackCTA("create_sandbox", "homepage");
-    setTimeout(() => {
-      router.push("/sandbox/demo");
-    }, 1500);
+    setTimeout(() => router.push("/sandbox/demo"), 1500);
   };
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden border-b">
-        <div className="container py-20 md:py-32">
-          <div className="mx-auto max-w-3xl text-center">
-            <Badge variant="secondary" className="mb-6">
-              <Sparkles className="mr-1 h-3 w-3" />
-              Agents on FHIR — building the agentic health stack
-            </Badge>
 
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              The home for{" "}
-              <span className="text-primary">FHIR builders</span>
-            </h1>
+      {/* ═══════════════════════════════════════════════════════════════════
+          HERO — Lead with OpenClaw (the "wow factor")
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden border-b bg-gradient-to-br from-violet-50 via-background to-blue-50">
+        <div className="container py-16 md:py-24">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              {/* Left — headline + CTAs */}
+              <div>
+                <Badge className="mb-5 bg-violet-100 text-violet-700 border-violet-200">
+                  <Sparkles className="mr-1 h-3 w-3" />
+                  The home for FHIR builders
+                </Badge>
 
-            <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto">
-              Build, share, and collaborate on AI-powered FHIR apps.
-              Get a sandbox with 100 synthetic patients in 30 seconds.
-            </p>
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl leading-tight">
+                  Make a FHIR app{" "}
+                  <span className="text-violet-600">like this</span>{" "}
+                  in 3 clicks
+                </h1>
 
-            {/* CTAs */}
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="h-14 px-8 text-lg"
-                onClick={handleCreateSandbox}
-                disabled={isCreating}
-              >
-                {isCreating ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Creating your sandbox...
-                  </>
-                ) : (
-                  <>
-                    <FlaskConical className="mr-2 h-5 w-5" />
-                    Create Free Sandbox
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
-              <Button size="lg" variant="outline" className="h-14 px-8 text-lg" asChild>
-                <Link href="/projects">
-                  <Users className="mr-2 h-5 w-5" />
-                  See Community Projects
-                </Link>
-              </Button>
-            </div>
+                <p className="mt-5 text-lg text-muted-foreground max-w-xl">
+                  Describe what you want to build. AI generates a complete,
+                  deployable FHIR app with Medplum and Claude. No boilerplate.
+                  No setup.
+                </p>
 
-            <p className="mt-3 text-sm text-muted-foreground">
-              No credit card. No signup. Just FHIR.
-            </p>
-
-            {/* Quick Stats */}
-            <div className="mt-12 flex justify-center gap-8 md:gap-12">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <stat.icon className="h-5 w-5 text-primary" />
-                    <span className="text-2xl font-bold">{stat.value}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <Button size="lg" className="h-12 px-7 bg-violet-600 hover:bg-violet-700 text-white" asChild>
+                    <Link href="/openclaw">
+                      <Wand2 className="mr-2 h-5 w-5" />
+                      Build with AI
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12 px-7"
+                    onClick={handleCreateSandbox}
+                    disabled={isCreating}
+                  >
+                    {isCreating ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <FlaskConical className="mr-2 h-5 w-5" />
+                    )}
+                    Explore Sandbox
+                  </Button>
                 </div>
-              ))}
+
+                <p className="mt-4 text-sm text-muted-foreground">
+                  No credit card. No signup required for sandbox.
+                </p>
+
+                {/* Section nav color keys */}
+                <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium">
+                  {[
+                    { label: "Build with AI", color: "bg-violet-100 text-violet-700", href: "/openclaw", icon: Wand2 },
+                    { label: "Sandbox", color: "bg-blue-100 text-blue-700", href: "/sandbox/demo", icon: FlaskConical },
+                    { label: "Community", color: "bg-teal-100 text-teal-700", href: "/projects", icon: FolderOpen },
+                    { label: "Learn", color: "bg-amber-100 text-amber-700", href: "/learn", icon: BookOpen },
+                  ].map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${item.color} hover:opacity-80 transition-opacity`}
+                    >
+                      <item.icon className="h-3 w-3" />
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right — OpenClaw mock screenshot */}
+              <div className="hidden lg:block">
+                <OpenClawScreenshot />
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Background pattern */}
         <div className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
       </section>
 
-      {/* Agentic Callout */}
-      <section className="border-b bg-gradient-to-r from-violet-50 via-blue-50 to-teal-50 dark:from-violet-950/20 dark:via-blue-950/20 dark:to-teal-950/20 py-12">
+      {/* ═══════════════════════════════════════════════════════════════════
+          AGENTIC CALLOUT — violet accent
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="border-b bg-violet-50/50 py-12">
         <div className="container">
           <div className="mx-auto max-w-4xl">
             <div className="text-center mb-8">
-              <Badge className="mb-3 bg-violet-100 text-violet-800 border-violet-200">
+              <Badge className="mb-3 bg-violet-100 text-violet-700 border-violet-200">
                 <Bot className="mr-1 h-3 w-3" />
                 Agentic Healthcare
               </Badge>
@@ -273,37 +417,41 @@ export default function HomePage() {
               </p>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-white/60 dark:bg-black/20 border">
-                <Bot className="h-6 w-6 text-violet-500 mt-0.5 shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-sm">AI Agents</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Autonomous agents that query FHIR APIs, execute CQL measures, and coordinate multi-step clinical workflows
-                  </p>
+              {[
+                {
+                  icon: Bot,
+                  title: "AI Agents",
+                  desc: "Autonomous agents that query FHIR APIs, execute CQL measures, and coordinate multi-step clinical workflows",
+                  color: "text-violet-500",
+                  bg: "bg-violet-100/60",
+                },
+                {
+                  icon: Wrench,
+                  title: "MCP Tools",
+                  desc: "Model Context Protocol tools that give Claude direct access to FHIR sandboxes, EHRs, and healthcare APIs",
+                  color: "text-blue-500",
+                  bg: "bg-blue-100/60",
+                },
+                {
+                  icon: Sparkles,
+                  title: "Claude Skills",
+                  desc: "Reusable Claude skills for clinical summarization, FHIR resource generation, and quality measure evaluation",
+                  color: "text-amber-500",
+                  bg: "bg-amber-100/60",
+                },
+              ].map((item) => (
+                <div key={item.title} className={`flex items-start gap-3 p-4 rounded-xl border ${item.bg}`}>
+                  <item.icon className={`h-6 w-6 mt-0.5 shrink-0 ${item.color}`} />
+                  <div>
+                    <h3 className="font-semibold text-sm">{item.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-white/60 dark:bg-black/20 border">
-                <Wrench className="h-6 w-6 text-blue-500 mt-0.5 shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-sm">MCP Tools</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Model Context Protocol tools that give Claude direct access to FHIR sandboxes, EHRs, and healthcare APIs
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-white/60 dark:bg-black/20 border">
-                <Sparkles className="h-6 w-6 text-amber-500 mt-0.5 shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-sm">Claude Skills</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Reusable Claude skills for clinical summarization, FHIR resource generation, and quality measure evaluation
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
             <div className="text-center mt-6">
-              <Button variant="outline" asChild>
-                <Link href="/projects?filter=Agent">
+              <Button variant="outline" className="border-violet-200 text-violet-700 hover:bg-violet-50" asChild>
+                <Link href="/projects">
                   Browse agentic projects
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -313,47 +461,46 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured This Week */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          FEATURED THIS WEEK — teal accent
+      ══════════════════════════════════════════════════════════════════════ */}
       {featuredProjects.length > 0 && (
-        <section className="container py-12">
-          <div className="mx-auto max-w-4xl">
+        <section className="container py-12 border-b">
+          <div className="mx-auto max-w-5xl">
             <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-bold">Featured this week</h2>
-                <p className="text-sm text-muted-foreground">Most upvoted community projects</p>
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-1 rounded-full bg-teal-500" />
+                <div>
+                  <h2 className="text-xl font-bold">Featured this week</h2>
+                  <p className="text-sm text-muted-foreground">Most upvoted community projects</p>
+                </div>
               </div>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" className="text-teal-600 hover:text-teal-700" asChild>
                 <Link href="/projects">
-                  See all
-                  <ArrowRight className="ml-1 h-4 w-4" />
+                  See all <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               {featuredProjects.map((project) => (
-                <Card key={project.id} className="hover:border-primary/40 transition-colors">
+                <Card key={project.id} className="hover:border-teal-300 transition-colors">
                   <CardContent className="pt-4 pb-4">
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      <div>
                         {project.artifactType && (
-                          <Badge
-                            variant="secondary"
-                            className={`text-xs ${ARTIFACT_COLORS[project.artifactType] ?? ""}`}
-                          >
+                          <Badge variant="secondary" className={`text-xs ${ARTIFACT_COLORS[project.artifactType] ?? ""}`}>
                             {project.artifactType}
                           </Badge>
                         )}
                       </div>
-                      <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1 text-sm font-medium text-teal-600">
                         <ArrowUp className="h-3.5 w-3.5" />
                         {project.upvoteCount}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{project.title}</h3>
+                    <h3 className="font-semibold text-sm mb-1 leading-snug">{project.title}</h3>
                     <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{project.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">{project.authorName}</span>
-                    </div>
+                    <p className="text-xs text-muted-foreground">{project.authorName}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -362,68 +509,80 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* What You Get */}
-      <section className="container py-20 border-t">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-center mb-12">
-            What you get, instantly
-          </h2>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <Database className="h-8 w-8 text-primary mb-2" />
-                <CardTitle className="text-lg">100 Patients</CardTitle>
-                <CardDescription>
-                  Realistic Synthea-generated data with conditions, medications, and encounters
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Terminal className="h-8 w-8 text-primary mb-2" />
-                <CardTitle className="text-lg">API Explorer</CardTitle>
-                <CardDescription>
-                  Interactive query builder. Test requests, see responses. No setup needed.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Code2 className="h-8 w-8 text-primary mb-2" />
-                <CardTitle className="text-lg">Your Endpoint</CardTitle>
-                <CardDescription>
-                  A real FHIR R4 URL you can use in your app immediately
-                </CardDescription>
-              </CardHeader>
-            </Card>
+      {/* ═══════════════════════════════════════════════════════════════════
+          SANDBOX SECTION — blue accent
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="border-b py-16">
+        <div className="container">
+          <div className="mx-auto max-w-5xl">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              <div>
+                <Badge className="mb-4 bg-blue-100 text-blue-700 border-blue-200">
+                  <FlaskConical className="mr-1 h-3 w-3" />
+                  FHIR Sandbox
+                </Badge>
+                <h2 className="text-3xl font-bold mb-4">
+                  FHIR data in{" "}
+                  <span className="text-blue-600">30 seconds</span>
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Stop setting up infrastructure. Get a sandbox with 100 synthetic patients
+                  instantly. A real FHIR R4 endpoint you can query immediately.
+                </p>
+                <div className="flex flex-wrap gap-4 mb-6">
+                  {stats.map((stat) => (
+                    <div key={stat.label} className="flex items-center gap-2">
+                      <stat.icon className="h-4 w-4 text-blue-500" />
+                      <span className="font-bold text-blue-700">{stat.value}</span>
+                      <span className="text-sm text-muted-foreground">{stat.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={handleCreateSandbox}
+                  disabled={isCreating}
+                >
+                  {isCreating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <FlaskConical className="mr-2 h-4 w-4" />
+                  )}
+                  Create Free Sandbox
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <p className="mt-2 text-xs text-muted-foreground">No credit card · No signup</p>
+              </div>
+              <div className="hidden lg:block">
+                <SandboxScreenshot />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Who is this for */}
-      <section className="border-t bg-muted/30 py-20">
+      {/* ═══════════════════════════════════════════════════════════════════
+          WHO IS THIS FOR — persona cards
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-muted/20 border-b py-16">
         <div className="container">
           <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl font-bold text-center mb-4">
-              Who is this for?
-            </h2>
-            <p className="text-center text-muted-foreground mb-12">
+            <h2 className="text-2xl font-bold text-center mb-2">Who is this for?</h2>
+            <p className="text-center text-muted-foreground mb-10">
               Whether you're building, learning, or leading — we've got you covered
             </p>
-
             <div className="grid gap-6 md:grid-cols-3">
               {PERSONAS.map((persona) => (
-                <Card key={persona.title} className="relative overflow-hidden">
+                <Card key={persona.title} className={`border-2 ${persona.color.border} hover:shadow-md transition-shadow`}>
                   <CardHeader>
-                    <persona.icon className="h-8 w-8 text-primary mb-2" />
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${persona.color.bg}`}>
+                      <persona.icon className={`h-5 w-5 ${persona.color.icon}`} />
+                    </div>
                     <CardTitle className="text-lg">{persona.title}</CardTitle>
-                    <CardDescription>{persona.description}</CardDescription>
+                    <CardDescription className="text-sm">{persona.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button variant="outline" className="w-full" asChild>
+                    <Button variant="outline" className={`w-full border ${persona.color.border} ${persona.color.accent} hover:bg-white`} asChild>
                       <Link href={persona.href}>
                         {persona.cta}
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -437,16 +596,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Use Cases */}
-      <section className="container py-20">
+      {/* ═══════════════════════════════════════════════════════════════════
+          USE CASES — what can you build
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="container py-16 border-b">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-center mb-4">
-            What can you build with FHIR?
-          </h2>
-          <p className="text-center text-muted-foreground mb-12">
+          <div className="flex items-center gap-3 mb-2 justify-center">
+            <div className="h-5 w-1 rounded-full bg-violet-500" />
+            <h2 className="text-2xl font-bold text-center">What can you build with FHIR?</h2>
+          </div>
+          <p className="text-center text-muted-foreground mb-10">
             Real problems being solved by our community
           </p>
-
           <div className="space-y-4">
             {USE_CASES.map((useCase, index) => (
               <Card key={index}>
@@ -458,23 +619,19 @@ export default function HomePage() {
                         <span className="text-sm font-medium text-amber-600">Problem</span>
                       </div>
                       <p className="text-muted-foreground mb-4">{useCase.problem}</p>
-
                       <div className="flex items-center gap-2 mb-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
                         <span className="text-sm font-medium text-green-600">Solution: {useCase.solution}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{useCase.description}</p>
                     </div>
-
-                    <div className="md:w-48 space-y-2">
+                    <div className="md:w-48 space-y-2 shrink-0">
                       <Badge variant="outline">{useCase.difficulty}</Badge>
                       <div className="text-xs text-muted-foreground">
                         <strong>FHIR Resources:</strong>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {useCase.resources.map((r) => (
-                            <Badge key={r} variant="secondary" className="text-xs">
-                              {r}
-                            </Badge>
+                            <Badge key={r} variant="secondary" className="text-xs">{r}</Badge>
                           ))}
                         </div>
                       </div>
@@ -484,9 +641,8 @@ export default function HomePage() {
               </Card>
             ))}
           </div>
-
           <div className="mt-8 text-center">
-            <Button variant="outline" asChild>
+            <Button variant="outline" className="border-teal-200 text-teal-700 hover:bg-teal-50" asChild>
               <Link href="/projects">
                 See all community projects
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -496,55 +652,45 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured: Medication Management Showcase */}
-      <section className="border-t bg-gradient-to-b from-primary/5 to-background py-20">
+      {/* ═══════════════════════════════════════════════════════════════════
+          MEDICATION MANAGEMENT SHOWCASE — featured demo
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="border-b bg-gradient-to-b from-blue-50/50 to-background py-16">
         <div className="container">
           <div className="mx-auto max-w-4xl">
             <div className="text-center mb-10">
-              <Badge className="mb-4 bg-primary/10 text-primary hover:bg-primary/20">
+              <Badge className="mb-4 bg-blue-100 text-blue-700 border-blue-200">
                 <Sparkles className="mr-1 h-3 w-3" />
-                Featured Use Case
+                Featured Demo
               </Badge>
-              <h2 className="text-3xl font-bold mb-4">
-                Medication Management
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                See how FHIRBuilders handles medication reconciliation end-to-end:
-                AI-powered conflict detection, code generation, and downloadable apps.
+              <h2 className="text-3xl font-bold mb-3">Medication Management</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                See AI-powered medication reconciliation end-to-end: conflict detection, code generation, and downloadable apps.
               </p>
             </div>
-
             <div className="grid gap-6 md:grid-cols-2">
-              <Card className="border-2 hover:border-primary/50 transition-colors">
+              <Card className="border-2 border-blue-200 hover:border-blue-400 transition-colors">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-500/10">
-                      <TestTube className="h-6 w-6 text-blue-500" />
+                    <div className="p-2 rounded-lg bg-blue-100">
+                      <TestTube className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">Try the Demo</CardTitle>
-                      <CardDescription>
-                        Explore sample patients and run AI-powered medication audits
-                      </CardDescription>
+                      <CardDescription>Explore patients, run AI medication audits</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 mb-6 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      5 sample patients with real medication data
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      AI conflict detection (drug interactions, duplicates)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      Clinical evidence citations
-                    </li>
+                    {["5 sample patients with real medication data", "AI conflict detection (drug interactions, duplicates)", "Clinical evidence citations"].map((item) => (
+                      <li key={item} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-500 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
                   </ul>
-                  <Button className="w-full" asChild>
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" asChild>
                     <Link href="/sandbox/demo?useCase=medrec">
                       <TestTube className="mr-2 h-4 w-4" />
                       Try Demo
@@ -553,37 +699,28 @@ export default function HomePage() {
                   </Button>
                 </CardContent>
               </Card>
-
-              <Card className="border-2 hover:border-primary/50 transition-colors">
+              <Card className="border-2 border-violet-200 hover:border-violet-400 transition-colors">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-500/10">
-                      <Wand2 className="h-6 w-6 text-purple-500" />
+                    <div className="p-2 rounded-lg bg-violet-100">
+                      <Wand2 className="h-6 w-6 text-violet-600" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">Generate an App</CardTitle>
-                      <CardDescription>
-                        AI generates a complete FHIR medication tracker you can download
-                      </CardDescription>
+                      <CardDescription>AI generates a complete FHIR app you can download</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 mb-6 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      Full Next.js + Medplum app generated by AI
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      Download as a zip, ready to run
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      Connect to Slack, Discord, WhatsApp
-                    </li>
+                    {["Full Next.js + Medplum app generated by Claude", "Download as a zip, ready to run", "Connect to Slack, Discord, WhatsApp"].map((item) => (
+                      <li key={item} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-500 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
                   </ul>
-                  <Button variant="outline" className="w-full" asChild>
+                  <Button variant="outline" className="w-full border-violet-200 text-violet-700 hover:bg-violet-50" asChild>
                     <Link href="/openclaw?template=medication-tracker">
                       <Wand2 className="mr-2 h-4 w-4" />
                       Generate App
@@ -597,78 +734,71 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Sample Queries Preview */}
-      <section className="border-y bg-muted/30 py-20">
+      {/* ═══════════════════════════════════════════════════════════════════
+          SAMPLE QUERIES — code preview
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="border-b bg-zinc-900 py-16">
         <div className="container">
           <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl font-bold text-center mb-4">
+            <h2 className="text-2xl font-bold text-center text-white mb-2">
               Start querying immediately
             </h2>
-            <p className="text-center text-muted-foreground mb-12">
+            <p className="text-center text-zinc-400 mb-10">
               Your sandbox comes with sample queries ready to run
             </p>
-
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden bg-zinc-950 border-zinc-800">
               <CardContent className="p-0">
-                <div className="bg-zinc-900 text-zinc-100 p-4 font-mono text-sm">
+                <div className="p-4 font-mono text-sm">
                   <div className="flex items-center gap-2 text-zinc-500 mb-4">
                     <div className="h-3 w-3 rounded-full bg-red-500" />
                     <div className="h-3 w-3 rounded-full bg-yellow-500" />
                     <div className="h-3 w-3 rounded-full bg-green-500" />
-                    <span className="ml-2">FHIR API Explorer</span>
+                    <span className="ml-2 text-zinc-400">FHIR API Explorer</span>
                   </div>
-
                   <div className="space-y-3">
                     {sampleQueries.map((q, i) => (
                       <div key={i} className="flex items-center gap-3">
-                        <span className="text-green-400">$</span>
-                        <span className="text-zinc-400">{q.query}</span>
+                        <span className="text-blue-400 text-xs">GET</span>
+                        <span className="text-zinc-300 text-xs">{q.query}</span>
                         <span className="text-zinc-600 text-xs ml-auto">{q.label}</span>
                       </div>
                     ))}
                   </div>
-
                   <div className="mt-6 pt-4 border-t border-zinc-800">
                     <div className="text-zinc-500 text-xs mb-2">Response (200 OK)</div>
-                    <pre className="text-xs text-zinc-400 overflow-x-auto">
-{`{
-  "resourceType": "Bundle",
-  "type": "searchset",
-  "total": 100,
-  "entry": [
-    { "resource": { "resourceType": "Patient", "id": "..." } }
-  ]
-}`}
-                    </pre>
+                    <pre className="text-xs text-zinc-400 overflow-x-auto">{`{"resourceType":"Bundle","type":"searchset","total":100,"entry":[{"resource":{"resourceType":"Patient","id":"..."}}]}`}</pre>
                   </div>
                 </div>
               </CardContent>
             </Card>
-
             <div className="mt-8 text-center">
-              <Button size="lg" onClick={handleCreateSandbox} disabled={isCreating}>
-                {isCreating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Zap className="mr-2 h-4 w-4" />
-                )}
-                Try it now
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-zinc-600 text-zinc-200 hover:bg-zinc-800"
+                onClick={handleCreateSandbox}
+                disabled={isCreating}
+              >
+                {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+                Try it now — free
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Community Links */}
-      <section className="container py-20">
+      {/* ═══════════════════════════════════════════════════════════════════
+          COMMUNITY LINKS — teal accent
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="container py-16 border-b">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-center mb-4">
-            Join the FHIR community
-          </h2>
-          <p className="text-center text-muted-foreground mb-12">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="h-5 w-1 rounded-full bg-teal-500" />
+            <h2 className="text-2xl font-bold">Join the FHIR community</h2>
+          </div>
+          <p className="text-center text-muted-foreground mb-10">
             Connect with thousands of FHIR builders worldwide
           </p>
-
           <div className="grid gap-4 md:grid-cols-2">
             {COMMUNITY_LINKS.map((link) => (
               <a
@@ -676,7 +806,7 @@ export default function HomePage() {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:border-primary/40 hover:bg-muted/30 transition-colors group"
+                className="flex items-start gap-4 p-4 rounded-xl border hover:border-teal-300 hover:bg-teal-50/30 transition-colors group"
               >
                 <link.icon className={`h-6 w-6 mt-0.5 shrink-0 ${link.color}`} />
                 <div className="flex-1">
@@ -684,7 +814,7 @@ export default function HomePage() {
                     <h3 className="font-medium text-sm">{link.title}</h3>
                     <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{link.description}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{link.description}</p>
                 </div>
               </a>
             ))}
@@ -692,56 +822,27 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Perfect For */}
-      <section className="border-t bg-muted/30 py-20">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl font-bold text-center mb-12">
-              Perfect for
-            </h2>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {[
-                { title: "Learning FHIR", desc: "Explore the data model without infrastructure headaches" },
-                { title: "Prototyping Apps", desc: "Build your MVP against real FHIR data" },
-                { title: "Testing Integrations", desc: "Validate your FHIR client before production" },
-                { title: "Hackathons", desc: "Get your team started in seconds, not hours" },
-              ].map((item) => (
-                <div key={item.title} className="flex items-start gap-3 p-4 rounded-lg border bg-card">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
-                  <div>
-                    <h3 className="font-medium">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="border-t bg-primary text-primary-foreground py-16">
+      {/* ═══════════════════════════════════════════════════════════════════
+          FINAL CTA
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-violet-600 text-white py-16">
         <div className="container text-center">
-          <h2 className="text-2xl font-bold mb-4">
-            Ready to build?
-          </h2>
-          <p className="text-primary-foreground/80 mb-8">
-            Your FHIR sandbox is one click away.
+          <h2 className="text-2xl font-bold mb-3">Ready to build?</h2>
+          <p className="text-violet-200 mb-8 max-w-md mx-auto">
+            Generate your first FHIR app in minutes, or explore real patient data in the sandbox.
           </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            onClick={handleCreateSandbox}
-            disabled={isCreating}
-          >
-            {isCreating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <FlaskConical className="mr-2 h-4 w-4" />
-            )}
-            Create Free Sandbox
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" className="bg-white text-violet-700 hover:bg-violet-50" asChild>
+              <Link href="/openclaw">
+                <Wand2 className="mr-2 h-5 w-5" />
+                Build with AI
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="border-violet-300 text-white hover:bg-violet-700" onClick={handleCreateSandbox} disabled={isCreating}>
+              {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FlaskConical className="mr-2 h-4 w-4" />}
+              Free Sandbox
+            </Button>
+          </div>
         </div>
       </section>
     </div>

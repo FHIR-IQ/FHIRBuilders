@@ -25,13 +25,13 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-// Navigation - balanced for different personas
+// Navigation - color-coded by section category
 const navigation = [
-  { title: "Showcase", href: "/showcase", icon: Trophy, highlight: true },
-  { title: "Build with AI", href: "/openclaw", icon: Wand2 },
-  { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical },
-  { title: "Learn", href: "/learn", icon: BookOpen },
-  { title: "Projects", href: "/projects", icon: FolderOpen },
+  { title: "Build with AI", href: "/openclaw", icon: Wand2, color: "text-violet-600 hover:text-violet-700", highlight: true },
+  { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical, color: "text-blue-600 hover:text-blue-700" },
+  { title: "Projects", href: "/projects", icon: FolderOpen, color: "text-teal-600 hover:text-teal-700" },
+  { title: "Showcase", href: "/showcase", icon: Trophy, color: "text-orange-500 hover:text-orange-600" },
+  { title: "Learn", href: "/learn", icon: BookOpen, color: "text-amber-600 hover:text-amber-700" },
 ];
 
 export function Header() {
@@ -49,17 +49,13 @@ export function Header() {
             <span className="font-semibold hidden sm:inline-block">FHIRBuilders</span>
           </Link>
 
-          {/* Desktop Navigation - minimal */}
+          {/* Desktop Navigation - color-coded by section */}
           <nav className="hidden md:flex items-center gap-4">
             {navigation.map((item) => (
               <Link
                 key={item.title}
                 href={item.href}
-                className={`flex items-center gap-1.5 text-sm transition-colors ${
-                  item.highlight
-                    ? "text-primary font-medium hover:text-primary/80"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${item.color ?? "text-muted-foreground hover:text-foreground"}`}
               >
                 <item.icon className="h-4 w-4" />
                 {item.title}
