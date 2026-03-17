@@ -22,6 +22,7 @@ import {
   BookOpen,
   Wand2,
   Lightbulb,
+  Sparkles,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -30,6 +31,7 @@ const navigation = [
   { title: "Problems", href: "/problems", icon: Lightbulb, color: "text-rose-600 hover:text-rose-700" },
   { title: "Projects", href: "/projects", icon: FolderOpen, color: "text-teal-600 hover:text-teal-700" },
   { title: "Build", href: "/build", icon: Wand2, color: "text-violet-600 hover:text-violet-700" },
+  { title: "OpenClaw Skills", href: "/openclaw", icon: Sparkles, color: "text-amber-600 hover:text-amber-700" },
   { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical, color: "text-blue-600 hover:text-blue-700" },
   { title: "Learn", href: "/learn", icon: BookOpen, color: "text-amber-600 hover:text-amber-700" },
 ];
