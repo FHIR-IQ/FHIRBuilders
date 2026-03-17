@@ -7,6 +7,8 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowUp,
+  ArrowRight,
+  Copy,
   ExternalLink,
   Github,
   Plus,
@@ -39,12 +41,12 @@ interface Project {
   createdAt: string;
 }
 
-const ARTIFACT_TYPES = ["All", "Agent", "MCP Tool", "Claude Skill", "App", "CQL Measure", "FHIR IG"];
+const ARTIFACT_TYPES = ["All", "Agent", "MCP Tool", "OpenClaw Skill", "App", "CQL Measure", "FHIR IG"];
 
 const ARTIFACT_COLORS: Record<string, string> = {
   "Agent":        "bg-violet-100 text-violet-800 border-violet-200",
   "MCP Tool":     "bg-blue-100 text-blue-800 border-blue-200",
-  "Claude Skill": "bg-amber-100 text-amber-800 border-amber-200",
+  "OpenClaw Skill": "bg-amber-100 text-amber-800 border-amber-200",
   "App":          "bg-green-100 text-green-800 border-green-200",
   "CQL Measure":  "bg-teal-100 text-teal-800 border-teal-200",
   "FHIR IG":      "bg-pink-100 text-pink-800 border-pink-200",
@@ -53,7 +55,7 @@ const ARTIFACT_COLORS: Record<string, string> = {
 const ARTIFACT_ICONS: Record<string, React.ElementType> = {
   "Agent":        Bot,
   "MCP Tool":     Wrench,
-  "Claude Skill": Sparkles,
+  "OpenClaw Skill": Sparkles,
   "App":          Layers,
   "CQL Measure":  FileCode2,
   "FHIR IG":      BarChart3,
@@ -155,6 +157,18 @@ export default function ProjectsPage() {
           </Link>
         </Button>
       </div>
+
+      {/* I2 — OpenClaw Skills banner when filtered */}
+      {filterType === "OpenClaw Skill" && (
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm">
+          <span className="text-violet-700">
+            Looking for curated FHIR skills with one-click installs and a skill builder?
+          </span>
+          <Link href="/openclaw" className="ml-3 shrink-0 font-medium text-violet-700 hover:underline flex items-center gap-1">
+            Visit the Skills Hub <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      )}
 
       {/* Filters and Sort */}
       <div className="flex flex-col gap-4 mb-8">
@@ -295,6 +309,22 @@ export default function ProjectsPage() {
                         </div>
                         <p className="text-muted-foreground">{project.description}</p>
                       </div>
+
+                      {/* OpenClaw Skill install chip (I1) */}
+                      {project.artifactType === "OpenClaw Skill" && (
+                        <div className="mb-4 bg-zinc-900 rounded-lg px-3 py-2 flex items-center gap-2 text-xs">
+                          <code className="text-green-400 font-mono flex-1">
+                            clawhub install fhirbuilders/{project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
+                          </code>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(`clawhub install fhirbuilders/${project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`)}
+                            className="text-zinc-400 hover:text-white transition-colors"
+                            title="Copy install command"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
 
                       {/* Tags */}
                       {project.tags.length > 0 && (

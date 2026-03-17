@@ -20,7 +20,7 @@ const ARTIFACT_TYPES = [
   { value: "App", color: "bg-green-100 text-green-800 border-green-200" },
   { value: "Agent", color: "bg-violet-100 text-violet-800 border-violet-200" },
   { value: "MCP Tool", color: "bg-blue-100 text-blue-800 border-blue-200" },
-  { value: "Claude Skill", color: "bg-amber-100 text-amber-800 border-amber-200" },
+  { value: "OpenClaw Skill", color: "bg-amber-100 text-amber-800 border-amber-200" },
   { value: "FHIR IG", color: "bg-pink-100 text-pink-800 border-pink-200" },
   { value: "CQL Measure", color: "bg-teal-100 text-teal-800 border-teal-200" },
 ];

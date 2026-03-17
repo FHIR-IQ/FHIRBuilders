@@ -27,7 +27,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 // Navigation - color-coded by section category
 const navigation = [
   { title: "Projects", href: "/projects", icon: FolderOpen, color: "text-teal-600 hover:text-teal-700" },
-  { title: "Build with AI", href: "/openclaw", icon: Wand2, color: "text-violet-600 hover:text-violet-700" },
+  { title: "OpenClaw Skills", href: "/openclaw", icon: Wand2, color: "text-violet-600 hover:text-violet-700" },
   { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical, color: "text-blue-600 hover:text-blue-700" },
   { title: "Learn", href: "/learn", icon: BookOpen, color: "text-amber-600 hover:text-amber-700" },
 ];

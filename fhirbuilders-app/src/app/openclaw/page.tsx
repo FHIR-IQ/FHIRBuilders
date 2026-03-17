@@ -1,1079 +1,1162 @@
-"use client"
+"use client";
 
-import { useState, useEffect, Suspense } from "react"
-import Link from "next/link"
-import { useSearchParams } from "next/navigation"
-import { useSession } from "next-auth/react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Loader2,
-  Sparkles,
-  CheckCircle,
-  AlertCircle,
-  Code,
-  ExternalLink,
-  Pill,
-  User,
-  Activity,
-  Calendar,
-  ArrowRight,
-  FileCode,
-  FolderTree,
-  Copy,
-  Check,
-  Wand2,
-  LayoutTemplate,
-  Zap,
-  MessageSquare,
-  Download,
-  ChevronRight,
-  TestTube,
-  Home,
-  Key,
-  Eye,
-  EyeOff,
-  X,
-  ChevronDown,
-} from "lucide-react"
-import { ChannelsPanel } from "@/components/openclaw/channels-panel"
+  Sparkles, Copy, Check, Download, ExternalLink, ChevronDown, ChevronUp,
+  Github, Search, ArrowRight, MessageCircle, Smartphone, Terminal,
+  Clock, Brain, Zap, FlaskConical, Bot, Wrench, BarChart3, Stethoscope,
+  AlertCircle, Loader2, Plus, X,
+} from "lucide-react";
 
-// Template definitions matching the backend
-const TEMPLATES = [
+// ── Seed skills ──────────────────────────────────────────────────────────────
+
+const SEED_SKILLS = [
   {
-    id: "medication-tracker",
-    name: "Medication Tracker",
-    description: "Track and manage patient medications with reminders",
-    icon: Pill,
-    resources: ["Patient", "MedicationRequest"],
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
+    id: "fhir-patient-query",
+    name: "FHIR Patient Query",
+    description: "Query any FHIR R4 endpoint for patient demographics, conditions, medications, and recent labs from a single natural language request",
+    category: "Data Access",
+    fhirResources: ["Patient", "Condition", "MedicationRequest", "Observation"],
+    fhirVersion: "R4",
+    author: "FHIRBuilders Community",
+    installCmd: "clawhub install fhirbuilders/fhir-patient-query",
+    downloadPath: "/skills/fhir-patient-query/SKILL.md",
+    installCount: 0,
+    isOfficial: true,
   },
   {
-    id: "patient-portal",
-    name: "Patient Portal",
-    description: "A comprehensive patient health portal",
-    icon: User,
-    resources: ["Patient"],
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
+    id: "fhir-care-gap-monitor",
+    name: "Care Gap Monitor",
+    description: "Identify patients with open quality care gaps — missing preventive screenings, overdue labs, or unfulfilled care plan goals",
+    category: "Clinical Workflows",
+    fhirResources: ["Patient", "Observation", "Condition", "Procedure", "Goal"],
+    fhirVersion: "R4",
+    author: "FHIRBuilders Community",
+    installCmd: "clawhub install fhirbuilders/fhir-care-gap-monitor",
+    downloadPath: "/skills/fhir-care-gap-monitor/SKILL.md",
+    installCount: 0,
+    isOfficial: true,
   },
   {
-    id: "observation-dashboard",
-    name: "Vitals Dashboard",
-    description: "View and track patient health observations and vitals",
-    icon: Activity,
-    resources: ["Patient", "Observation"],
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
+    id: "fhir-adt-alerts",
+    name: "ADT Alerts",
+    description: "Monitor FHIR Subscription resources for ADT events and send proactive alerts when patients are admitted, discharged, or transferred",
+    category: "Alerts & Monitoring",
+    fhirResources: ["Encounter", "Patient", "Subscription"],
+    fhirVersion: "R4",
+    author: "FHIRBuilders Community",
+    installCmd: "clawhub install fhirbuilders/fhir-adt-alerts",
+    downloadPath: "/skills/fhir-adt-alerts/SKILL.md",
+    installCount: 0,
+    isOfficial: true,
   },
   {
-    id: "appointment-scheduler",
-    name: "Appointment Scheduler",
-    description: "Schedule and manage patient appointments",
-    icon: Calendar,
-    resources: ["Patient", "Appointment"],
-    color: "text-orange-500",
-    bgColor: "bg-orange-500/10",
+    id: "cql-measure-runner",
+    name: "CQL Measure Runner",
+    description: "Run a CQL quality measure against your FHIR endpoint and return population results — initial population, denominator, numerator, and performance rate",
+    category: "Quality Measures",
+    fhirResources: ["MeasureReport", "Measure"],
+    fhirVersion: "R4",
+    author: "FHIRBuilders Community",
+    installCmd: "clawhub install fhirbuilders/cql-measure-runner",
+    downloadPath: "/skills/cql-measure-runner/SKILL.md",
+    installCount: 0,
+    isOfficial: true,
   },
-]
+  {
+    id: "fhir-medication-reconciliation",
+    name: "Medication Reconciliation",
+    description: "Compare medication lists from multiple sources, flag duplicates and drug interactions, and produce a reconciliation summary for clinical review",
+    category: "Clinical Workflows",
+    fhirResources: ["MedicationRequest", "MedicationStatement", "Patient"],
+    fhirVersion: "R4",
+    author: "FHIRBuilders Community",
+    installCmd: "clawhub install fhirbuilders/fhir-medication-reconciliation",
+    downloadPath: "/skills/fhir-medication-reconciliation/SKILL.md",
+    installCount: 0,
+    isOfficial: true,
+  },
+  {
+    id: "fhirbuilders-digest",
+    name: "FHIRBuilders Digest",
+    description: "Daily digest of new projects and trending artifacts on FHIRBuilders.com — delivered to your chat app every morning",
+    category: "Productivity",
+    fhirResources: [],
+    fhirVersion: "—",
+    author: "FHIRBuilders Community",
+    installCmd: "clawhub install fhirbuilders/fhirbuilders-digest",
+    downloadPath: "/skills/fhirbuilders-digest/SKILL.md",
+    installCount: 0,
+    isOfficial: true,
+  },
+  {
+    id: "fhir-agent-coordinator",
+    name: "Agent Coordinator",
+    description: "Coordinate multi-agent FHIR workflows — delegate tasks to specialized sub-agents using A2A messaging over FHIR Task resources",
+    category: "Agent Coordination",
+    fhirResources: ["Task", "Patient", "Communication"],
+    fhirVersion: "R4",
+    author: "FHIRBuilders Community",
+    installCmd: "clawhub install fhirbuilders/fhir-agent-coordinator",
+    downloadPath: "/skills/fhir-agent-coordinator/SKILL.md",
+    installCount: 0,
+    isOfficial: true,
+  },
+  {
+    id: "smart-fhir-launcher",
+    name: "SMART on FHIR Launcher",
+    description: "Initiate SMART on FHIR authorization flows and manage access tokens for multiple endpoints from your agent — no manual browser auth required",
+    category: "Data Access",
+    fhirResources: [],
+    fhirVersion: "R4",
+    author: "FHIRBuilders Community",
+    installCmd: "clawhub install fhirbuilders/smart-fhir-launcher",
+    downloadPath: "/skills/smart-fhir-launcher/SKILL.md",
+    installCount: 0,
+    isOfficial: true,
+  },
+];
 
-const EXAMPLE_PROMPTS = [
-  "Build a medication reminder app that shows patients their prescriptions and lets them mark doses as taken",
-  "Create an appointment scheduling app for a small clinic with patient and provider views",
-  "Build a lab results viewer that shows trends over time with charts",
-  "Create a patient portal showing conditions, allergies, and care team members",
-]
+const CATEGORIES = [
+  "All",
+  "Clinical Workflows",
+  "Quality Measures",
+  "Data Access",
+  "Alerts & Monitoring",
+  "Agent Coordination",
+  "Productivity",
+];
 
-const GENERATION_STEPS = [
-  { key: "PENDING", label: "Queued", description: "Waiting to start" },
-  { key: "ANALYZING", label: "Analyzing", description: "Understanding your requirements" },
-  { key: "GENERATING", label: "Generating", description: "Creating code with AI" },
-  { key: "DEPLOYING", label: "Deploying", description: "Setting up sandbox" },
-  { key: "COMPLETED", label: "Complete", description: "Ready to use" },
-]
+const CATEGORY_COLORS: Record<string, string> = {
+  "Clinical Workflows":  "bg-teal-100 text-teal-800 border-teal-200",
+  "Quality Measures":    "bg-green-100 text-green-800 border-green-200",
+  "Data Access":         "bg-blue-100 text-blue-800 border-blue-200",
+  "Alerts & Monitoring": "bg-amber-100 text-amber-800 border-amber-200",
+  "Agent Coordination":  "bg-purple-100 text-purple-800 border-purple-200",
+  "Productivity":        "bg-gray-100 text-gray-700 border-gray-200",
+};
 
-type GenerationStatus = "idle" | "generating" | "success" | "error"
+const FHIR_RESOURCE_CHIPS = [
+  "Patient", "Observation", "Condition", "MedicationRequest", "MedicationStatement",
+  "Encounter", "Procedure", "Goal", "Task", "Communication", "Subscription",
+  "MeasureReport", "Measure", "DiagnosticReport", "AllergyIntolerance",
+];
 
-interface GeneratedFile {
-  name: string
-  path: string
-  code: string
+// ── Skill card ────────────────────────────────────────────────────────────────
+
+function SkillCard({ skill }: { skill: typeof SEED_SKILLS[0] }) {
+  const [copied, setCopied] = useState(false);
+  const [installCount, setInstallCount] = useState(skill.installCount);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(skill.installCmd);
+    setCopied(true);
+    setInstallCount((c) => c + 1);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Card className="flex flex-col hover:border-violet-200 transition-colors">
+      <CardContent className="p-5 flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h3 className="font-semibold text-base">{skill.name}</h3>
+              {skill.isOfficial && (
+                <Badge variant="outline" className="text-xs bg-violet-50 text-violet-700 border-violet-200">
+                  Official
+                </Badge>
+              )}
+            </div>
+            <Badge variant="outline" className={`text-xs ${CATEGORY_COLORS[skill.category] ?? ""}`}>
+              {skill.category}
+            </Badge>
+          </div>
+          <span className="text-xs text-muted-foreground ml-2 shrink-0">
+            {installCount > 0 ? `${installCount} installs` : "Be first"}
+          </span>
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground mb-3 flex-1">{skill.description}</p>
+
+        {/* FHIR resources */}
+        {skill.fhirResources.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-4">
+            {skill.fhirResources.map((r) => (
+              <Badge key={r} variant="secondary" className="text-xs">
+                {r}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Install command */}
+        <div className="bg-zinc-900 rounded-lg px-3 py-2 flex items-center justify-between gap-2 mb-3">
+          <code className="text-xs text-green-400 font-mono truncate flex-1">
+            {skill.installCmd}
+          </code>
+          <button
+            onClick={handleCopy}
+            className="text-zinc-400 hover:text-white transition-colors shrink-0"
+            title="Copy install command"
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-green-400" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{skill.author}</span>
+          <div className="flex gap-2">
+            <a
+              href={skill.downloadPath}
+              download
+              className="flex items-center gap-1 hover:text-foreground transition-colors"
+            >
+              <Download className="h-3 w-3" />
+              SKILL.md
+            </a>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-interface GenerationResult {
-  id: string
-  status: string
-  fhirResources: string[]
-  sandboxUrl?: string | null
-  githubRepoUrl?: string | null
-  errorMessage?: string | null
-  generatedCode?: {
-    appName: string
-    description: string
-    components: GeneratedFile[]
-    pages: GeneratedFile[]
-    apiRoutes: GeneratedFile[]
-  }
+// ── Community skill card ──────────────────────────────────────────────────────
+
+interface CommunitySkill {
+  id: string;
+  title: string;
+  description: string;
+  artifactType: string | null;
+  upvoteCount: number;
+  authorName: string;
+  repoUrl: string | null;
+  tags: string[];
 }
 
-function OpenClawContent() {
-  const searchParams = useSearchParams()
-  const { data: session } = useSession()
-  const [prompt, setPrompt] = useState("")
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-  const [status, setStatus] = useState<GenerationStatus>("idle")
-  const [result, setResult] = useState<GenerationResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [detectedResources, setDetectedResources] = useState<string[]>([])
-  const [copiedFile, setCopiedFile] = useState<string | null>(null)
-  const [activeCodeTab, setActiveCodeTab] = useState<string>("components")
-  const [isDownloading, setIsDownloading] = useState(false)
+function CommunitySkillCard({ skill }: { skill: CommunitySkill }) {
+  const [copied, setCopied] = useState(false);
+  const installCmd = skill.repoUrl
+    ? `# Download from GitHub:\ncurl -L ${skill.repoUrl}/raw/main/SKILL.md > SKILL.md`
+    : "# Contact the author for install instructions";
 
-  // BYOK state
-  const [aiProvider, setAiProvider] = useState<"anthropic" | "openai">("anthropic")
-  const [aiKey, setAiKey] = useState("")
-  const [savedAiKey, setSavedAiKey] = useState<string | null>(null)
-  const [savedAiProvider, setSavedAiProvider] = useState<"anthropic" | "openai">("anthropic")
-  const [showKeyInput, setShowKeyInput] = useState(false)
-  const [showKeyValue, setShowKeyValue] = useState(false)
-  const [keyError, setKeyError] = useState("")
+  return (
+    <Card className="flex flex-col hover:border-teal-200 transition-colors">
+      <CardContent className="p-5 flex-1 flex flex-col">
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="font-semibold text-base flex-1">{skill.title}</h3>
+          <span className="text-xs text-muted-foreground ml-2">{skill.upvoteCount} ↑</span>
+        </div>
+        <p className="text-sm text-muted-foreground mb-3 flex-1">{skill.description}</p>
+        {skill.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {skill.tags.slice(0, 4).map((t) => (
+              <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+            ))}
+          </div>
+        )}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{skill.authorName}</span>
+          <div className="flex gap-2">
+            {skill.repoUrl && (
+              <a href={skill.repoUrl} target="_blank" rel="noopener noreferrer" className="hover:text-foreground flex items-center gap-1">
+                <Github className="h-3 w-3" />
+                Code
+              </a>
+            )}
+            <button
+              onClick={() => { navigator.clipboard.writeText(installCmd); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+              className="flex items-center gap-1 hover:text-foreground"
+            >
+              {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+              Copy
+            </button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-  // Load saved key from localStorage
-  useEffect(() => {
-    try {
-      const key = localStorage.getItem("fhirbuilders_ai_key")
-      const provider = localStorage.getItem("fhirbuilders_ai_provider") as "anthropic" | "openai" | null
-      if (key) {
-        setSavedAiKey(key)
-        setSavedAiProvider(provider ?? "anthropic")
-      }
-    } catch {}
-  }, [])
+// ── Skill builder ─────────────────────────────────────────────────────────────
 
-  function saveAiKey() {
-    setKeyError("")
-    const trimmed = aiKey.trim()
-    if (!trimmed) { setKeyError("Enter an API key"); return }
-    if (aiProvider === "anthropic" && !trimmed.startsWith("sk-ant-")) {
-      setKeyError("Anthropic keys start with sk-ant-"); return
+function SkillBuilder() {
+  const [step, setStep] = useState(1);
+  const [taskDescription, setTaskDescription] = useState("");
+  const [fhirEndpoint, setFhirEndpoint] = useState("");
+  const [authMethod, setAuthMethod] = useState("bearer");
+  const [fhirVersion, setFhirVersion] = useState("R4");
+  const [selectedResources, setSelectedResources] = useState<string[]>([]);
+  const [isProactive, setIsProactive] = useState(false);
+  const [schedule, setSchedule] = useState("every morning at 7am");
+  const [userApiKey, setUserApiKey] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedSkill, setGeneratedSkill] = useState("");
+  const [error, setError] = useState("");
+  const outputRef = useRef<HTMLPreElement>(null);
+
+  const toggleResource = (r: string) => {
+    setSelectedResources((prev) =>
+      prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]
+    );
+  };
+
+  const handleGenerate = async () => {
+    if (!taskDescription.trim()) {
+      setError("Please describe what you want your agent to do.");
+      return;
     }
-    if (aiProvider === "openai" && !trimmed.startsWith("sk-")) {
-      setKeyError("OpenAI keys start with sk-"); return
-    }
-    try {
-      localStorage.setItem("fhirbuilders_ai_key", trimmed)
-      localStorage.setItem("fhirbuilders_ai_provider", aiProvider)
-      setSavedAiKey(trimmed)
-      setSavedAiProvider(aiProvider)
-      setAiKey("")
-      setShowKeyInput(false)
-    } catch {}
-  }
-
-  function clearAiKey() {
-    try {
-      localStorage.removeItem("fhirbuilders_ai_key")
-      localStorage.removeItem("fhirbuilders_ai_provider")
-    } catch {}
-    setSavedAiKey(null)
-    setAiKey("")
-  }
-
-  // Handle ?template= URL param
-  useEffect(() => {
-    const templateParam = searchParams.get("template")
-    if (templateParam) {
-      const template = TEMPLATES.find(t => t.id === templateParam)
-      if (template) {
-        setSelectedTemplate(templateParam)
-        if (!prompt) {
-          setPrompt(`Build a ${template.name.toLowerCase()} app that ${template.description.toLowerCase()}`)
-        }
-      }
-    }
-  }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Client-side resource detection for preview
-  useEffect(() => {
-    const keywords: Record<string, string[]> = {
-      MedicationRequest: ["medication", "prescription", "drug", "dose", "pill", "medicine"],
-      Appointment: ["appointment", "schedule", "booking", "visit", "calendar"],
-      Observation: ["lab", "test", "result", "vital", "blood pressure", "observation"],
-      Condition: ["condition", "diagnosis", "disease", "problem"],
-      CareTeam: ["care team", "provider", "doctor", "nurse"],
-      Immunization: ["vaccine", "immunization", "shot"],
-      AllergyIntolerance: ["allergy", "allergies", "intolerance"],
-      Practitioner: ["practitioner", "doctor", "physician", "nurse"],
-    }
-
-    const detected = new Set<string>(["Patient"])
-    const lowerPrompt = prompt.toLowerCase()
-
-    for (const [resource, kws] of Object.entries(keywords)) {
-      for (const kw of kws) {
-        if (lowerPrompt.includes(kw)) {
-          detected.add(resource)
-          break
-        }
-      }
-    }
-
-    // Add resources from selected template
-    if (selectedTemplate) {
-      const template = TEMPLATES.find(t => t.id === selectedTemplate)
-      template?.resources.forEach(r => detected.add(r))
-    }
-
-    setDetectedResources(Array.from(detected))
-  }, [prompt, selectedTemplate])
-
-  async function handleGenerate() {
-    if (!prompt.trim() || prompt.length < 20) {
-      setError("Please provide a more detailed description (at least 20 characters)")
-      return
-    }
-
-    setStatus("generating")
-    setError(null)
-    setResult(null)
+    setError("");
+    setGeneratedSkill("");
+    setIsGenerating(true);
 
     try {
-      const response = await fetch("/api/openclaw/generate", {
+      const res = await fetch("/api/openclaw/generate-skill", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt,
-          templateId: selectedTemplate,
-          // Pass BYOK key if user has connected one
-          ...(savedAiKey ? { userApiKey: savedAiKey, userProvider: savedAiProvider } : {}),
+          taskDescription,
+          fhirEndpoint,
+          authMethod,
+          fhirVersion,
+          fhirResources: selectedResources,
+          isProactive,
+          schedule: isProactive ? schedule : undefined,
+          userApiKey: userApiKey || undefined,
         }),
-      })
+      });
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Generation failed")
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Generation failed. Please try again.");
+        setIsGenerating(false);
+        return;
       }
 
-      setResult({
-        id: data.id,
-        status: data.status,
-        fhirResources: data.fhirResources,
-      })
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) {
+        setError("Stream unavailable.");
+        setIsGenerating(false);
+        return;
+      }
 
-      // Start polling for status updates
-      pollStatus(data.id)
-    } catch (err) {
-      setStatus("error")
-      setError(err instanceof Error ? err.message : "Unknown error")
-    }
-  }
-
-  async function pollStatus(id: string) {
-    const poll = async () => {
-      try {
-        const response = await fetch(`/api/openclaw/status/${id}`)
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to get status")
+      let accumulated = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        accumulated += chunk;
+        setGeneratedSkill(accumulated);
+        if (outputRef.current) {
+          outputRef.current.scrollTop = outputRef.current.scrollHeight;
         }
-
-        setResult(data)
-
-        if (data.status === "COMPLETED") {
-          setStatus("success")
-        } else if (data.status === "FAILED") {
-          setStatus("error")
-          setError(data.errorMessage || "Generation failed")
-        } else {
-          // Keep polling
-          setTimeout(poll, 2000)
-        }
-      } catch (err) {
-        setStatus("error")
-        setError(err instanceof Error ? err.message : "Polling failed")
       }
-    }
-
-    poll()
-  }
-
-  function getCurrentStepIndex(statusKey: string): number {
-    return GENERATION_STEPS.findIndex(s => s.key === statusKey)
-  }
-
-  function copyToClipboard(code: string, fileName: string) {
-    navigator.clipboard.writeText(code)
-    setCopiedFile(fileName)
-    setTimeout(() => setCopiedFile(null), 2000)
-  }
-
-  function selectTemplate(templateId: string) {
-    if (selectedTemplate === templateId) {
-      setSelectedTemplate(null)
-    } else {
-      setSelectedTemplate(templateId)
-      const template = TEMPLATES.find(t => t.id === templateId)
-      if (template && !prompt) {
-        // Set a starter prompt based on template
-        setPrompt(`Build a ${template.name.toLowerCase()} app that ${template.description.toLowerCase()}`)
-      }
-    }
-  }
-
-  async function handleDownload() {
-    if (!result?.generatedCode) return
-    setIsDownloading(true)
-
-    try {
-      const [JSZip, { scaffoldProject }] = await Promise.all([
-        import("jszip").then(m => m.default),
-        import("@/lib/openclaw/scaffold"),
-      ])
-
-      const files = scaffoldProject(result.generatedCode)
-      const zip = new JSZip()
-
-      for (const [path, content] of Object.entries(files)) {
-        zip.file(path, content)
-      }
-
-      const blob = await zip.generateAsync({ type: "blob" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `${result.generatedCode.appName || "fhir-app"}.zip`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch (err) {
-      console.error("Download failed:", err)
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
-      setIsDownloading(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
-  function startOver() {
-    setStatus("idle")
-    setResult(null)
-    setError(null)
-    setPrompt("")
-    setSelectedTemplate(null)
-  }
-
-  // Get all generated files for display
-  const allFiles = result?.generatedCode ? [
-    ...result.generatedCode.components.map(f => ({ ...f, type: "component" })),
-    ...result.generatedCode.pages.map(f => ({ ...f, type: "page" })),
-    ...result.generatedCode.apiRoutes.map(f => ({ ...f, type: "api" })),
-  ] : []
+  const handleDownload = () => {
+    const blob = new Blob([generatedSkill], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "SKILL.md";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="container mx-auto py-10 max-w-5xl">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-        <Link href="/" className="hover:text-foreground">Home</Link>
-        <ChevronRight className="h-4 w-4" />
-        <Link href="/openclaw" className="hover:text-foreground">OpenClaw</Link>
-        {selectedTemplate && (
-          <>
-            <ChevronRight className="h-4 w-4" />
-            <span>{TEMPLATES.find(t => t.id === selectedTemplate)?.name}</span>
-          </>
-        )}
+    <div className="space-y-6">
+      {/* Step 1 */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">
+          Step 1 — What should your agent do? <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          value={taskDescription}
+          onChange={(e) => setTaskDescription(e.target.value)}
+          placeholder="Describe the task in plain English. What should your agent do when you ask it? What FHIR data does it need?&#10;&#10;Example: Every morning, tell me which patients in my panel have an HbA1c older than 12 months and send me their contact info"
+          className="w-full min-h-[120px] px-3 py-2 rounded-lg border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+        />
       </div>
 
-      {/* Header */}
-      <div className="text-center mb-10">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="p-3 rounded-xl bg-primary/10">
-            <Wand2 className="h-8 w-8 text-primary" />
+      {/* Step 2 */}
+      <div className="space-y-4 border rounded-xl p-4 bg-muted/20">
+        <h4 className="text-sm font-medium">Step 2 — Configure it</h4>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">FHIR Endpoint URL</label>
+            <Input
+              placeholder="https://api.medplum.com/fhir/R4"
+              value={fhirEndpoint}
+              onChange={(e) => setFhirEndpoint(e.target.value)}
+              className="text-sm"
+            />
           </div>
-          <h1 className="text-4xl font-bold">OpenClaw</h1>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">FHIR Version</label>
+            <div className="flex gap-2">
+              {["R4", "R4B", "R5"].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setFhirVersion(v)}
+                  className={`px-3 py-1.5 rounded text-sm border transition-colors ${fhirVersion === v ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-muted"}`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Describe your healthcare app idea and watch AI build it for you.
-          Connect it to Slack, Discord, WhatsApp, and more.
-          Powered by Claude + Medplum + FHIR.
-        </p>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Auth Method</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "bearer", label: "Bearer Token" },
+              { value: "smart", label: "SMART on FHIR" },
+              { value: "basic", label: "Basic Auth" },
+              { value: "none", label: "None (public)" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setAuthMethod(opt.value)}
+                className={`px-3 py-1.5 rounded text-sm border transition-colors ${authMethod === opt.value ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-muted"}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">Primary FHIR Resources</label>
+          <div className="flex flex-wrap gap-1.5">
+            {FHIR_RESOURCE_CHIPS.map((r) => (
+              <button
+                key={r}
+                onClick={() => toggleResource(r)}
+                className={`px-2 py-1 rounded text-xs border transition-colors ${selectedResources.includes(r) ? "bg-blue-100 text-blue-800 border-blue-300" : "border-input hover:bg-muted"}`}
+              >
+                {selectedResources.includes(r) && <Check className="inline h-3 w-3 mr-0.5" />}
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">Execution Mode</label>
+          <div className="flex gap-3">
+            {[
+              { value: false, label: "Reactive", desc: "Runs when you message your agent" },
+              { value: true, label: "Proactive", desc: "Runs on a schedule (heartbeat)" },
+            ].map((opt) => (
+              <label key={String(opt.value)} className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="mode"
+                  checked={isProactive === opt.value}
+                  onChange={() => setIsProactive(opt.value)}
+                  className="mt-0.5 accent-primary"
+                />
+                <div>
+                  <span className="text-sm font-medium">{opt.label}</span>
+                  <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+          {isProactive && (
+            <Input
+              placeholder='Schedule: e.g., "every morning at 7am" or "every 30 minutes"'
+              value={schedule}
+              onChange={(e) => setSchedule(e.target.value)}
+              className="text-sm mt-2"
+            />
+          )}
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">
+            Anthropic API Key <span className="font-normal">(optional — uses server key if blank)</span>
+          </label>
+          <Input
+            type="password"
+            placeholder="sk-ant-..."
+            value={userApiKey}
+            onChange={(e) => setUserApiKey(e.target.value)}
+            className="text-sm font-mono"
+          />
+        </div>
       </div>
 
-      {/* Demo Mode Banner for anonymous users */}
-      {status === "idle" && !session && (
-        <Card className="mb-6 border-amber-200 bg-amber-50/50">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
-                <div>
-                  <p className="font-medium text-amber-800">Demo Mode</p>
-                  <p className="text-sm text-amber-700/80">
-                    You can try OpenClaw without signing in. Sign in to save your generated apps and connect messaging channels.
-                  </p>
-                </div>
-              </div>
-              <Button asChild variant="outline" size="sm" className="shrink-0">
-                <Link href="/login">Sign In</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Step 3 — Generate */}
+      {error && (
+        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </div>
       )}
 
-      {/* ── AI Provider Connection (BYOK) ── */}
-      {status === "idle" && (
-        <Card className={`mb-6 ${savedAiKey ? "border-violet-200 bg-violet-50/40" : "border-dashed border-2"}`}>
-          <CardContent className="py-4">
-            {savedAiKey ? (
-              /* Connected state */
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center">
-                    <Key className="h-4 w-4 text-violet-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-violet-800 text-sm">
-                      {savedAiProvider === "openai" ? "OpenAI (GPT-4o)" : "Anthropic (Claude)"} connected
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {savedAiKey.slice(0, 12)}••••••••••••
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setShowKeyInput(!showKeyInput)}>
-                    Change
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={clearAiKey}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              /* Disconnected state */
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                    <Key className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">Connect your AI provider</p>
-                    <p className="text-xs text-muted-foreground">
-                      Add your Anthropic or OpenAI key to generate apps. Your key is never stored on our servers.
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 border-violet-300 text-violet-700 hover:bg-violet-50"
-                  onClick={() => setShowKeyInput(!showKeyInput)}
-                >
-                  <Key className="mr-1.5 h-3.5 w-3.5" />
-                  Connect key
-                  <ChevronDown className={`ml-1 h-3.5 w-3.5 transition-transform ${showKeyInput ? "rotate-180" : ""}`} />
+      <Button
+        onClick={handleGenerate}
+        disabled={isGenerating || !taskDescription.trim()}
+        className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+        size="lg"
+      >
+        {isGenerating ? (
+          <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating SKILL.md...</>
+        ) : (
+          <><Sparkles className="mr-2 h-4 w-4" />Generate SKILL.md</>
+        )}
+      </Button>
+
+      {/* Generated output */}
+      {(generatedSkill || isGenerating) && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium">Generated SKILL.md</h4>
+            {generatedSkill && !isGenerating && (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(generatedSkill); }}>
+                  <Copy className="h-3.5 w-3.5 mr-1" />
+                  Copy
+                </Button>
+                <Button size="sm" onClick={handleDownload}>
+                  <Download className="h-3.5 w-3.5 mr-1" />
+                  Download SKILL.md
                 </Button>
               </div>
             )}
+          </div>
 
-            {/* Expandable key input */}
-            {showKeyInput && (
-              <div className="mt-4 pt-4 border-t space-y-3">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setAiProvider("anthropic")}
-                    className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${aiProvider === "anthropic" ? "border-violet-400 bg-violet-50 text-violet-700" : "border-border text-muted-foreground hover:border-violet-200"}`}
-                  >
-                    🤖 Anthropic (Claude)
-                  </button>
-                  <button
-                    onClick={() => setAiProvider("openai")}
-                    className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${aiProvider === "openai" ? "border-blue-400 bg-blue-50 text-blue-700" : "border-border text-muted-foreground hover:border-blue-200"}`}
-                  >
-                    🧠 OpenAI (GPT-4o)
-                  </button>
-                </div>
+          <div className="relative rounded-xl overflow-hidden border bg-zinc-950">
+            <div className="bg-zinc-800 px-4 py-2 flex items-center gap-2">
+              <div className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
+              <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
+              <div className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
+              <span className="ml-2 text-xs text-zinc-400 font-mono">SKILL.md</span>
+            </div>
+            <pre
+              ref={outputRef}
+              className="text-xs text-zinc-300 font-mono p-4 overflow-auto max-h-96 whitespace-pre-wrap"
+            >
+              {generatedSkill || "Generating..."}
+              {isGenerating && <span className="animate-pulse">▊</span>}
+            </pre>
+          </div>
 
-                <div className="relative">
-                  <input
-                    type={showKeyValue ? "text" : "password"}
-                    value={aiKey}
-                    onChange={e => setAiKey(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && saveAiKey()}
-                    placeholder={aiProvider === "anthropic" ? "sk-ant-api03-..." : "sk-proj-..."}
-                    className="w-full rounded-md border px-3 py-2 pr-10 text-sm font-mono bg-background focus:outline-none focus:ring-2 focus:ring-violet-300"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowKeyValue(!showKeyValue)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showKeyValue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+          {generatedSkill && !isGenerating && (
+            <div className="bg-muted/30 rounded-lg p-4 text-sm space-y-2">
+              <p className="font-medium">Install instructions:</p>
+              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                <li>Download SKILL.md and save it to <code className="text-xs bg-muted px-1 rounded">~/.openclaw/skills/your-skill-name/SKILL.md</code></li>
+                <li>Restart your OpenClaw gateway: <code className="text-xs bg-muted px-1 rounded">openclaw restart</code></li>
+                <li>Test it: message your agent and describe the task</li>
+              </ol>
+              <Button variant="outline" size="sm" asChild className="mt-2">
+                <a href="#share-skill">Share with community →</a>
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
-                {keyError && <p className="text-xs text-red-600">{keyError}</p>}
+// ── Skill submission form ─────────────────────────────────────────────────────
 
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    Stored in browser only. Never sent to our servers without your prompt.{" "}
-                    {aiProvider === "anthropic"
-                      ? <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" className="underline">Get key →</a>
-                      : <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" className="underline">Get key →</a>
-                    }
-                  </p>
-                  <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white" onClick={saveAiKey}>
-                    Save &amp; connect
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+function SkillSubmissionForm() {
+  const [formData, setFormData] = useState({
+    skillName: "",
+    displayName: "",
+    description: "",
+    category: "",
+    fhirVersion: "R4",
+    githubUrl: "",
+    authorName: "",
+    authorEmail: "",
+  });
+  const [selectedResources, setSelectedResources] = useState<string[]>([]);
+  const [formState, setFormState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const toggleResource = (r: string) => {
+    setSelectedResources((prev) =>
+      prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    if (!formData.githubUrl.startsWith("https://github.com/")) {
+      setErrorMsg("Please provide a valid GitHub URL.");
+      return;
+    }
+
+    setFormState("loading");
+
+    // Validate that the GitHub URL contains a SKILL.md
+    try {
+      const rawBase = formData.githubUrl
+        .replace("https://github.com/", "https://raw.githubusercontent.com/")
+        .replace(/\/$/, "");
+      const skillMdUrl = `${rawBase}/main/SKILL.md`;
+      const checkRes = await fetch(skillMdUrl, { method: "HEAD" });
+      if (!checkRes.ok) {
+        setErrorMsg("Could not find a SKILL.md at this GitHub URL. Make sure SKILL.md is at the root of the default branch.");
+        setFormState("error");
+        return;
+      }
+    } catch {
+      setErrorMsg("Could not verify the GitHub URL. Please check the URL and try again.");
+      setFormState("error");
+      return;
+    }
+
+    // Submit to projects API as an OpenClaw Skill artifact
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: formData.displayName,
+        description: formData.description,
+        repoUrl: formData.githubUrl,
+        tags: selectedResources.slice(0, 5),
+        authorName: formData.authorName,
+        authorEmail: formData.authorEmail,
+        artifactType: "OpenClaw Skill",
+        status: "live",
+        lookingFor: [],
+      }),
+    });
+
+    if (res.ok) {
+      setFormState("success");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setErrorMsg(data.error || "Submission failed. Please try again.");
+      setFormState("error");
+    }
+  };
+
+  if (formState === "success") {
+    return (
+      <div className="text-center py-8">
+        <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <Check className="h-6 w-6 text-green-600" />
+        </div>
+        <h3 className="font-semibold text-lg mb-2">Skill Submitted!</h3>
+        <p className="text-muted-foreground text-sm">
+          Your skill is now visible in the community gallery below.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Skill slug <span className="text-red-500">*</span></label>
+          <Input
+            placeholder="fhir-care-gaps"
+            value={formData.skillName}
+            onChange={(e) => setFormData({ ...formData, skillName: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-") })}
+            required
+          />
+          <p className="text-xs text-muted-foreground">Lowercase, hyphens only</p>
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Display name <span className="text-red-500">*</span></label>
+          <Input
+            placeholder="FHIR Care Gaps"
+            value={formData.displayName}
+            onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Description <span className="text-red-500">*</span> <span className="text-muted-foreground font-normal">(max 100 chars)</span></label>
+        <Input
+          placeholder="One-line description of what this skill does"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value.slice(0, 100) })}
+          required
+        />
+        <p className="text-xs text-muted-foreground">{formData.description.length}/100</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Category <span className="text-red-500">*</span></label>
+          <select
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            required
+            className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          >
+            <option value="">Select category</option>
+            {CATEGORIES.filter((c) => c !== "All").map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">FHIR Version <span className="text-red-500">*</span></label>
+          <div className="flex gap-2 mt-1">
+            {["R4", "R4B", "R5"].map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setFormData({ ...formData, fhirVersion: v })}
+                className={`px-3 py-1.5 rounded text-sm border transition-colors ${formData.fhirVersion === v ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-muted"}`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-sm font-medium">FHIR Resources Used</label>
+        <div className="flex flex-wrap gap-1.5">
+          {FHIR_RESOURCE_CHIPS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => toggleResource(r)}
+              className={`px-2 py-1 rounded text-xs border transition-colors ${selectedResources.includes(r) ? "bg-blue-100 text-blue-800 border-blue-300" : "border-input hover:bg-muted"}`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-sm font-medium">GitHub Repository URL <span className="text-red-500">*</span></label>
+        <Input
+          placeholder="https://github.com/username/fhir-care-gaps"
+          value={formData.githubUrl}
+          onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
+          required
+        />
+        <p className="text-xs text-muted-foreground">Must contain a SKILL.md at the root of the main branch</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Your Name <span className="text-red-500">*</span></label>
+          <Input
+            placeholder="Jane Doe"
+            value={formData.authorName}
+            onChange={(e) => setFormData({ ...formData, authorName: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Email <span className="text-muted-foreground font-normal">(not public)</span></label>
+          <Input
+            type="email"
+            placeholder="you@example.com"
+            value={formData.authorEmail}
+            onChange={(e) => setFormData({ ...formData, authorEmail: e.target.value })}
+          />
+        </div>
+      </div>
+
+      {(formState === "error" || errorMsg) && (
+        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {errorMsg}
+        </div>
       )}
 
-      {status === "idle" && (
-        <>
-          {/* Template Selection */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <LayoutTemplate className="h-5 w-5" />
-                Choose a Template (Optional)
-              </CardTitle>
-              <CardDescription>
-                Start with a pre-built template or describe your app from scratch
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {TEMPLATES.map((template) => {
-                  const Icon = template.icon
-                  const isSelected = selectedTemplate === template.id
-                  return (
-                    <button
-                      key={template.id}
-                      onClick={() => selectTemplate(template.id)}
-                      className={`p-4 rounded-lg border-2 text-left transition-all ${
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50 hover:bg-muted/50"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg ${template.bgColor}`}>
-                          <Icon className={`h-5 w-5 ${template.color}`} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{template.name}</h3>
-                            {isSelected && (
-                              <CheckCircle className="h-4 w-4 text-primary" />
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {template.description}
-                          </p>
-                          <div className="flex gap-1 mt-2 flex-wrap">
-                            {template.resources.map((r) => (
-                              <Badge key={r} variant="secondary" className="text-xs">
-                                {r}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
+      <Button type="submit" className="w-full" disabled={formState === "loading"}>
+        {formState === "loading" ? (
+          <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verifying & Submitting...</>
+        ) : (
+          <>Share Skill with Community</>
+        )}
+      </Button>
+    </form>
+  );
+}
 
-          {/* Prompt Input Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                Describe Your App
-              </CardTitle>
-              <CardDescription>
-                Tell us what you want to build in plain English
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Build a medication reminder app that shows patients their prescriptions and lets them mark when they've taken doses..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                rows={4}
-                className="mb-4 text-base"
-              />
+// ── Main page ─────────────────────────────────────────────────────────────────
 
-              {/* Example Prompts */}
-              <div className="mb-4">
-                <p className="text-sm text-muted-foreground mb-2">Try an example:</p>
-                <div className="flex gap-2 flex-wrap">
-                  {EXAMPLE_PROMPTS.map((example, i) => (
-                    <Badge
-                      key={i}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-accent text-xs py-1"
-                      onClick={() => setPrompt(example)}
-                    >
-                      {example.slice(0, 40)}...
-                    </Badge>
+export default function OpenClawSkillsPage() {
+  const [explainerOpen, setExplainerOpen] = useState(false);
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [communitySkills, setCommunitySkills] = useState<CommunitySkill[]>([]);
+  const [communityCount, setCommunityCount] = useState(0);
+  const galleryRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/projects?sort=popular")
+      .then((r) => r.json())
+      .then((data) => {
+        const skills = (data.projects ?? []).filter(
+          (p: CommunitySkill & { artifactType?: string }) =>
+            p.artifactType === "OpenClaw Skill"
+        );
+        setCommunitySkills(skills);
+        setCommunityCount(skills.length);
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredSeed = SEED_SKILLS.filter((s) => {
+    if (filterCategory !== "All" && s.category !== filterCategory) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (
+        s.name.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q) ||
+        s.fhirResources.some((r) => r.toLowerCase().includes(q))
+      );
+    }
+    return true;
+  });
+
+  const filteredCommunity = communitySkills.filter((s) => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  return (
+    <div className="flex flex-col">
+
+      {/* ── HERO ──────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b bg-gradient-to-br from-violet-50 via-background to-blue-50">
+        <div className="container py-16 md:py-20">
+          <div className="mx-auto max-w-4xl text-center">
+            <Badge className="mb-5 bg-violet-100 text-violet-700 border-violet-200">
+              <Sparkles className="mr-1 h-3 w-3" />
+              OpenClaw × FHIRBuilders
+            </Badge>
+
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl leading-tight mb-5">
+              FHIR superpowers for your{" "}
+              <span className="text-violet-600">OpenClaw</span> agent
+            </h1>
+
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+              Install community-built skills that give your local AI agent the ability to query
+              FHIR endpoints, monitor care gaps, run quality measures, and coordinate clinical
+              workflows — all from WhatsApp or Telegram.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+              <Button
+                size="lg"
+                className="bg-violet-600 hover:bg-violet-700 text-white"
+                onClick={() => galleryRef.current?.scrollIntoView({ behavior: "smooth" })}
+              >
+                Browse FHIR Skills
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => setExplainerOpen(!explainerOpen)}
+              >
+                What is OpenClaw?
+                {explainerOpen ? (
+                  <ChevronUp className="ml-2 h-4 w-4" />
+                ) : (
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                )}
+              </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Don&apos;t have OpenClaw yet?{" "}
+              <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                npm i -g openclaw && openclaw onboard
+              </code>
+              {" "}·{" "}
+              <a
+                href="https://docs.openclaw.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-violet-600 hover:underline inline-flex items-center gap-1"
+              >
+                OpenClaw docs <ExternalLink className="h-3 w-3" />
+              </a>
+            </p>
+          </div>
+        </div>
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </section>
+
+      {/* ── EXPLAINER (collapsible) ────────────────────────────────────── */}
+      {explainerOpen && (
+        <section className="border-b bg-violet-50/40">
+          <div className="container py-12">
+            <div className="mx-auto max-w-5xl grid gap-10 lg:grid-cols-2">
+              {/* Left */}
+              <div>
+                <h2 className="text-xl font-bold mb-4">OpenClaw in plain English</h2>
+                <div className="text-muted-foreground space-y-3 text-sm leading-relaxed">
+                  <p>
+                    OpenClaw is an open-source AI agent that runs on your machine and lives in your
+                    chat apps. You message it like a coworker — on WhatsApp, Telegram, Discord, or
+                    Slack — and it <em>actually does things</em>.
+                  </p>
+                  <p>
+                    It has persistent memory (Markdown files on your disk), browser control, file
+                    system access, shell execution, and a <strong>heartbeat</strong> that wakes it up
+                    to run proactive tasks without you asking.
+                  </p>
+                  <p>
+                    <strong>Skills</strong> are what give it new capabilities. A skill is a SKILL.md
+                    file that teaches your agent how to do something specific — query a FHIR endpoint,
+                    run a care gap check, send clinical alerts. Install one command, gain a superpower.
+                  </p>
+                </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {[
+                    { icon: Smartphone, label: "WhatsApp & Telegram" },
+                    { icon: Brain, label: "Persistent memory" },
+                    { icon: Clock, label: "Heartbeat scheduler" },
+                    { icon: Terminal, label: "Shell + file access" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-2 text-sm bg-white border rounded-full px-3 py-1.5">
+                      <item.icon className="h-3.5 w-3.5 text-violet-500" />
+                      {item.label}
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Detected Resources Preview */}
-              {(prompt.length > 10 || selectedTemplate) && (
-                <div className="mb-4 p-4 bg-muted/50 rounded-lg border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="h-4 w-4 text-amber-500" />
-                    <p className="text-sm font-medium">Detected FHIR Resources:</p>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    {detectedResources.map((resource) => (
-                      <Badge key={resource} className="bg-primary/10 text-primary hover:bg-primary/20">
-                        {resource}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Generate Button */}
-              <Button
-                onClick={handleGenerate}
-                disabled={prompt.length < 20}
-                className="w-full"
-                size="lg"
-              >
-                <Wand2 className="mr-2 h-5 w-5" />
-                Generate App
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-
-              {prompt.length > 0 && prompt.length < 20 && (
-                <p className="text-sm text-muted-foreground mt-2 text-center">
-                  {20 - prompt.length} more characters needed
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {/* Generation In Progress */}
-      {status === "generating" && result && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              Building Your App
-            </CardTitle>
-            <CardDescription>
-              {result.generatedCode?.appName || "AI is generating your healthcare application"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Progress Steps */}
-            <div className="relative mb-6">
-              <div className="flex justify-between">
-                {GENERATION_STEPS.map((step, index) => {
-                  const currentIndex = getCurrentStepIndex(result.status)
-                  const isComplete = index < currentIndex
-                  const isCurrent = index === currentIndex
-
-                  return (
-                    <div key={step.key} className="flex flex-col items-center flex-1">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                          isComplete
-                            ? "bg-green-500 border-green-500 text-white"
-                            : isCurrent
-                            ? "bg-primary border-primary text-white animate-pulse"
-                            : "bg-muted border-muted-foreground/30 text-muted-foreground"
-                        }`}
-                      >
-                        {isComplete ? (
-                          <Check className="h-5 w-5" />
-                        ) : isCurrent ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <span className="text-sm">{index + 1}</span>
-                        )}
-                      </div>
-                      <p className={`text-xs mt-2 text-center ${isCurrent ? "font-semibold text-primary" : "text-muted-foreground"}`}>
-                        {step.label}
-                      </p>
+              {/* Right — Examples */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold mb-4">Healthcare examples</h2>
+                {[
+                  {
+                    channel: "WhatsApp",
+                    icon: MessageCircle,
+                    color: "text-green-600",
+                    trigger: "Run today's care gap summary for Dr. Chen's panel",
+                    action: "Queries FHIR endpoint, counts open gaps by type",
+                    result: "Sends formatted summary with 8 patients needing HbA1c",
+                  },
+                  {
+                    channel: "Telegram",
+                    icon: Bot,
+                    color: "text-blue-500",
+                    trigger: "Which diabetic patients haven't had an HbA1c in 12 months?",
+                    action: "Queries Condition + Observation resources",
+                    result: "Returns patient list with dates and days overdue",
+                  },
+                  {
+                    channel: "Heartbeat — 6am weekdays",
+                    icon: Zap,
+                    color: "text-amber-500",
+                    trigger: "(no message needed)",
+                    action: "Checks FHIR Subscription for new ADT notifications",
+                    result: "Sends morning briefing to Slack: 2 new admissions overnight",
+                  },
+                ].map((ex) => (
+                  <div key={ex.channel} className="bg-white border rounded-xl p-4 text-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ex.icon className={`h-4 w-4 ${ex.color}`} />
+                      <span className="font-medium text-xs text-muted-foreground">{ex.channel}</span>
                     </div>
-                  )
-                })}
-              </div>
-              {/* Progress Line */}
-              <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted -z-10 mx-12">
-                <div
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{
-                    width: `${(getCurrentStepIndex(result.status) / (GENERATION_STEPS.length - 1)) * 100}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Resources being used */}
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm font-medium mb-2">FHIR Resources:</p>
-              <div className="flex gap-2 flex-wrap">
-                {result.fhirResources?.map((resource) => (
-                  <Badge key={resource} variant="outline">
-                    {resource}
-                  </Badge>
+                    <p className="font-mono text-xs bg-muted rounded px-2 py-1 mb-2">
+                      &quot;{ex.trigger}&quot;
+                    </p>
+                    <p className="text-xs text-muted-foreground">→ {ex.action}</p>
+                    <p className="text-xs text-muted-foreground">→ {ex.result}</p>
+                  </div>
                 ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
 
-      {/* Error Display */}
-      {status === "error" && error && (
-        <Card className="mb-6 border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              Generation Failed
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={startOver}>
-                Start Over
-              </Button>
-              <Button
-                onClick={() => {
-                  setStatus("idle")
-                  setError(null)
-                }}
-              >
-                Try Again
-              </Button>
+      {/* ── COMMUNITY STRIP (I2) ──────────────────────────────────────── */}
+      {communityCount > 0 && (
+        <div className="border-b bg-teal-50/40 py-3">
+          <div className="container">
+            <p className="text-sm text-center text-teal-700">
+              <span className="font-medium">{communityCount} OpenClaw skill{communityCount !== 1 ? "s" : ""}</span> shared by the community on FHIRBuilders
+              {" · "}
+              <Link href="/projects?type=OpenClaw+Skill" className="underline hover:no-underline">
+                Browse all community skills →
+              </Link>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── SKILL GALLERY ─────────────────────────────────────────────── */}
+      <section ref={galleryRef} className="container py-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div>
+              <h2 className="text-2xl font-bold">FHIR Skill Library</h2>
+              <p className="text-muted-foreground text-sm mt-1">
+                {SEED_SKILLS.length} official skills · {communityCount} community skills
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
 
-      {/* Success Display */}
-      {status === "success" && result && (
-        <>
-          {/* Success Header */}
-          <Card className="mb-6 border-green-500/50 bg-green-500/5">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-green-600 flex items-center gap-2">
-                    <CheckCircle className="h-6 w-6" />
-                    {result.generatedCode?.appName || "App"} Generated Successfully!
-                  </CardTitle>
-                  <CardDescription className="mt-1">
-                    {result.generatedCode?.description || "Your healthcare app is ready"}
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={startOver}>
-                  Build Another
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4">
-                {/* Stats */}
-                <div className="flex items-center gap-2 text-sm">
-                  <FileCode className="h-4 w-4 text-muted-foreground" />
-                  <span>{allFiles.length} files generated</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <FolderTree className="h-4 w-4 text-muted-foreground" />
-                  <span>{result.fhirResources?.length || 0} FHIR resources</span>
-                </div>
-              </div>
-
-              {/* Resource Badges */}
-              <div className="flex gap-2 flex-wrap mt-4">
-                {result.fhirResources?.map((resource) => (
-                  <Badge key={resource} className="bg-green-500/10 text-green-700 hover:bg-green-500/20">
-                    {resource}
-                  </Badge>
-                ))}
-              </div>
-
-              {/* Action Links */}
-              <div className="flex gap-4 mt-6 flex-wrap">
-                {result.generatedCode && (
-                  <Button onClick={handleDownload} disabled={isDownloading}>
-                    {isDownloading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="mr-2 h-4 w-4" />
-                    )}
-                    Download Project
-                  </Button>
-                )}
-                <Button variant="outline" asChild>
-                  <Link href="/sandbox/demo?useCase=medrec">
-                    <TestTube className="mr-2 h-4 w-4" />
-                    Try in Sandbox
-                  </Link>
-                </Button>
-                {result.sandboxUrl && (
-                  <Button variant="outline" asChild>
-                    <a href={result.sandboxUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Open in Sandbox
-                    </a>
-                  </Button>
-                )}
-                {result.githubRepoUrl && (
-                  <Button variant="outline" asChild>
-                    <a href={result.githubRepoUrl} target="_blank" rel="noopener noreferrer">
-                      <Code className="mr-2 h-4 w-4" />
-                      View on GitHub
-                    </a>
-                  </Button>
-                )}
-                <Button variant="ghost" asChild>
-                  <Link href="/">
-                    <Home className="mr-2 h-4 w-4" />
-                    Back to Home
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Generated Code Preview */}
-          {result.generatedCode && allFiles.length > 0 && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Code className="h-5 w-5" />
-                  Generated Code
-                </CardTitle>
-                <CardDescription>
-                  Browse the generated files for your app
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs value={activeCodeTab} onValueChange={setActiveCodeTab}>
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="components">
-                      Components ({result.generatedCode.components.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="pages">
-                      Pages ({result.generatedCode.pages.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="api">
-                      API Routes ({result.generatedCode.apiRoutes.length})
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="components" className="space-y-4">
-                    {result.generatedCode.components.map((file) => (
-                      <CodeFileCard
-                        key={file.path}
-                        file={file}
-                        onCopy={copyToClipboard}
-                        isCopied={copiedFile === file.path}
-                      />
-                    ))}
-                    {result.generatedCode.components.length === 0 && (
-                      <p className="text-muted-foreground text-center py-8">No components generated</p>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="pages" className="space-y-4">
-                    {result.generatedCode.pages.map((file) => (
-                      <CodeFileCard
-                        key={file.path}
-                        file={file}
-                        onCopy={copyToClipboard}
-                        isCopied={copiedFile === file.path}
-                      />
-                    ))}
-                    {result.generatedCode.pages.length === 0 && (
-                      <p className="text-muted-foreground text-center py-8">No pages generated</p>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="api" className="space-y-4">
-                    {result.generatedCode.apiRoutes.map((file) => (
-                      <CodeFileCard
-                        key={file.path}
-                        file={file}
-                        onCopy={copyToClipboard}
-                        isCopied={copiedFile === file.path}
-                      />
-                    ))}
-                    {result.generatedCode.apiRoutes.length === 0 && (
-                      <p className="text-muted-foreground text-center py-8">No API routes generated</p>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Messaging Channels Integration */}
-          {session ? (
-            <div className="mb-6">
-              <ChannelsPanel generatedAppId={result.id} />
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-8">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search skills, resources, capabilities..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
-          ) : (
-            <Card className="mb-6 border-primary/20 bg-primary/5">
-              <CardContent className="py-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      Connect Messaging Channels
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Sign in to connect your app to Slack, Discord, WhatsApp, and more.
-                    </p>
-                  </div>
-                  <Button asChild>
-                    <Link href="/login">Sign In to Connect</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Post-generation sign-in prompt for anonymous users */}
-          {!session && (
-            <Card className="mb-6 border-green-200 bg-green-50/50">
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-green-800">Save your work</p>
-                    <p className="text-sm text-green-700/80">
-                      This demo generation will not be saved. Sign in to keep your generated apps and iterate on them.
-                    </p>
-                  </div>
-                  <Button asChild className="bg-green-600 hover:bg-green-700">
-                    <Link href="/login">Sign In to Save</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
-
-      {/* How It Works - Only show when idle */}
-      {status === "idle" && (
-        <Card className="bg-muted/30">
-          <CardHeader>
-            <CardTitle>How OpenClaw Works</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-              {[
-                { icon: Sparkles, label: "Describe", text: "Tell us your app idea" },
-                { icon: Zap, label: "Analyze", text: "We detect FHIR resources" },
-                { icon: Wand2, label: "Generate", text: "AI creates your code" },
-                { icon: ExternalLink, label: "Deploy", text: "Launch to sandbox" },
-                { icon: MessageSquare, label: "Connect", text: "Link messaging apps" },
-                { icon: ArrowRight, label: "Iterate", text: "Refine with feedback" },
-              ].map((step, i) => (
-                <div key={i} className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-                    <step.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <p className="font-medium text-sm">{step.label}</p>
-                  <p className="text-xs text-muted-foreground">{step.text}</p>
-                </div>
+            <div className="flex flex-wrap gap-1.5">
+              {CATEGORIES.map((cat) => (
+                <Button
+                  key={cat}
+                  variant={filterCategory === cat ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setFilterCategory(cat)}
+                  className="h-8 text-xs"
+                >
+                  {cat}
+                </Button>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
+          </div>
 
-export default function OpenClawPage() {
-  return (
-    <Suspense fallback={<div className="container mx-auto py-10 max-w-5xl"><p>Loading...</p></div>}>
-      <OpenClawContent />
-    </Suspense>
-  )
-}
-
-// Code File Card Component
-function CodeFileCard({
-  file,
-  onCopy,
-  isCopied,
-}: {
-  file: GeneratedFile
-  onCopy: (code: string, path: string) => void
-  isCopied: boolean
-}) {
-  const [isExpanded, setIsExpanded] = useState(false)
-
-  return (
-    <div className="border rounded-lg overflow-hidden">
-      <div
-        className="flex items-center justify-between p-3 bg-muted/50 cursor-pointer hover:bg-muted"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center gap-2">
-          <FileCode className="h-4 w-4 text-muted-foreground" />
-          <span className="font-mono text-sm">{file.path}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              onCopy(file.code, file.path)
-            }}
-          >
-            {isCopied ? (
-              <Check className="h-4 w-4 text-green-500" />
+          {/* Official skills grid */}
+          <div className="mb-10">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-4 w-1 rounded-full bg-violet-500" />
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                Official FHIRBuilders Skills
+              </h3>
+            </div>
+            {filteredSeed.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredSeed.map((skill) => (
+                  <SkillCard key={skill.id} skill={skill} />
+                ))}
+              </div>
             ) : (
-              <Copy className="h-4 w-4" />
+              <p className="text-muted-foreground text-sm">No skills match your filters.</p>
             )}
-          </Button>
-          <span className="text-xs text-muted-foreground">
-            {isExpanded ? "Collapse" : "Expand"}
-          </span>
+          </div>
+
+          {/* Community skills */}
+          {filteredCommunity.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-4 w-1 rounded-full bg-teal-500" />
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Community Skills
+                </h3>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredCommunity.map((skill) => (
+                  <CommunitySkillCard key={skill.id} skill={skill} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Below gallery CTAs */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4 border-t text-sm text-muted-foreground">
+            <span>Don&apos;t see what you need?</span>
+            <a href="#build-skill" className="text-violet-600 hover:underline font-medium">
+              Build a skill →
+            </a>
+            <span>·</span>
+            <a href="#share-skill" className="text-teal-600 hover:underline font-medium">
+              Share a skill you&apos;ve built →
+            </a>
+          </div>
         </div>
-      </div>
-      {isExpanded && (
-        <div className="relative">
-          <pre className="p-4 text-sm overflow-x-auto bg-zinc-950 text-zinc-100 max-h-96">
-            <code>{file.code}</code>
-          </pre>
+      </section>
+
+      {/* ── SKILL BUILDER ─────────────────────────────────────────────── */}
+      <section id="build-skill" className="border-t bg-muted/20 py-16">
+        <div className="container">
+          <div className="mx-auto max-w-2xl">
+            <div className="text-center mb-8">
+              <Badge className="mb-3 bg-violet-100 text-violet-700 border-violet-200">
+                <Sparkles className="mr-1 h-3 w-3" />
+                AI-Powered
+              </Badge>
+              <h2 className="text-2xl font-bold mb-2">Build a FHIR skill</h2>
+              <p className="text-muted-foreground">
+                Describe what you want your agent to do. We&apos;ll generate a complete,
+                ready-to-install SKILL.md file.
+              </p>
+            </div>
+            <Card>
+              <CardContent className="pt-6">
+                <SkillBuilder />
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      )}
+      </section>
+
+      {/* ── SKILL SUBMISSION ──────────────────────────────────────────── */}
+      <section id="share-skill" className="border-t py-16">
+        <div className="container">
+          <div className="mx-auto max-w-2xl">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-2">Share a skill you&apos;ve built</h2>
+              <p className="text-muted-foreground">
+                Your skill goes live in the community gallery immediately after submission.
+                You need a GitHub repo with a SKILL.md at the root.
+              </p>
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Skill Submission</CardTitle>
+                <CardDescription>All fields marked with * are required</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SkillSubmissionForm />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
-  )
+  );
 }

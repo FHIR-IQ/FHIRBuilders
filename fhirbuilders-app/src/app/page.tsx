@@ -187,7 +187,7 @@ interface FeaturedProject {
 const ARTIFACT_COLORS: Record<string, string> = {
   "Agent":        "bg-violet-100 text-violet-800",
   "MCP Tool":     "bg-blue-100 text-blue-800",
-  "Claude Skill": "bg-amber-100 text-amber-800",
+  "OpenClaw Skill": "bg-amber-100 text-amber-800",
   "App":          "bg-green-100 text-green-800",
   "CQL Measure":  "bg-teal-100 text-teal-800",
   "FHIR IG":      "bg-pink-100 text-pink-800",
