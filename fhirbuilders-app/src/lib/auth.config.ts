@@ -6,6 +6,7 @@ import Credentials from "next-auth/providers/credentials";
 // Edge-compatible auth config — NO Prisma/adapter imports
 // Used by middleware.ts which runs in the Vercel Edge runtime
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,

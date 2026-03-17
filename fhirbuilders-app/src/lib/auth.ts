@@ -7,6 +7,7 @@ import { authConfig } from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   providers: [
     // Override Credentials in authConfig with the real Node.js implementations
