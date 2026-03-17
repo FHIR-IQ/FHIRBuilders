@@ -227,7 +227,7 @@ export default function ProblemDetailPage({
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href="/build">
+                  <Link href="/openclaw">
                     Generate starter code →
                   </Link>
                 </Button>
