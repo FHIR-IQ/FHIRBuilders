@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Wrench, ArrowRight, Github, ExternalLink, Zap, Database, Stethoscope, Bot } from "lucide-react";
+import { Wrench, ArrowRight, Zap, Database, Stethoscope, Bot } from "lucide-react";
 
 const MCP_TOOLS = [
   {
@@ -15,7 +15,6 @@ const MCP_TOOLS = [
     color: "text-blue-500",
     bg: "bg-blue-100/60",
     border: "border-blue-200",
-    githubUrl: "https://github.com/fhirbuilders",
   },
   {
     name: "SMART on FHIR Launcher",
@@ -27,7 +26,6 @@ const MCP_TOOLS = [
     color: "text-amber-500",
     bg: "bg-amber-100/60",
     border: "border-amber-200",
-    githubUrl: "https://github.com/fhirbuilders",
   },
   {
     name: "CQL Measure Runner",
@@ -39,7 +37,6 @@ const MCP_TOOLS = [
     color: "text-teal-500",
     bg: "bg-teal-100/60",
     border: "border-teal-200",
-    githubUrl: "https://github.com/fhirbuilders",
   },
   {
     name: "Clinical Terminology Lookup",
@@ -51,7 +48,6 @@ const MCP_TOOLS = [
     color: "text-violet-500",
     bg: "bg-violet-100/60",
     border: "border-violet-200",
-    githubUrl: "https://github.com/fhirbuilders",
   },
 ];
 
@@ -88,10 +84,10 @@ export default function McpPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                <a href="https://github.com/fhirbuilders" target="_blank" rel="noopener noreferrer">
-                  <Github className="mr-2 h-4 w-4" />
-                  Submit a tool on GitHub
-                </a>
+                <Link href="/projects/new?artifactType=MCP+Tool">
+                  <Wrench className="mr-2 h-4 w-4" />
+                  Submit your MCP tool
+                </Link>
               </Button>
               <Button variant="outline" asChild>
                 <Link href="/projects">
@@ -161,11 +157,10 @@ export default function McpPage() {
                       ))}
                     </div>
                     <Button variant="outline" size="sm" className="w-full" asChild>
-                      <a href={tool.githubUrl} target="_blank" rel="noopener noreferrer">
-                        <Github className="mr-2 h-3.5 w-3.5" />
-                        View on GitHub
-                        <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
-                      </a>
+                      <Link href="/projects">
+                        View in Projects
+                        <ArrowRight className="ml-auto h-3.5 w-3.5" />
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -177,13 +172,13 @@ export default function McpPage() {
               <Wrench className="h-10 w-10 text-blue-400 mx-auto mb-3" />
               <h3 className="font-semibold text-lg mb-2">Built an MCP tool for healthcare?</h3>
               <p className="text-muted-foreground text-sm mb-5 max-w-md mx-auto">
-                Submit a PR to the FHIRBuilders GitHub org. We review and list all open-source MCP tools built for FHIR and clinical data.
+                Share your MCP tool with the FHIRBuilders community. It takes 2 minutes — add your repo URL, a description, and what you&apos;re looking for.
               </p>
               <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                <a href="https://github.com/fhirbuilders" target="_blank" rel="noopener noreferrer">
-                  <Github className="mr-2 h-4 w-4" />
+                <Link href="/projects/new?artifactType=MCP+Tool">
+                  <Wrench className="mr-2 h-4 w-4" />
                   Submit your tool
-                </a>
+                </Link>
               </Button>
             </div>
           </div>
