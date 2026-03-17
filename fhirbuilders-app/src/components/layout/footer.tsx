@@ -27,8 +27,11 @@ export function Footer() {
             <Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
               Projects
             </Link>
+            <Link href="/mcp" className="text-muted-foreground hover:text-foreground transition-colors">
+              MCP
+            </Link>
             <Link href="/openclaw" className="text-muted-foreground hover:text-foreground transition-colors">
-              OpenClaw Skills
+              Agent Skills
             </Link>
             <Link href="/sandbox/demo" className="text-muted-foreground hover:text-foreground transition-colors">
               Sandbox

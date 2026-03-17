@@ -137,10 +137,10 @@ const PERSONAS = [
   },
   {
     title: "AI Builder",
-    description: "Generate complete FHIR apps from a prompt, then connect to any messaging channel",
-    cta: "Build with AI",
+    description: "Browse reusable Claude agent skills for FHIR — from clinical summarization to quality measure evaluation",
+    cta: "Explore Agent Skills",
     href: "/openclaw",
-    icon: Wand2,
+    icon: Sparkles,
     color: SECTION_COLORS.openclaw,
   },
 ];
@@ -380,10 +380,10 @@ export default function HomePage() {
                 </p>
 
                 <div className="mt-7 flex flex-col sm:flex-row gap-3 flex-wrap">
-                  <Button size="lg" className="h-12 px-7 bg-violet-600 hover:bg-violet-700 text-white" asChild>
-                    <Link href="/openclaw">
-                      <Wand2 className="mr-2 h-5 w-5" />
-                      Build with AI
+                  <Button size="lg" className="h-12 px-7 bg-rose-600 hover:bg-rose-700 text-white" asChild>
+                    <Link href="/problems">
+                      <Lightbulb className="mr-2 h-5 w-5" />
+                      Browse Problems
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
@@ -433,7 +433,8 @@ export default function HomePage() {
                 {/* Section nav color keys */}
                 <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium">
                   {[
-                    { label: "Build with AI", color: "bg-violet-100 text-violet-700", href: "/openclaw", icon: Wand2 },
+                    { label: "MCP Tools", color: "bg-blue-100 text-blue-700", href: "/mcp", icon: Wrench },
+                    { label: "Agent Skills", color: "bg-violet-100 text-violet-700", href: "/openclaw", icon: Sparkles },
                     { label: "Sandbox", color: "bg-blue-100 text-blue-700", href: "/sandbox/demo", icon: FlaskConical },
                     { label: "Community", color: "bg-teal-100 text-teal-700", href: "/projects", icon: FolderOpen },
                     { label: "Learn", color: "bg-amber-100 text-amber-700", href: "/learn", icon: BookOpen },
@@ -517,6 +518,67 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          MCP SECTION — blue accent
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="border-b bg-blue-50/40 py-14">
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+              <div>
+                <Badge className="mb-3 bg-blue-100 text-blue-700 border-blue-200">
+                  <Wrench className="mr-1 h-3 w-3" />
+                  Model Context Protocol
+                </Badge>
+                <h2 className="text-2xl font-bold">MCP tools for healthcare AI</h2>
+                <p className="text-muted-foreground mt-2 max-w-lg">
+                  Connect Claude and other AI models directly to FHIR APIs, EHR systems, and clinical databases via the Model Context Protocol.
+                </p>
+              </div>
+              <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50 shrink-0" asChild>
+                <Link href="/mcp">
+                  Browse all MCP tools
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  title: "FHIR Server Access",
+                  desc: "Give Claude read/write access to any FHIR R4 server — query patients, create resources, run searches",
+                  badge: "FHIR R4",
+                  color: "border-blue-200 bg-white",
+                  badgeColor: "bg-blue-100 text-blue-700",
+                },
+                {
+                  title: "CQL Measure Evaluation",
+                  desc: "Run HEDIS and CMS quality measures against live patient data directly from a Claude conversation",
+                  badge: "Quality",
+                  color: "border-blue-200 bg-white",
+                  badgeColor: "bg-blue-100 text-blue-700",
+                },
+                {
+                  title: "EHR Integration",
+                  desc: "MCP tools for Epic, Cerner, and SMART on FHIR — launch from EHR context with patient already loaded",
+                  badge: "EHR",
+                  color: "border-blue-200 bg-white",
+                  badgeColor: "bg-blue-100 text-blue-700",
+                },
+              ].map((item) => (
+                <Link key={item.title} href="/mcp" className={`block p-4 rounded-xl border ${item.color} hover:shadow-sm transition-shadow`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-sm">{item.title}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${item.badgeColor}`}>{item.badge}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
@@ -891,13 +953,19 @@ export default function HomePage() {
         <div className="container text-center">
           <h2 className="text-2xl font-bold mb-3">Ready to build?</h2>
           <p className="text-violet-200 mb-8 max-w-md mx-auto">
-            Generate your first FHIR app in minutes, or explore real patient data in the sandbox.
+            Browse MCP tools and agent skills, or spin up a FHIR sandbox and start experimenting.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="bg-white text-violet-700 hover:bg-violet-50" asChild>
+            <Button size="lg" variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50" asChild>
+              <Link href="/mcp">
+                <Wrench className="mr-2 h-5 w-5" />
+                Browse MCP Tools
+              </Link>
+            </Button>
+            <Button size="lg" variant="secondary" className="bg-white/10 text-white hover:bg-white/20 border border-white/20" asChild>
               <Link href="/openclaw">
-                <Wand2 className="mr-2 h-5 w-5" />
-                Build with AI
+                <Sparkles className="mr-2 h-5 w-5" />
+                Agent Skills
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-violet-300 text-white hover:bg-violet-700" onClick={handleCreateSandbox} disabled={isCreating}>
