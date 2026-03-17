@@ -139,7 +139,7 @@ const PERSONAS = [
     title: "AI Builder",
     description: "Generate complete FHIR apps from a prompt, then connect to any messaging channel",
     cta: "Build with AI",
-    href: "/build",
+    href: "/openclaw",
     icon: Wand2,
     color: SECTION_COLORS.openclaw,
   },
@@ -381,7 +381,7 @@ export default function HomePage() {
 
                 <div className="mt-7 flex flex-col sm:flex-row gap-3 flex-wrap">
                   <Button size="lg" className="h-12 px-7 bg-violet-600 hover:bg-violet-700 text-white" asChild>
-                    <Link href="/build">
+                    <Link href="/openclaw">
                       <Wand2 className="mr-2 h-5 w-5" />
                       Build with AI
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -433,7 +433,7 @@ export default function HomePage() {
                 {/* Section nav color keys */}
                 <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium">
                   {[
-                    { label: "Build with AI", color: "bg-violet-100 text-violet-700", href: "/build", icon: Wand2 },
+                    { label: "Build with AI", color: "bg-violet-100 text-violet-700", href: "/openclaw", icon: Wand2 },
                     { label: "Sandbox", color: "bg-blue-100 text-blue-700", href: "/sandbox/demo", icon: FlaskConical },
                     { label: "Community", color: "bg-teal-100 text-teal-700", href: "/projects", icon: FolderOpen },
                     { label: "Learn", color: "bg-amber-100 text-amber-700", href: "/learn", icon: BookOpen },
@@ -895,7 +895,7 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" className="bg-white text-violet-700 hover:bg-violet-50" asChild>
-              <Link href="/build">
+              <Link href="/openclaw">
                 <Wand2 className="mr-2 h-5 w-5" />
                 Build with AI
               </Link>

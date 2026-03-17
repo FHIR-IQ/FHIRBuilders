@@ -27,9 +27,6 @@ export function Footer() {
             <Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
               Projects
             </Link>
-            <Link href="/build" className="text-muted-foreground hover:text-foreground transition-colors">
-              Build
-            </Link>
             <Link href="/openclaw" className="text-muted-foreground hover:text-foreground transition-colors">
               OpenClaw Skills
             </Link>
