@@ -8,15 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowUp,
   ArrowRight,
+  CheckCircle2,
+  Clock,
   Copy,
   ExternalLink,
+  GitFork,
   Github,
-  Plus,
-  Users,
-  Clock,
   Lightbulb,
-  Search,
   MessageSquare,
+  Plus,
+  Search,
+  TrendingUp,
+  Users,
   Bot,
   Wrench,
   Sparkles,
@@ -37,28 +40,31 @@ interface Project {
   lookingFor?: string[];
   authorName: string;
   upvoteCount: number;
-  commentCount?: number;
+  forkCount?: number;
+  trendingScore?: number;
+  verified?: boolean;
+  makerComment?: string | null;
   createdAt: string;
 }
 
 const ARTIFACT_TYPES = ["All", "Agent", "MCP Tool", "OpenClaw Skill", "App", "CQL Measure", "FHIR IG"];
 
 const ARTIFACT_COLORS: Record<string, string> = {
-  "Agent":        "bg-violet-100 text-violet-800 border-violet-200",
-  "MCP Tool":     "bg-blue-100 text-blue-800 border-blue-200",
+  "Agent":          "bg-violet-100 text-violet-800 border-violet-200",
+  "MCP Tool":       "bg-blue-100 text-blue-800 border-blue-200",
   "OpenClaw Skill": "bg-amber-100 text-amber-800 border-amber-200",
-  "App":          "bg-green-100 text-green-800 border-green-200",
-  "CQL Measure":  "bg-teal-100 text-teal-800 border-teal-200",
-  "FHIR IG":      "bg-pink-100 text-pink-800 border-pink-200",
+  "App":            "bg-green-100 text-green-800 border-green-200",
+  "CQL Measure":    "bg-teal-100 text-teal-800 border-teal-200",
+  "FHIR IG":        "bg-pink-100 text-pink-800 border-pink-200",
 };
 
 const ARTIFACT_ICONS: Record<string, React.ElementType> = {
-  "Agent":        Bot,
-  "MCP Tool":     Wrench,
+  "Agent":          Bot,
+  "MCP Tool":       Wrench,
   "OpenClaw Skill": Sparkles,
-  "App":          Layers,
-  "CQL Measure":  FileCode2,
-  "FHIR IG":      BarChart3,
+  "App":            Layers,
+  "CQL Measure":    FileCode2,
+  "FHIR IG":        BarChart3,
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -84,7 +90,7 @@ const LOOKING_FOR_COLORS: Record<string, string> = {
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [sortBy, setSortBy] = useState<"newest" | "popular">("popular");
+  const [sortBy, setSortBy] = useState<"trending" | "popular" | "newest">("trending");
   const [filterType, setFilterType] = useState<string>("All");
   const [filterLookingFor, setFilterLookingFor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,7 +128,6 @@ export default function ProjectsPage() {
     try {
       await fetch(`/api/projects/${projectId}/upvote`, { method: "POST" });
     } catch {
-      // revert on failure
       setUpvotedIds((prev) => { const s = new Set(prev); s.delete(projectId); return s; });
       setProjects((prev) =>
         prev.map((p) => p.id === projectId ? { ...p, upvoteCount: p.upvoteCount - 1 } : p)
@@ -175,6 +180,14 @@ export default function ProjectsPage() {
         {/* Sort + Artifact Type */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex gap-2">
+            <Button
+              variant={sortBy === "trending" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSortBy("trending")}
+            >
+              <TrendingUp className="mr-1 h-3 w-3" />
+              Trending
+            </Button>
             <Button
               variant={sortBy === "popular" ? "default" : "outline"}
               size="sm"
@@ -256,8 +269,11 @@ export default function ProjectsPage() {
             const ArtifactIcon = project.artifactType ? ARTIFACT_ICONS[project.artifactType] : null;
             const hasUpvoted = upvotedIds.has(project.id);
             const isAnimating = animatingIds.has(project.id);
+            const makerPreview = project.makerComment
+              ? project.makerComment.slice(0, 120) + (project.makerComment.length > 120 ? "…" : "")
+              : null;
             return (
-              <Card key={project.id} className="overflow-hidden">
+              <Card key={project.id} className="overflow-hidden hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Main content */}
@@ -265,7 +281,9 @@ export default function ProjectsPage() {
                       {/* Header */}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <CardTitle className="text-xl">{project.title}</CardTitle>
+                          <Link href={`/projects/${project.id}`} className="hover:underline">
+                            <CardTitle className="text-xl">{project.title}</CardTitle>
+                          </Link>
                           {project.artifactType && (
                             <Badge
                               variant="outline"
@@ -280,6 +298,12 @@ export default function ProjectsPage() {
                               {STATUS_LABELS[project.status] ?? project.status}
                             </span>
                           )}
+                          {project.verified && (
+                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-teal-100 text-teal-700">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Verified
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0 ml-2">
                           <Button
@@ -292,17 +316,17 @@ export default function ProjectsPage() {
                             <ArrowUp className={`h-4 w-4 mr-1 ${hasUpvoted ? "fill-teal-600 text-teal-600" : ""}`} />
                             {project.upvoteCount}
                           </Button>
-                          {project.commentCount != null && (
-                            <Button variant="ghost" size="sm" className="h-8">
-                              <MessageSquare className="h-4 w-4 mr-1" />
-                              {project.commentCount}
-                            </Button>
+                          {(project.forkCount ?? 0) > 0 && (
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground px-2">
+                              <GitFork className="h-3.5 w-3.5" />
+                              {project.forkCount}
+                            </span>
                           )}
                         </div>
                       </div>
 
                       {/* Problem / Description */}
-                      <div className="mb-4">
+                      <div className="mb-3">
                         <div className="flex items-center gap-2 mb-1">
                           <Lightbulb className="h-4 w-4 text-amber-500" />
                           <span className="text-sm font-medium text-amber-600">Problem</span>
@@ -310,7 +334,16 @@ export default function ProjectsPage() {
                         <p className="text-muted-foreground">{project.description}</p>
                       </div>
 
-                      {/* OpenClaw Skill install chip (I1) */}
+                      {/* Maker comment preview (C1) */}
+                      {makerPreview && (
+                        <div className="mb-3 flex items-start gap-2 text-sm text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+                          <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0 text-teal-500" />
+                          <span className="italic">&ldquo;{makerPreview}&rdquo;</span>
+                          <Badge variant="outline" className="text-xs shrink-0 bg-teal-50 text-teal-700 border-teal-200">Builder</Badge>
+                        </div>
+                      )}
+
+                      {/* OpenClaw Skill install chip */}
                       {project.artifactType === "OpenClaw Skill" && (
                         <div className="mb-4 bg-zinc-900 rounded-lg px-3 py-2 flex items-center gap-2 text-xs">
                           <code className="text-green-400 font-mono flex-1">
@@ -365,7 +398,9 @@ export default function ProjectsPage() {
                               </a>
                             </Button>
                           )}
-                          <Button size="sm">Connect</Button>
+                          <Button size="sm" asChild>
+                            <Link href={`/projects/${project.id}`}>View</Link>
+                          </Button>
                         </div>
                       </div>
                     </div>

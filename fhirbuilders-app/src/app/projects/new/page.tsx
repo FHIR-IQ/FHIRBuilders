@@ -53,6 +53,7 @@ export default function NewProjectPage() {
     artifactType: "",
     status: "concept" as "concept" | "in-progress" | "live",
     lookingFor: [] as string[],
+    makerComment: "",
   });
   const [tagInput, setTagInput] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -370,6 +371,26 @@ export default function NewProjectPage() {
                   />
                   <p className="text-xs text-muted-foreground">Not displayed publicly.</p>
                 </div>
+              </div>
+
+              {/* Maker Comment */}
+              <div className="space-y-2">
+                <label htmlFor="makerComment" className="text-sm font-medium">
+                  Maker Comment <span className="text-muted-foreground font-normal">(recommended, min 80 chars)</span>
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Tell the community why you built this, what makes it unique, and what kind of feedback you&apos;re looking for. This is pinned as your &ldquo;Builder&rdquo; comment on the project page.
+                </p>
+                <textarea
+                  id="makerComment"
+                  placeholder="I built this because... The key insight is... Looking for feedback on..."
+                  value={formData.makerComment}
+                  onChange={(e) => setFormData({ ...formData, makerComment: e.target.value })}
+                  className="w-full min-h-[100px] px-3 py-2 rounded-lg border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                <p className={`text-xs ${formData.makerComment.length < 80 && formData.makerComment.length > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
+                  {formData.makerComment.length} / 80 min characters
+                </p>
               </div>
 
               {/* Submit */}

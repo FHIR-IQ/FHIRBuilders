@@ -181,6 +181,9 @@ interface FeaturedProject {
   description: string;
   artifactType?: string | null;
   upvoteCount: number;
+  forkCount?: number;
+  verified?: boolean;
+  repoUrl?: string | null;
   authorName: string;
 }
 
@@ -293,7 +296,7 @@ export default function HomePage() {
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
 
   useEffect(() => {
-    fetch("/api/projects?sort=popular")
+    fetch("/api/projects?sort=trending")
       .then((r) => r.json())
       .then((data) => {
         if (data.projects) setFeaturedProjects(data.projects.slice(0, 3));
@@ -464,7 +467,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          FEATURED THIS WEEK — teal accent
+          FROM THE COMMUNITY — teal accent (C7: live trending feed)
       ══════════════════════════════════════════════════════════════════════ */}
       {featuredProjects.length > 0 && (
         <section className="container py-12 border-b">
@@ -473,8 +476,8 @@ export default function HomePage() {
               <div className="flex items-center gap-3">
                 <div className="h-5 w-1 rounded-full bg-teal-500" />
                 <div>
-                  <h2 className="text-xl font-bold">Featured this week</h2>
-                  <p className="text-sm text-muted-foreground">Most upvoted community projects</p>
+                  <h2 className="text-xl font-bold">From the Community</h2>
+                  <p className="text-sm text-muted-foreground">Trending FHIR projects right now</p>
                 </div>
               </div>
               <Button variant="ghost" size="sm" className="text-teal-600 hover:text-teal-700" asChild>
@@ -485,26 +488,42 @@ export default function HomePage() {
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               {featuredProjects.map((project) => (
-                <Card key={project.id} className="hover:border-teal-300 transition-colors">
-                  <CardContent className="pt-4 pb-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        {project.artifactType && (
-                          <Badge variant="secondary" className={`text-xs ${ARTIFACT_COLORS[project.artifactType] ?? ""}`}>
-                            {project.artifactType}
-                          </Badge>
+                <Link key={project.id} href={`/projects/${project.id}`}>
+                  <Card className="hover:border-teal-300 transition-colors cursor-pointer h-full">
+                    <CardContent className="pt-4 pb-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {project.artifactType && (
+                            <Badge variant="secondary" className={`text-xs ${ARTIFACT_COLORS[project.artifactType] ?? ""}`}>
+                              {project.artifactType}
+                            </Badge>
+                          )}
+                          {project.verified && (
+                            <span className="flex items-center gap-0.5 text-xs text-teal-600">
+                              <CheckCircle className="h-3 w-3" />
+                              Verified
+                            </span>
+                          )}
+                        </div>
+                        <span className="flex items-center gap-1 text-sm font-medium text-teal-600 shrink-0">
+                          <ArrowUp className="h-3.5 w-3.5" />
+                          {project.upvoteCount}
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1 leading-snug">{project.title}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{project.description}</p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{project.authorName}</span>
+                        {(project.forkCount ?? 0) > 0 && (
+                          <span className="flex items-center gap-0.5">
+                            <ExternalLink className="h-3 w-3" />
+                            {project.forkCount} forks
+                          </span>
                         )}
                       </div>
-                      <span className="flex items-center gap-1 text-sm font-medium text-teal-600">
-                        <ArrowUp className="h-3.5 w-3.5" />
-                        {project.upvoteCount}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-sm mb-1 leading-snug">{project.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{project.description}</p>
-                    <p className="text-xs text-muted-foreground">{project.authorName}</p>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>

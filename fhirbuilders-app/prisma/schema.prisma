@@ -680,7 +680,7 @@ model SharedProject {
   tags         String[]
 
   // Artifact classification
-  artifactType String?  // "App" | "Agent" | "MCP Tool" | "Claude Skill" | "FHIR IG" | "CQL Measure"
+  artifactType String?  // "App" | "Agent" | "MCP Tool" | "OpenClaw Skill" | "FHIR IG" | "CQL Measure"
   status       String?  // "concept" | "in-progress" | "live"
   lookingFor   String[] // ["Technical co-founder", "Clinical advisors", "Funding", "Pilot sites"]
 
@@ -688,9 +688,37 @@ model SharedProject {
   authorName   String
   authorEmail  String?
 
+  // C1 — Maker comment (required post-submission, pinned first)
+  makerComment String?  @db.Text
+
+  // C3 — Fork count
+  forkCount    Int      @default(0)
+
+  // C2 — Cached trending score (recomputed on each upvote)
+  trendingScore Float   @default(0)
+
+  // C4 — Per-type structured metadata (JSON)
+  artifactMeta Json?
+
+  // C6 — Community Verified badge (auto-computed)
+  verified     Boolean  @default(false)
+
   // Engagement
   upvoteCount  Int      @default(0)
 
+  // C2 — Upvote events for velocity calculation
+  upvoteEvents UpvoteEvent[]
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// C2 — Upvote event log for velocity-based trending
+model UpvoteEvent {
+  id        String        @id @default(cuid())
+  projectId String
+  project   SharedProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@index([projectId, createdAt])
 }

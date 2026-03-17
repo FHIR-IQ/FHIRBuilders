@@ -76,7 +76,18 @@
       "Bash(curl -sv -o /dev/null https://fhir-builders.vercel.app/dashboard)",
       "Bash(grep -v \"^$\\\\|Common\\\\|vercel env\\\\|Retrieving\\\\|found for\")",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''''prisma'''',{}\\), indent=2\\)\\)\")",
-      "Bash(ls /Users/eugenevestel/Git/FHIRBuilders/fhirbuilders-app/.env*)"
+      "Bash(ls /Users/eugenevestel/Git/FHIRBuilders/fhirbuilders-app/.env*)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "mcp__claude_ai_Vercel__web_fetch_vercel_url",
+      "WebFetch(domain:docs.openclaw.ai)",
+      "Bash(ls -la /Users/eugenevestel/Git/FHIRBuilders/fhirbuilders-app/src/app/api/projects/[id]/)",
+      "Bash(find /Users/eugenevestel/Git/FHIRBuilders/fhirbuilders-app/src/app/api/projects/[id] -type f)",
+      "Bash(set -a)",
+      "Bash(source .env.local)",
+      "Bash(set +a)",
+      "Bash(npx tsx:*)",
+      "Bash(npx tsc:*)",
+      "Bash(grep -B1 \"error  \\\\`''''\\\\`\\\\|error  Error:\")"
     ]
   }
 }

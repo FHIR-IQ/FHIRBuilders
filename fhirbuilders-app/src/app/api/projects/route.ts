@@ -14,9 +14,21 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, description, repoUrl, demoUrl, tags, authorName, authorEmail, artifactType, status, lookingFor } = body;
+    const {
+      title,
+      description,
+      repoUrl,
+      demoUrl,
+      tags,
+      authorName,
+      authorEmail,
+      artifactType,
+      status,
+      lookingFor,
+      makerComment,
+      artifactMeta,
+    } = body;
 
-    // Validate required fields
     if (!title || !description || !authorName || !artifactType) {
       return NextResponse.json(
         { error: "Title, description, author name, and artifact type are required" },
@@ -24,27 +36,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate URLs if provided
-    const urlRegex = /^https?:\/\/.+/;
-    if (repoUrl && !urlRegex.test(repoUrl)) {
+    if (makerComment && typeof makerComment === "string" && makerComment.trim().length < 80) {
       return NextResponse.json(
-        { error: "Invalid repository URL" },
-        { status: 400 }
-      );
-    }
-    if (demoUrl && !urlRegex.test(demoUrl)) {
-      return NextResponse.json(
-        { error: "Invalid demo URL" },
+        { error: "Maker comment must be at least 80 characters." },
         { status: 400 }
       );
     }
 
-    // Create project
+    const urlRegex = /^https?:\/\/.+/;
+    if (repoUrl && !urlRegex.test(repoUrl)) {
+      return NextResponse.json({ error: "Invalid repository URL" }, { status: 400 });
+    }
+    if (demoUrl && !urlRegex.test(demoUrl)) {
+      return NextResponse.json({ error: "Invalid demo URL" }, { status: 400 });
+    }
+
+    const cleanRepoUrl = repoUrl?.trim() || null;
+    const cleanMakerComment = makerComment?.trim() || null;
+
     const project = await prisma.sharedProject.create({
       data: {
         title: title.trim(),
         description: description.trim(),
-        repoUrl: repoUrl?.trim() || null,
+        repoUrl: cleanRepoUrl,
         demoUrl: demoUrl?.trim() || null,
         tags: Array.isArray(tags) ? tags.slice(0, 5) : [],
         authorName: authorName.trim(),
@@ -52,13 +66,12 @@ export async function POST(request: NextRequest) {
         artifactType: artifactType?.trim() || null,
         status: status?.trim() || null,
         lookingFor: Array.isArray(lookingFor) ? lookingFor : [],
+        makerComment: cleanMakerComment,
+        artifactMeta: artifactMeta ?? null,
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      project,
-    });
+    return NextResponse.json({ success: true, project });
   } catch (error) {
     console.error("Projects API error:", error);
     return NextResponse.json(
@@ -72,13 +85,17 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const sort = searchParams.get("sort") || "popular";
+    const sort = searchParams.get("sort") || "trending";
+
+    const orderBy =
+      sort === "newest"
+        ? { createdAt: "desc" as const }
+        : sort === "popular"
+        ? { upvoteCount: "desc" as const }
+        : { trendingScore: "desc" as const }; // default: trending
 
     const projects = await prisma.sharedProject.findMany({
-      orderBy:
-        sort === "newest"
-          ? { createdAt: "desc" }
-          : { upvoteCount: "desc" },
+      orderBy,
       select: {
         id: true,
         title: true,
@@ -91,6 +108,11 @@ export async function GET(request: NextRequest) {
         lookingFor: true,
         authorName: true,
         upvoteCount: true,
+        forkCount: true,
+        trendingScore: true,
+        verified: true,
+        makerComment: true,
+        artifactMeta: true,
         createdAt: true,
       },
     });
