@@ -34,6 +34,7 @@ import {
   ArrowUp,
   ExternalLink,
   FolderOpen,
+  Heart,
 } from "lucide-react";
 
 // ── Vega-inspired categorical palette (section-level color coding) ──────────
@@ -138,7 +139,7 @@ const PERSONAS = [
     title: "AI Builder",
     description: "Generate complete FHIR apps from a prompt, then connect to any messaging channel",
     cta: "Build with AI",
-    href: "/openclaw",
+    href: "/build",
     icon: Wand2,
     color: SECTION_COLORS.openclaw,
   },
@@ -186,6 +187,32 @@ interface FeaturedProject {
   repoUrl?: string | null;
   authorName: string;
 }
+
+interface FeaturedProblem {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  supportCount: number;
+  postedByRole: string;
+}
+
+interface ActivityStats {
+  projectsThisWeek: number;
+  problemsThisWeek: number;
+  totalUpvotes: number;
+}
+
+const PROBLEM_CATEGORY_COLORS: Record<string, string> = {
+  "Care Coordination": "bg-blue-100 text-blue-800",
+  "Medication Safety": "bg-red-100 text-red-800",
+  "Patient Access": "bg-teal-100 text-teal-800",
+  "Quality Measurement": "bg-purple-100 text-purple-800",
+  "Data Access": "bg-amber-100 text-amber-800",
+  "Workflow Automation": "bg-orange-100 text-orange-800",
+  "Diagnostics": "bg-pink-100 text-pink-800",
+  "Other": "bg-gray-100 text-gray-800",
+};
 
 const ARTIFACT_COLORS: Record<string, string> = {
   "Agent":        "bg-violet-100 text-violet-800",
@@ -294,6 +321,8 @@ export default function HomePage() {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
+  const [featuredProblems, setFeaturedProblems] = useState<FeaturedProblem[]>([]);
+  const [activity, setActivity] = useState<ActivityStats | null>(null);
 
   useEffect(() => {
     fetch("/api/projects?sort=trending")
@@ -301,6 +330,18 @@ export default function HomePage() {
       .then((data) => {
         if (data.projects) setFeaturedProjects(data.projects.slice(0, 3));
       })
+      .catch(() => {});
+
+    fetch("/api/problems?sort=popular")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.problems) setFeaturedProblems(data.problems.slice(0, 3));
+      })
+      .catch(() => {});
+
+    fetch("/api/activity")
+      .then((r) => r.json())
+      .then((data) => setActivity(data))
       .catch(() => {});
   }, []);
 
@@ -329,20 +370,18 @@ export default function HomePage() {
                 </Badge>
 
                 <h1 className="text-4xl font-bold tracking-tight sm:text-5xl leading-tight">
-                  Make a FHIR app{" "}
-                  <span className="text-violet-600">like this</span>{" "}
-                  in 3 clicks
+                  The home for{" "}
+                  <span className="text-violet-600">FHIR builders</span>
                 </h1>
 
-                <p className="mt-5 text-lg text-muted-foreground max-w-xl">
-                  Describe what you want to build. AI generates a complete,
-                  deployable FHIR app with Medplum and Claude. No boilerplate.
-                  No setup.
+                <p className="mt-4 text-lg text-muted-foreground max-w-xl">
+                  Clinicians post the problems. Builders ship the solutions.
+                  Investors find the teams. All working on the same mission.
                 </p>
 
-                <div className="mt-8 flex flex-col sm:flex-row gap-3 flex-wrap">
+                <div className="mt-7 flex flex-col sm:flex-row gap-3 flex-wrap">
                   <Button size="lg" className="h-12 px-7 bg-violet-600 hover:bg-violet-700 text-white" asChild>
-                    <Link href="/openclaw">
+                    <Link href="/build">
                       <Wand2 className="mr-2 h-5 w-5" />
                       Build with AI
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -370,14 +409,31 @@ export default function HomePage() {
                   </Button>
                 </div>
 
-                <p className="mt-4 text-sm text-muted-foreground">
+                {/* Live activity signal */}
+                {activity && (
+                  <div className="mt-5 text-sm text-muted-foreground">
+                    <span className="text-teal-600 font-medium">
+                      {activity.projectsThisWeek > 0 ? `↑ ${activity.projectsThisWeek} project${activity.projectsThisWeek !== 1 ? "s" : ""} shared this week` : ""}
+                    </span>
+                    {activity.projectsThisWeek > 0 && activity.problemsThisWeek > 0 && " · "}
+                    <span className="text-rose-500 font-medium">
+                      {activity.problemsThisWeek > 0 ? `${activity.problemsThisWeek} problem${activity.problemsThisWeek !== 1 ? "s" : ""} posted` : ""}
+                    </span>
+                    {(activity.projectsThisWeek > 0 || activity.problemsThisWeek > 0) && activity.totalUpvotes > 0 && " · "}
+                    <span className="text-muted-foreground">
+                      {activity.totalUpvotes > 0 ? `${activity.totalUpvotes} upvotes` : ""}
+                    </span>
+                  </div>
+                )}
+
+                <p className="mt-3 text-sm text-muted-foreground">
                   No credit card. No signup required for sandbox.
                 </p>
 
                 {/* Section nav color keys */}
                 <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium">
                   {[
-                    { label: "Build with AI", color: "bg-violet-100 text-violet-700", href: "/openclaw", icon: Wand2 },
+                    { label: "Build with AI", color: "bg-violet-100 text-violet-700", href: "/build", icon: Wand2 },
                     { label: "Sandbox", color: "bg-blue-100 text-blue-700", href: "/sandbox/demo", icon: FlaskConical },
                     { label: "Community", color: "bg-teal-100 text-teal-700", href: "/projects", icon: FolderOpen },
                     { label: "Learn", color: "bg-amber-100 text-amber-700", href: "/learn", icon: BookOpen },
@@ -525,6 +581,73 @@ export default function HomePage() {
                   </Card>
                 </Link>
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          PROBLEMS STRIP — rose accent (4A)
+      ══════════════════════════════════════════════════════════════════════ */}
+      {featuredProblems.length > 0 && (
+        <section className="container py-12 border-b">
+          <div className="mx-auto max-w-5xl">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-1 rounded-full bg-rose-500" />
+                <div>
+                  <h2 className="text-xl font-bold">Problems posted by clinicians, waiting for builders</h2>
+                  <p className="text-sm text-muted-foreground">The problems real healthcare workers live with every day</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700 shrink-0" asChild>
+                <Link href="/problems/new">
+                  Post yours <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {featuredProblems.map((problem) => (
+                <Link key={problem.id} href={`/problems/${problem.id}`}>
+                  <Card className="hover:border-rose-200 transition-colors cursor-pointer h-full">
+                    <CardContent className="pt-4 pb-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge variant="secondary" className={`text-xs ${PROBLEM_CATEGORY_COLORS[problem.category] ?? "bg-gray-100 text-gray-700"}`}>
+                          {problem.category}
+                        </Badge>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ml-2 ${
+                          problem.status === "being-built" ? "bg-green-100 text-green-700" :
+                          problem.status === "solved" ? "bg-teal-100 text-teal-700" :
+                          "bg-gray-100 text-gray-600"
+                        }`}>
+                          {problem.status === "being-built" ? "Being Built" :
+                           problem.status === "solved" ? "Solved" : "Unclaimed"}
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-2 leading-snug">{problem.title}</h3>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
+                        <span className="truncate">{problem.postedByRole}</span>
+                        <span className="flex items-center gap-0.5 shrink-0 ml-2 text-rose-500">
+                          <Heart className="h-3 w-3" />
+                          {problem.supportCount}
+                        </span>
+                      </div>
+                      <div className="mt-3">
+                        <span className="text-xs text-rose-600 font-medium hover:underline">
+                          I&apos;m building this →
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+            <div className="text-right mt-4">
+              <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700" asChild>
+                <Link href="/problems">
+                  See all problems <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
@@ -772,7 +895,7 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" className="bg-white text-violet-700 hover:bg-violet-50" asChild>
-              <Link href="/openclaw">
+              <Link href="/build">
                 <Wand2 className="mr-2 h-5 w-5" />
                 Build with AI
               </Link>

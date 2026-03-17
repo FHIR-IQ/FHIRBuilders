@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ArrowLeft,
   ArrowUp,
@@ -24,6 +24,15 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
+
+interface ClinicalProblem {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  supportCount: number;
+  linkedProjects: string[];
+}
 
 interface Project {
   id: string;
@@ -85,6 +94,7 @@ export default function ProjectDetailPage() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [hasFored, setHasFored] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [relatedProblems, setRelatedProblems] = useState<ClinicalProblem[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -93,6 +103,17 @@ export default function ProjectDetailPage() {
       .then((d) => setProject(d.project ?? null))
       .catch(() => setProject(null))
       .finally(() => setIsLoading(false));
+
+    // Fetch problems linked to this project
+    fetch("/api/problems")
+      .then((r) => r.json())
+      .then((d) => {
+        const linked = (d.problems || []).filter(
+          (p: ClinicalProblem) => p.linkedProjects.includes(id)
+        );
+        setRelatedProblems(linked);
+      })
+      .catch(() => {});
   }, [id]);
 
   const handleUpvote = async () => {
@@ -424,6 +445,39 @@ export default function ProjectDetailPage() {
               </dl>
             </div>
           </div>
+
+          {/* Related problems — full width below grid */}
+          {relatedProblems.length > 0 && (
+            <div className="lg:col-span-3 mt-2">
+              <Card className="border-rose-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2 text-rose-700">
+                    <Lightbulb className="h-4 w-4" />
+                    Related problems this solves
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {relatedProblems.map((problem) => (
+                      <Link
+                        key={problem.id}
+                        href={`/problems/${problem.id}`}
+                        className="flex items-start gap-3 p-3 rounded-lg border hover:border-rose-300 hover:bg-rose-50/30 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium leading-snug">{problem.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{problem.category} · {problem.supportCount} people have this problem</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-200 shrink-0">
+                          Being Built
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       )}
 

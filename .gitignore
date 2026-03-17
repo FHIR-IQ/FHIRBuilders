@@ -6,8 +6,8 @@ node_modules/
 # Build outputs
 .next/
 out/
-build/
-dist/
+/build/
+/dist/
 
 # Environment files
 .env

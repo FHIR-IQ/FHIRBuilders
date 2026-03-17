@@ -722,3 +722,36 @@ model UpvoteEvent {
 
   @@index([projectId, createdAt])
 }
+
+// Problem Board — clinical problems posted by healthcare professionals
+model ClinicalProblem {
+  id          String   @id @default(cuid())
+
+  title       String   // max 80 chars, one-sentence version
+  description String   @db.Text // full narrative voice
+
+  category    String   // "Care Coordination" | "Medication Safety" | "Patient Access" | "Quality Measurement" | "Data Access" | "Workflow Automation" | "Diagnostics" | "Other"
+  status      String   @default("unclaimed") // "unclaimed" | "being-built" | "solved"
+
+  // Who does this affect
+  affectedRoles String[] // ["Patients", "Nurses", "Physicians", "Care coordinators", "Pharmacists", "Administrators", "Payers", "Family caregivers"]
+
+  // How often
+  frequency   String?  // "Daily" | "Weekly" | "Monthly" | "Occasionally"
+
+  // Posted by — role description, NOT name (privacy)
+  postedByRole String  // "Hospitalist, academic medical center"
+
+  // Optional contact
+  contactEmail String?  // not displayed publicly
+  willingToAdvise Boolean @default(false)
+
+  // Engagement
+  supportCount Int     @default(0)
+
+  // Linked projects (builders working on this)
+  linkedProjects String[] // array of SharedProject IDs
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

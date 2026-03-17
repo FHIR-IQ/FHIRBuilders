@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   X,
   Github,
   ExternalLink,
+  Lightbulb,
 } from "lucide-react";
 
 const ARTIFACT_TYPES = [
@@ -39,24 +40,41 @@ const SUGGESTED_TAGS = [
   "AI", "React", "Python", "Integration", "Clinical", "Analytics",
 ];
 
-export default function NewProjectPage() {
+function NewProjectForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const problemId = searchParams.get("problem_id");
+  const prefillDescription = searchParams.get("description") || "";
+  const prefillArtifactType = searchParams.get("artifactType") || "";
+
+  const [linkedProblemTitle, setLinkedProblemTitle] = useState<string | null>(null);
   const [formState, setFormState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
+    description: prefillDescription,
     repoUrl: "",
     demoUrl: "",
     tags: [] as string[],
     authorName: "",
     authorEmail: "",
-    artifactType: "",
+    artifactType: prefillArtifactType,
     status: "concept" as "concept" | "in-progress" | "live",
     lookingFor: [] as string[],
     makerComment: "",
+    problemId: problemId || "",
   });
   const [tagInput, setTagInput] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (!problemId) return;
+    fetch(`/api/problems/${problemId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.problem?.title) setLinkedProblemTitle(d.problem.title);
+      })
+      .catch(() => {});
+  }, [problemId]);
 
   const addTag = (tag: string) => {
     const t = tag.trim();
@@ -96,6 +114,15 @@ export default function NewProjectPage() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        // Link this project to the problem if problem_id was provided
+        if (problemId && data.project?.id) {
+          await fetch(`/api/problems/${problemId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ projectId: data.project.id }),
+          }).catch(() => {}); // non-critical
+        }
         setFormState("success");
       } else {
         const data = await response.json().catch(() => ({}));
@@ -157,6 +184,17 @@ export default function NewProjectPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to projects
         </Link>
+
+        {linkedProblemTitle && (
+          <div className="mb-6 flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 rounded-xl">
+            <Lightbulb className="h-5 w-5 text-rose-500 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-rose-700">Building on a posted problem</p>
+              <p className="text-sm text-rose-600 mt-0.5">&ldquo;{linkedProblemTitle}&rdquo;</p>
+              <p className="text-xs text-rose-500 mt-1">Your project will be linked to this problem automatically.</p>
+            </div>
+          </div>
+        )}
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Share Your Project</h1>
@@ -413,5 +451,13 @@ export default function NewProjectPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function NewProjectPage() {
+  return (
+    <Suspense fallback={<div className="container py-20 flex justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}>
+      <NewProjectForm />
+    </Suspense>
   );
 }

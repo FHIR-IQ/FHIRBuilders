@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Github, MessageCircle } from "lucide-react";
+import { Github } from "lucide-react";
 
 export function Footer() {
   return (
@@ -15,39 +15,27 @@ export function Footer() {
               <span className="font-semibold">FHIRBuilders</span>
             </Link>
             <span className="text-sm text-muted-foreground hidden sm:inline">
-              FHIR data in 30 seconds
+              The home for FHIR builders
             </span>
           </div>
 
-          {/* Links */}
+          {/* Links — mirror primary nav */}
           <div className="flex items-center gap-6 text-sm">
-            <Link
-              href="/showcase"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Showcase
+            <Link href="/problems" className="text-muted-foreground hover:text-foreground transition-colors">
+              Problems
             </Link>
-            <Link
-              href="/sandbox/demo"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Sandbox
-            </Link>
-            <Link
-              href="/projects"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
               Projects
             </Link>
-            <a
-              href="https://chat.fhir.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Zulip</span>
-            </a>
+            <Link href="/openclaw" className="text-muted-foreground hover:text-foreground transition-colors">
+              OpenClaw
+            </Link>
+            <Link href="/sandbox/demo" className="text-muted-foreground hover:text-foreground transition-colors">
+              Sandbox
+            </Link>
+            <Link href="/learn" className="text-muted-foreground hover:text-foreground transition-colors">
+              Learn
+            </Link>
             <a
               href="https://github.com/fhirbuilders"
               target="_blank"
