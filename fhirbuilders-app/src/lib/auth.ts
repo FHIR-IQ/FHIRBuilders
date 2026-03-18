@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
@@ -10,10 +12,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   adapter: PrismaAdapter(prisma),
   providers: [
-    // Override Credentials in authConfig with the real Node.js implementations
-    ...authConfig.providers.filter(
-      (p) => typeof p !== "function" && (p as { id?: string }).id !== "credentials" && (p as { id?: string }).id !== "zulip-fhir"
-    ),
+    // Declare OAuth providers directly (not filtered from authConfig) to ensure
+    // allowDangerousEmailAccountLinking is preserved through PrismaAdapter
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
+    }),
     // Email/password login
     Credentials({
       id: "credentials",
