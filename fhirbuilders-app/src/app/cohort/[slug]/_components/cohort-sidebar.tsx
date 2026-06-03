@@ -7,6 +7,7 @@ import {
   CircleHelp,
   Flame,
   FlaskConical,
+  GraduationCap,
   Home,
   ListChecks,
   MessageSquare,
@@ -27,6 +28,7 @@ const NAV = [
   { label: "Community", href: "/community", icon: Users },
   { label: "Messages", href: "external:slack", icon: MessageSquare },
   { label: "Meeting", href: "/meeting", icon: Video },
+  { label: "Workshops", href: "/workshops", icon: GraduationCap },
   { label: "The Lab", href: "/lab", icon: FlaskConical },
 ] as const;
 
