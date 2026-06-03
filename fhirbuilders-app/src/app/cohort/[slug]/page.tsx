@@ -400,10 +400,10 @@ function ResourcesCard() {
       external: true,
     },
     {
-      label: "Slack (invite in your email)",
-      href: "#",
+      label: "Slack · fhirbuilders workspace",
+      href: "https://join.slack.com/t/fhirbuilders/shared_invite/zt-405j5tykg-T9v8~nNaX9tFZZgzaj37Ow",
       icon: MessageSquare,
-      external: false,
+      external: true,
     },
   ];
 
