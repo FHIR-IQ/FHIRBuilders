@@ -1,0 +1,132 @@
+import { notFound } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Calendar, ExternalLink, Video } from "lucide-react";
+import { formatSessionTime, getCohortBySlug, nextSession } from "@/lib/cohort/cohort-00";
+
+type PageProps = { params: Promise<{ slug: string }> };
+
+export default async function MeetingPage({ params }: PageProps) {
+  const { slug } = await params;
+  const cohort = getCohortBySlug(slug);
+  if (!cohort) notFound();
+  // eslint-disable-next-line react-hooks/purity
+  const upcoming = nextSession(cohort, new Date(Date.now()));
+
+  return (
+    <div className="mx-auto max-w-3xl px-6 py-10 lg:px-10 lg:py-14">
+      <div className="mb-8">
+        <Badge variant="outline" className="mb-2 border-fuchsia-300 bg-fuchsia-50 text-fuchsia-700">
+          <Video className="mr-1 h-3 w-3" /> Meeting
+        </Badge>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          Where you go right now.
+        </h1>
+        <p className="mt-2 max-w-2xl text-slate-600">
+          One button. No tab-hunting. This page always shows the next live session.
+        </p>
+      </div>
+
+      {upcoming ? (
+        <Card className="overflow-hidden border-0 shadow-lg">
+          <div
+            className={`relative px-8 py-9 ${
+              upcoming.kind === "intro"
+                ? "bg-gradient-to-br from-violet-600 via-fuchsia-500 to-rose-500"
+                : "bg-gradient-to-br from-teal-600 via-emerald-500 to-lime-500"
+            } text-white`}
+          >
+            <div className="absolute inset-0 opacity-10 mix-blend-overlay [background-image:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_60%,white,transparent_40%)]" />
+            <div className="relative">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <Badge className="border-0 bg-white/20 text-white hover:bg-white/30">
+                  {upcoming.kind === "intro" ? "Intro" : `Week ${upcoming.weekNumber ?? "—"}`}
+                </Badge>
+                {upcoming.mandatory && (
+                  <Badge className="border-0 bg-rose-500/90 text-white hover:bg-rose-500">
+                    Mandatory live
+                  </Badge>
+                )}
+              </div>
+              <div className="mb-1 font-mono text-xs uppercase tracking-widest opacity-90">
+                Up next
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{upcoming.title}</h2>
+              <p className="mt-3 max-w-xl text-sm text-white/90">{upcoming.description}</p>
+
+              <div className="mt-6 flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 opacity-90" />
+                <span>{formatSessionTime(upcoming)}</span>
+              </div>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                {upcoming.meetUrl ? (
+                  <Button size="lg" asChild className="bg-white text-slate-900 hover:bg-white/90">
+                    <a href={upcoming.meetUrl} target="_blank" rel="noopener noreferrer">
+                      <Video className="mr-2 h-4 w-4" />
+                      Join on Google Meet
+                    </a>
+                  </Button>
+                ) : (
+                  <Button
+                    size="lg"
+                    className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20"
+                    disabled
+                  >
+                    Meet link arrives 24h before
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>No upcoming sessions</CardTitle>
+            <CardDescription>Cohort 00 has wrapped. Check Calendar for the full archive.</CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      <Card className="mt-6 border-dashed">
+        <CardContent className="flex items-start justify-between gap-3 p-4">
+          <div className="text-sm">
+            <div className="font-medium text-slate-900">Recordings</div>
+            <p className="mt-0.5 text-slate-600">
+              Posted within 24 hours of each session. Linked from Bulletin and emailed.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href={`/cohort/${cohort.slug}/bulletin`}>
+              Bulletin <ArrowRight className="ml-1 h-3 w-3" />
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-3 border-dashed">
+        <CardContent className="flex items-start justify-between gap-3 p-4">
+          <div className="text-sm">
+            <div className="font-medium text-slate-900">1:1 with Eugene</div>
+            <p className="mt-0.5 text-slate-600">
+              Two per builder over the 6 weeks. Reply to any cohort email to book.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href="mailto:gene@fhiriq.com?subject=Cohort%2000%20%E2%80%94%201%3A1%20request">
+              Email Eugene <ExternalLink className="ml-1 h-3 w-3" />
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

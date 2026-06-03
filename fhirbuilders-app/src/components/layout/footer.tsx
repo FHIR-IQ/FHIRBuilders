@@ -1,7 +1,15 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Github } from "lucide-react";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  // Mirror header: cohort routes own their own chrome.
+  if (pathname?.startsWith("/cohort")) return null;
+
   return (
     <footer className="border-t bg-muted/30">
       <div className="container py-8">

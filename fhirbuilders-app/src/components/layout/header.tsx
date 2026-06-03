@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,10 @@ const navigation = [
 
 export function Header() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
+
+  // Cohort routes own their own chrome (left sidebar shell).
+  if (pathname?.startsWith("/cohort")) return null;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
