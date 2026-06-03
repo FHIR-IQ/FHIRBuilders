@@ -8,6 +8,7 @@ import {
   Flame,
   FlaskConical,
   Home,
+  ListChecks,
   MessageSquare,
   Newspaper,
   NotebookPen,
@@ -18,6 +19,7 @@ import {
 
 const NAV = [
   { label: "Home", href: "", icon: Home },
+  { label: "Pre-flight", href: "/prereqs", icon: ListChecks },
   { label: "Bulletin", href: "/bulletin", icon: Newspaper },
   { label: "Reflect", href: "/reflect", icon: NotebookPen },
   { label: "Plan", href: "/plan", icon: Sparkles },
