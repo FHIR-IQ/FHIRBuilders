@@ -26,6 +26,7 @@ const NAV = [
   { label: "Plan", href: "/plan", icon: Sparkles },
   { label: "Calendar", href: "/calendar", icon: Calendar },
   { label: "Community", href: "/community", icon: Users },
+  { label: "Channels", href: "/channels", icon: MessageSquare },
   { label: "Messages", href: "external:slack", icon: MessageSquare },
   { label: "Meeting", href: "/meeting", icon: Video },
   { label: "Workshops", href: "/workshops", icon: GraduationCap },
