@@ -12,8 +12,10 @@ import {
   ArrowRight,
   Calendar,
   ExternalLink,
+  FileText,
   FolderOpen,
   NotebookText,
+  PlayCircle,
   Video,
 } from "lucide-react";
 import { formatSessionTime, getCohortBySlug, nextSession } from "@/lib/cohort/cohort-00";
@@ -142,19 +144,69 @@ export default async function MeetingPage({ params }: PageProps) {
         </Card>
       )}
 
-      <Card className="mt-6 border-dashed">
-        <CardContent className="flex items-start justify-between gap-3 p-4">
-          <div className="text-sm">
-            <div className="font-medium text-slate-900">Recordings</div>
-            <p className="mt-0.5 text-slate-600">
-              Posted within 24 hours of each session. Linked from Bulletin and emailed.
+      <Card className="mt-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <PlayCircle className="h-4 w-4 text-slate-600" /> Recordings
+          </CardTitle>
+          <CardDescription>
+            Posted within 24 hours of each session. Mirrored in Slack #demos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {cohort.sessions.filter((s) => s.recordingUrl).length === 0 ? (
+            <p className="text-sm text-slate-500">
+              No recordings yet — the first one drops after the intro call wraps.
             </p>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/cohort/${cohort.slug}/bulletin`}>
-              Bulletin <ArrowRight className="ml-1 h-3 w-3" />
-            </a>
-          </Button>
+          ) : (
+            cohort.sessions
+              .filter((s) => s.recordingUrl)
+              .map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center gap-3 rounded-md border border-slate-200 px-3 py-2 transition hover:border-rose-300 hover:bg-rose-50/30"
+                >
+                  <PlayCircle className="h-4 w-4 flex-shrink-0 text-rose-500" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-slate-900">
+                      {s.title}
+                    </div>
+                    <div className="font-mono text-[11px] text-slate-500">
+                      {formatSessionTime(s)}
+                    </div>
+                  </div>
+                  <div className="flex flex-shrink-0 gap-1.5">
+                    <Button variant="outline" size="sm" asChild className="h-7 px-2.5 text-xs">
+                      <a
+                        href={s.recordingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Watch recording of ${s.title}`}
+                      >
+                        <Video className="mr-1 h-3 w-3" /> Watch
+                      </a>
+                    </Button>
+                    {s.chatTranscriptUrl && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="h-7 px-2 text-xs text-slate-500"
+                      >
+                        <a
+                          href={s.chatTranscriptUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Chat transcript for ${s.title}`}
+                        >
+                          <FileText className="h-3 w-3" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))
+          )}
         </CardContent>
       </Card>
 

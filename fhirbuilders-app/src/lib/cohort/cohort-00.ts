@@ -29,6 +29,10 @@ export type CohortSession = {
    * Drive picker, so this folder is also the "source of truth" for prep.
    */
   driveFolderUrl?: string;
+  /** Recording URL — Google Drive (Meet recording) or YouTube. */
+  recordingUrl?: string;
+  /** Chat transcript URL — usually the Meet-attached chat .txt in Drive. */
+  chatTranscriptUrl?: string;
 };
 
 export type CohortSignup = {
@@ -74,6 +78,10 @@ export const COHORT_00: Cohort = {
       endsAt: "2026-06-03T15:45:00-04:00",
       meetUrl: "https://meet.google.com/xkg-cnqo-jse",
       mandatory: false,
+      recordingUrl:
+        "https://drive.google.com/file/d/1wtN8agd9CKVkvhMAvZBvyD4kD8ERAHrV/view",
+      chatTranscriptUrl:
+        "https://drive.google.com/file/d/1PxJ5YjyHFfp5F_gHXY0ZiW1DQAer74mG/view",
     },
     {
       id: "intro-thu",
