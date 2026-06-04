@@ -99,10 +99,8 @@ export const COHORT_00: Cohort = {
       mandatory: true,
       driveFolderUrl:
         "https://drive.google.com/drive/folders/1ysomAEmYFJyzTljdP-oNHATEL4hHm43a",
-      // Eugene: paste the NotebookLM share URL here once you've created the
-      // notebook at notebooklm.google.com from this Drive folder. See the
-      // syllabus doc inside the folder for the source-list checklist.
-      notebookLmUrl: undefined,
+      notebookLmUrl:
+        "https://drive.google.com/file/d/1wtN8agd9CKVkvhMAvZBvyD4kD8ERAHrV/view",
     },
     {
       id: "session-2",
