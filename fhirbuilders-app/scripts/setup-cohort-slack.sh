@@ -3,7 +3,7 @@
 #
 # Creates the 10 cohort-wide channels, sets topics + purposes, posts the
 # pinned welcome message in each, and pins it. Safe to re-run — channels
-# that already exist are skipped and only missing pieces are added.
+# that already exist are detected and only missing pieces get added.
 #
 # What this script CAN do (with the bot scopes below):
 #   - Create public + private channels
@@ -35,7 +35,14 @@
 #
 # Optional: --dry-run prints the planned actions without hitting the API.
 #
-# ─────────────────────────────────────────────────────────────────────────────
+# ─── WHY THE JSON BODIES ARE BUILT THROUGH ENV VARS ──────────────────────────
+#
+# macOS bash 3.2 does brace expansion on `{...}` literals inside nested
+# `$(python3 -c "...")`, mangling the JSON before Python sees it. The
+# bulletproof workaround is to pass values into Python through env vars
+# and use a quoted heredoc (`<<'PYEOF'`) so bash performs zero substitution
+# inside the Python body. The build_*_body / extract_field helpers below
+# all follow this pattern.
 
 set -euo pipefail
 
@@ -57,21 +64,93 @@ COHORT_HOME_URL="https://fhirbuilders.com/cohort/cohort-00"
 CHANNELS_DIR_URL="https://fhirbuilders.com/cohort/cohort-00/channels"
 PREREQS_URL="https://fhirbuilders.com/cohort/cohort-00/prereqs"
 
-# ─── API helpers ─────────────────────────────────────────────────────────────
+# ─── JSON helpers (env-var-passing pattern) ──────────────────────────────────
+
+# build_create_body <name> <is_private:true|false> → JSON for conversations.create
+build_create_body() {
+  CHANNEL_NAME="$1" IS_PRIVATE="$2" python3 <<'PYEOF'
+import json, os
+print(json.dumps({
+    "name": os.environ["CHANNEL_NAME"],
+    "is_private": os.environ["IS_PRIVATE"] == "true",
+}))
+PYEOF
+}
+
+# build_topic_body <channel_id> <topic_text> → JSON for conversations.setTopic
+build_topic_body() {
+  CHANNEL="$1" TOPIC="$2" python3 <<'PYEOF'
+import json, os
+print(json.dumps({"channel": os.environ["CHANNEL"], "topic": os.environ["TOPIC"]}))
+PYEOF
+}
+
+# build_purpose_body <channel_id> <purpose_text> → JSON for conversations.setPurpose
+build_purpose_body() {
+  CHANNEL="$1" PURPOSE="$2" python3 <<'PYEOF'
+import json, os
+print(json.dumps({"channel": os.environ["CHANNEL"], "purpose": os.environ["PURPOSE"]}))
+PYEOF
+}
+
+# build_message_body <channel_id> <message_text> → JSON for chat.postMessage
+build_message_body() {
+  CHANNEL="$1" TEXT="$2" python3 <<'PYEOF'
+import json, os
+print(json.dumps({"channel": os.environ["CHANNEL"], "text": os.environ["TEXT"]}))
+PYEOF
+}
+
+# extract <json_blob> <dotted_path> → field value or empty
+# e.g. extract "$resp" channel.id
+extract() {
+  JSON="$1" FIELD_PATH="$2" python3 <<'PYEOF'
+import json, os, sys
+try:
+    data = json.loads(os.environ["JSON"])
+except Exception:
+    sys.exit(0)
+for part in os.environ["FIELD_PATH"].split("."):
+    if isinstance(data, dict):
+        data = data.get(part)
+    else:
+        data = None
+    if data is None:
+        sys.exit(0)
+if isinstance(data, bool):
+    print("true" if data else "false")
+else:
+    print(data)
+PYEOF
+}
+
+# lookup_channel_id <list_response_json> <channel_name>
+lookup_channel_id() {
+  JSON="$1" NAME="$2" python3 <<'PYEOF'
+import json, os, sys
+try:
+    data = json.loads(os.environ["JSON"])
+except Exception:
+    sys.exit(0)
+for c in data.get("channels", []):
+    if c.get("name") == os.environ["NAME"]:
+        print(c.get("id", ""))
+        sys.exit(0)
+PYEOF
+}
+
+# ─── Slack API helpers ───────────────────────────────────────────────────────
 
 slack_post() {
   # slack_post <method> <json_body>
-  local method=$1
-  local body=$2
-  curl -sS -X POST "${API}/${method}" \
+  curl -sS -X POST "${API}/$1" \
     -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
     -H "Content-Type: application/json; charset=utf-8" \
-    --data "${body}"
+    --data "$2"
 }
 
+# create_channel <name> <is_private:true|false> → echoes channel ID
 create_channel() {
-  # create_channel <name> <is_private(true|false)>
-  # Returns channel ID on stdout. Exits with 0 even if channel exists.
   local name=$1
   local is_private=${2:-false}
 
@@ -80,35 +159,23 @@ create_channel() {
     return 0
   fi
 
-  local resp
-  resp=$(slack_post conversations.create \
-    "{\"name\":\"${name}\",\"is_private\":${is_private}}")
+  local body resp ok err
+  body=$(build_create_body "$name" "$is_private")
+  resp=$(slack_post conversations.create "$body")
+  ok=$(extract "$resp" ok)
 
-  local ok
-  ok=$(echo "$resp" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('ok'))")
-
-  if [[ "$ok" == "True" ]]; then
-    echo "$resp" | python3 -c "import sys,json;print(json.load(sys.stdin)['channel']['id'])"
+  if [[ "$ok" == "true" ]]; then
+    extract "$resp" channel.id
     return 0
   fi
 
-  local err
-  err=$(echo "$resp" | python3 -c "import sys,json;print(json.load(sys.stdin).get('error',''))")
-
+  err=$(extract "$resp" error)
   if [[ "$err" == "name_taken" ]]; then
-    # Look up the existing channel by name
+    # Find the existing channel by name
     local list
     list=$(slack_post conversations.list \
       '{"limit":1000,"types":"public_channel,private_channel","exclude_archived":true}')
-    echo "$list" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-for c in data.get('channels', []):
-    if c.get('name') == '${name}':
-        print(c.get('id'))
-        sys.exit(0)
-sys.exit(1)
-"
+    lookup_channel_id "$list" "$name"
     return 0
   fi
 
@@ -116,42 +183,44 @@ sys.exit(1)
   return 1
 }
 
+# set_topic_and_purpose <channel_id> <topic> <purpose>
 set_topic_and_purpose() {
   local id=$1
   local topic=$2
   local purpose=$3
   [[ $DRY_RUN -eq 1 ]] && return 0
 
-  slack_post conversations.setTopic \
-    "$(python3 -c "import json; print(json.dumps({'channel':'${id}','topic':'''${topic}'''}))")" >/dev/null
-  slack_post conversations.setPurpose \
-    "$(python3 -c "import json; print(json.dumps({'channel':'${id}','purpose':'''${purpose}'''}))")" >/dev/null
+  local body
+  body=$(build_topic_body "$id" "$topic")
+  slack_post conversations.setTopic "$body" >/dev/null
+
+  body=$(build_purpose_body "$id" "$purpose")
+  slack_post conversations.setPurpose "$body" >/dev/null
 }
 
+# post_and_pin <channel_id> <message_text>
 post_and_pin() {
   local id=$1
   local text=$2
   [[ $DRY_RUN -eq 1 ]] && return 0
 
-  local resp ts ok
-  resp=$(slack_post chat.postMessage \
-    "$(python3 -c "import json,sys; print(json.dumps({'channel':'${id}','text':'''${text}'''}))")")
-  ok=$(echo "$resp" | python3 -c "import sys,json;print(json.load(sys.stdin).get('ok'))")
-  if [[ "$ok" != "True" ]]; then
-    local err
-    err=$(echo "$resp" | python3 -c "import sys,json;print(json.load(sys.stdin).get('error',''))")
+  local body resp ok err ts
+  body=$(build_message_body "$id" "$text")
+  resp=$(slack_post chat.postMessage "$body")
+  ok=$(extract "$resp" ok)
+  if [[ "$ok" != "true" ]]; then
+    err=$(extract "$resp" error)
     echo "    ✗ postMessage failed: ${err}" >&2
     return 1
   fi
-  ts=$(echo "$resp" | python3 -c "import sys,json;print(json.load(sys.stdin)['ts'])")
+  ts=$(extract "$resp" ts)
 
-  slack_post pins.add \
-    "{\"channel\":\"${id}\",\"timestamp\":\"${ts}\"}" >/dev/null
+  slack_post pins.add "{\"channel\":\"${id}\",\"timestamp\":\"${ts}\"}" >/dev/null
 }
 
 # ─── Channel definitions ─────────────────────────────────────────────────────
 # Format: name|is_private|topic|purpose|pinned_message
-# Use \n in messages for line breaks (printf %b expands).
+# Use \n in pinned messages for line breaks (expanded with printf '%b' below).
 
 declare -a CHANNELS=(
 
