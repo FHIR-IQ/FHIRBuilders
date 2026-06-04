@@ -45,3 +45,6 @@ prisma/*.db-journal
 # Testing
 coverage/
 .nyc_output/
+
+# Claude Code local permission overrides (may contain secrets — never commit)
+.claude/settings.local.json
