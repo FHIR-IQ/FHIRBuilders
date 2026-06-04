@@ -8,7 +8,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Calendar, ExternalLink, Video } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  ExternalLink,
+  FolderOpen,
+  NotebookText,
+  Video,
+} from "lucide-react";
 import { formatSessionTime, getCohortBySlug, nextSession } from "@/lib/cohort/cohort-00";
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -84,6 +91,45 @@ export default async function MeetingPage({ params }: PageProps) {
                   </Button>
                 )}
               </div>
+
+              {(upcoming.notebookLmUrl || upcoming.driveFolderUrl) && (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {upcoming.notebookLmUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="h-8 px-3 text-xs text-white/90 hover:bg-white/15 hover:text-white"
+                    >
+                      <a
+                        href={upcoming.notebookLmUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <NotebookText className="mr-1.5 h-3.5 w-3.5" />
+                        NotebookLM
+                      </a>
+                    </Button>
+                  )}
+                  {upcoming.driveFolderUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="h-8 px-3 text-xs text-white/90 hover:bg-white/15 hover:text-white"
+                    >
+                      <a
+                        href={upcoming.driveFolderUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
+                        Drive sources
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </Card>

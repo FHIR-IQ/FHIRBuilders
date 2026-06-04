@@ -8,7 +8,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Download, Video } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  Download,
+  FolderOpen,
+  NotebookText,
+  Video,
+} from "lucide-react";
 import { formatSessionTime, getCohortBySlug, type CohortSession } from "@/lib/cohort/cohort-00";
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -93,6 +99,26 @@ function CalendarRow({ session, isPast }: { session: CohortSession; isPast: bool
       </CardHeader>
       <CardContent className="pt-0">
         <div className="font-mono text-xs text-slate-500">{formatSessionTime(session)}</div>
+        {(session.notebookLmUrl || session.driveFolderUrl) && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {session.notebookLmUrl && (
+              <Button variant="outline" size="sm" asChild className="h-7 px-2.5 text-xs">
+                <a href={session.notebookLmUrl} target="_blank" rel="noopener noreferrer">
+                  <NotebookText className="mr-1.5 h-3 w-3 text-violet-600" />
+                  NotebookLM
+                </a>
+              </Button>
+            )}
+            {session.driveFolderUrl && (
+              <Button variant="outline" size="sm" asChild className="h-7 px-2.5 text-xs">
+                <a href={session.driveFolderUrl} target="_blank" rel="noopener noreferrer">
+                  <FolderOpen className="mr-1.5 h-3 w-3 text-slate-500" />
+                  Drive sources
+                </a>
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -15,6 +15,20 @@ export type CohortSession = {
   endsAt: string;
   meetUrl?: string;
   mandatory: boolean;
+  /**
+   * Optional NotebookLM (notebooklm.google.com) URL — a per-session AI-curated
+   * resource hub. Builders use it as a Q&A bot tuned to the session's syllabus
+   * + linked docs, with a generated audio overview. Created manually after the
+   * Drive folder is populated; Eugene pastes the share URL back here.
+   * Suggested by John Lee (cohort 00) at the Wed intro call.
+   */
+  notebookLmUrl?: string;
+  /**
+   * Google Drive folder containing all sources for the session (syllabus doc,
+   * recordings, slides, reference PDFs). NotebookLM ingests directly from
+   * Drive picker, so this folder is also the "source of truth" for prep.
+   */
+  driveFolderUrl?: string;
 };
 
 export type CohortSignup = {
@@ -83,6 +97,12 @@ export const COHORT_00: Cohort = {
       startsAt: "2026-06-08T13:00:00-04:00",
       endsAt: "2026-06-08T14:30:00-04:00",
       mandatory: true,
+      driveFolderUrl:
+        "https://drive.google.com/drive/folders/1ysomAEmYFJyzTljdP-oNHATEL4hHm43a",
+      // Eugene: paste the NotebookLM share URL here once you've created the
+      // notebook at notebooklm.google.com from this Drive folder. See the
+      // syllabus doc inside the folder for the source-list checklist.
+      notebookLmUrl: undefined,
     },
     {
       id: "session-2",
