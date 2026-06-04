@@ -100,7 +100,7 @@ export const COHORT_00: Cohort = {
       driveFolderUrl:
         "https://drive.google.com/drive/folders/1ysomAEmYFJyzTljdP-oNHATEL4hHm43a",
       notebookLmUrl:
-        "https://drive.google.com/file/d/1wtN8agd9CKVkvhMAvZBvyD4kD8ERAHrV/view",
+        "https://notebooklm.google.com/notebook/3e2285b5-07e1-405d-9887-6b737d64bb5a",
     },
     {
       id: "session-2",
