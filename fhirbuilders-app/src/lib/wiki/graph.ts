@@ -27,8 +27,14 @@ export type WikiNode = {
   category: WikiCategory;
   /** 1–2 line summary shown on index cards. */
   summary: string;
-  /** Markdown body. Empty = pure stub; the topic exists in the graph but text TBD. */
+  /** Markdown body inline. Empty = pure stub; the topic exists in the graph but text TBD. */
   body?: string;
+  /**
+   * If true, render from src/content/wiki/topics/<slug>.mdx instead of `body`.
+   * MDX bodies support React components inline (callouts, diagrams). Long-form
+   * content lives here once a topic outgrows a few paragraphs.
+   */
+  useMdx?: boolean;
   /** External authoritative links (HL7 spec, CMS docs, GitHub repo, etc.). */
   externalLinks?: Array<{ label: string; href: string }>;
   /** Other node slugs this topic depends on / extends / sees-also. */
@@ -85,14 +91,7 @@ const NODES: WikiNode[] = [
     status: "stable",
     summary:
       "HL7's modern interoperability standard. Resource-based, REST-first, JSON-default. The default substrate for almost every healthcare AI app that touches real clinical data.",
-    body: `FHIR (pronounced "fire") is the way healthcare apps in 2026 read and write clinical data. It defines ~150 *resources* (Patient, Observation, Encounter, MedicationRequest, Condition, etc.) and a RESTful API over them.
-
-Why builders care:
-- It's the only standard with widespread adoption from EHRs (Epic, Cerner/Oracle, athenahealth, Meditech), payers (CMS Blue Button, CARIN), and aggregators (Particle, Health Gorilla, Datavant, Innovaccer).
-- The 21st Century Cures Act + ONC Information Blocking rule mandates patient-app access via FHIR for US providers and payers.
-- JSON-default means your LLM can read and write it without exotic parsing.
-
-Pick R4 unless you have a reason not to.`,
+    useMdx: true,
     externalLinks: [
       { label: "HL7 FHIR R4 spec", href: "https://hl7.org/fhir/R4/" },
       { label: "FHIR overview", href: "https://hl7.org/fhir/overview.html" },
@@ -229,11 +228,7 @@ Used by:
     status: "stable",
     summary:
       "Minimum FHIR profile set ONC requires US-certified EHRs to expose. The baseline every US healthcare app should design against.",
-    body: `US Core defines profiles for the FHIR resources that US-certified EHRs must expose: Patient, AllergyIntolerance, CarePlan, Condition, Coverage, DocumentReference, Encounter, Goal, Immunization, Location, Medication, MedicationRequest, Observation (Lab/Vital), Organization, Practitioner, Procedure, etc.
-
-Current version (mid-2026): **US Core 7.0.0** on FHIR R4. Each US Core release ratchets up required fields + must-support markers.
-
-If your app ingests EHR data, code against US Core profiles — that's what Epic, Cerner, athenahealth, etc. publish.`,
+    useMdx: true,
     externalLinks: [
       { label: "US Core IG", href: "https://hl7.org/fhir/us/core/" },
       { label: "ONC USCDI", href: "https://www.healthit.gov/isa/united-states-core-data-interoperability-uscdi" },
@@ -519,24 +514,7 @@ Pair with UCUM for units (\`mm[Hg]\`, \`mg/dL\`).`,
     status: "draft",
     summary:
       "Author-once quality-measure logic that runs against FHIR data. The substrate for HEDIS, eCQMs, DTR rules.",
-    body: `CQL looks like SQL but for clinical logic:
-
-\`\`\`
-define "HasDiabetes":
-  exists ([Condition: "Diabetes mellitus"])
-
-define "InMeasurePopulation":
-  AgeInYearsAt(start of "Measurement Period") >= 18
-  and "HasDiabetes"
-\`\`\`
-
-Runs on a CQL engine (Java reference impl, JavaScript via [cql-execution](https://github.com/cqframework/cql-execution), or compiled to SQL — see SQL-on-FHIR).
-
-Used by:
-- CMS digital quality measures (eCQMs)
-- HEDIS measures
-- DaVinci DTR rules
-- Clinical decision support`,
+    useMdx: true,
     externalLinks: [
       { label: "CQL spec", href: "https://cql.hl7.org/" },
       { label: "Eugene's CQL→SQL talk", href: "https://fhiriq.com/cql-to-sql" },
@@ -717,6 +695,7 @@ Reference: HHS [HIPAA for Professionals](https://www.hhs.gov/hipaa/for-professio
     status: "draft",
     summary:
       "Anthropic's open protocol for connecting LLM agents to external tools/data. Natural fit for FHIR: one MCP server exposes Patient.read, Observation.search, etc. Eugene's HealthClaw + Cohort 00 build on this.",
+    useMdx: true,
     related: ["agent-loops-fhir", "healthclaw", "claude-code-fhir"],
     externalLinks: [
       { label: "MCP spec", href: "https://modelcontextprotocol.io" },

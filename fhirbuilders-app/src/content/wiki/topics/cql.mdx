@@ -1,0 +1,47 @@
+CQL is the **author-once language for clinical logic** — quality measures, decision support rules, payer authorization criteria. It runs against FHIR data and ships as a portable artifact you can hand to any conformant engine.
+
+## What it looks like
+
+```cql
+library DiabetesCareMeasure version '1.0'
+
+using FHIR version '4.0.1'
+
+include FHIRHelpers version '4.0.1' called FHIRHelpers
+
+context Patient
+
+define "HasDiabetes":
+  exists ([Condition: "Diabetes mellitus"])
+
+define "RecentHbA1c":
+  [Observation: "HbA1c laboratory test"] O
+  where O.effective during "Measurement Period"
+    and O.value.value > 9.0
+
+define "InMeasureNumerator":
+  "HasDiabetes" and "RecentHbA1c"
+```
+
+Reads like SQL for clinical concepts. Code lists (`"Diabetes mellitus"`, `"HbA1c laboratory test"`) bind to ValueSets in a terminology service.
+
+## Where it shows up
+
+- **CMS digital quality measures** (eCQMs) — MIPS, HEDIS-aligned measures
+- **DaVinci DTR** — prior auth questionnaires that prefill from FHIR data via CQL logic
+- **Clinical decision support** — CDS Hooks responses driven by CQL evaluation
+- **Quality improvement dashboards** — anywhere you want consistent, version-controlled clinical definitions
+
+## How it runs
+
+Three engine families in production:
+
+1. **Java reference engine** ([cqframework](https://github.com/cqframework)) — the canonical implementation, used by Bonnie + most EHRs
+2. **JavaScript engine** ([cql-execution](https://github.com/cqframework/cql-execution)) — runs in Node + browser, good for in-app DTR experiences
+3. **Compiled to SQL** — Eugene's [CQL → SQL talk at Analytics on FHIR](https://fhiriq.com/cql-to-sql) covers compiling CQL down to native SQL over flat FHIR tables. Wins on speed + transparency for analytics workloads. See the **SQL on FHIR** topic for the broader pattern.
+
+## Where to start
+
+If you're building anything that touches quality measures or prior auth, learn enough CQL to read existing measures. Authoring is a separate skill — most teams import + customize existing CMS or HEDIS libraries rather than writing from scratch.
+
+The reference repo: [cqframework/clinical_quality_language](https://github.com/cqframework/clinical_quality_language).

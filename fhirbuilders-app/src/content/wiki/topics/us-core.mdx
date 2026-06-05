@@ -1,0 +1,35 @@
+US Core is the **minimum FHIR profile set ONC requires US-certified EHRs to expose**. It's the baseline every healthcare app targeting US providers should design against — Epic, Cerner/Oracle, athenahealth, Meditech all publish US Core-conformant endpoints.
+
+## What it covers
+
+US Core defines profiles (constraints + required fields + value set bindings) for the resources that map onto the **USCDI** (United States Core Data for Interoperability):
+
+- Patient demographics + identifiers
+- AllergyIntolerance, CarePlan, Condition, Encounter, Goal, Immunization, Procedure
+- DocumentReference (clinical notes)
+- Coverage (insurance)
+- Lab Observations + Vital Signs (two distinct profiles on `Observation`)
+- MedicationRequest + Medication
+- Organization, Practitioner, PractitionerRole, Location
+
+Each release ratchets up required fields + must-support markers — what's optional in US Core 3.1.1 is required in US Core 6+.
+
+## Versions and ONC certification
+
+| Version | FHIR base | ONC tied to |
+|---------|-----------|-------------|
+| 3.1.1 | R4 | HTI-1 (legacy) |
+| 6.1.0 | R4 | HTI-1 transition |
+| 7.0.0 | R4 | HTI-2 (2025+) |
+
+If you're building against a US-certified EHR mid-2026, **target US Core 6.1+** unless your stakeholder says otherwise.
+
+## Where it bites
+
+- Search params: US Core requires specific search params to be supported (`patient`, `category`, `date` ranges, etc.). Don't assume search support beyond what US Core mandates.
+- Must-support ≠ required: an EHR can omit a must-support field for a specific patient if they don't have data, but they cannot reject your read for asking for it.
+- Vital Signs vs. Lab profile is a common trip-wire — they're different `Observation` profiles with different code bindings.
+
+## The connection to everything else
+
+Almost every US-targeted IG (DaVinci, SDOH-CC, mCODE, SMART App Launch) profiles _on top of_ US Core. Build to US Core first, then layer on the IG-specific profiles.

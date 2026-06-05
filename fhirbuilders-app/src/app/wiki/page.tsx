@@ -9,6 +9,7 @@ import {
   Clock,
   ExternalLink,
   GitBranch,
+  Network,
   Sparkles,
 } from "lucide-react";
 import {
@@ -19,6 +20,7 @@ import {
   getNodesByCategory,
   type WikiNode,
 } from "@/lib/wiki/graph";
+import { LiveSignalCard } from "./_components/live-signal";
 
 export const metadata: Metadata = {
   title: "Healthcare AI Builders Wiki",
@@ -62,6 +64,11 @@ export default function WikiIndexPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button size="sm" asChild>
+            <Link href="/wiki/graph">
+              <Network className="mr-2 h-3.5 w-3.5" /> Graph view
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/wiki/log">
               <Clock className="mr-2 h-3.5 w-3.5" /> Log
@@ -79,24 +86,41 @@ export default function WikiIndexPage() {
         </div>
       </div>
 
-      {/* CALLOUT — Karpathy framing */}
-      <Card className="mb-10 border-dashed border-slate-300 bg-slate-50/50">
-        <CardContent className="flex items-start gap-3 p-5 text-sm">
-          <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-500" />
-          <div className="text-slate-700">
-            <strong>How this wiki works.</strong> Topics are <em>nodes</em> with summaries +
-            external links + status (seed → draft → stable). Edges encode dependencies (US Core
-            depends-on FHIR R4), production relationships (CMS-0057 → DaVinci PAS), and discussion
-            channels (CMS Health Tech Slack discusses NPD). The graph is meant to grow — every
-            change lands in the <Link href="/wiki/log" className="text-rose-600 hover:underline">log</Link>{" "}
-            so future you (or a forking team) can see what was added when and why. Fork the
-            <code className="mx-1 rounded bg-slate-200 px-1 py-0.5 font-mono text-xs">
-              graph.ts
-            </code>
-            file in the repo to build your own.
-          </div>
-        </CardContent>
-      </Card>
+      {/* CALLOUT + LIVE SIGNAL */}
+      <div className="mb-10 grid gap-4 lg:grid-cols-3">
+        <Card className="border-dashed border-slate-300 bg-slate-50/50 lg:col-span-2">
+          <CardContent className="flex items-start gap-3 p-5 text-sm">
+            <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-500" />
+            <div className="text-slate-700">
+              <strong>How this wiki works.</strong> Topics are <em>nodes</em> with summaries +
+              external links + status (seed → draft → stable). Edges encode dependencies (US Core
+              depends-on FHIR R4), production relationships (CMS-0057 → DaVinci PAS), and
+              discussion channels (CMS Health Tech Slack discusses NPD). See the whole thing
+              spatially in the{" "}
+              <Link href="/wiki/graph" className="text-rose-600 hover:underline">
+                graph view
+              </Link>
+              . The graph is meant to grow — every change lands in the{" "}
+              <Link href="/wiki/log" className="text-rose-600 hover:underline">log</Link>{" "}
+              so future you (or a forking team) can see what was added when and why. Fork the{" "}
+              <code className="mx-1 rounded bg-slate-200 px-1 py-0.5 font-mono text-xs">
+                src/lib/wiki/
+              </code>
+              module to build your own — see the{" "}
+              <a
+                href="https://github.com/FHIR-IQ/FHIRBuilders/blob/main/fhirbuilders-app/src/lib/wiki/README.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-rose-600 hover:underline"
+              >
+                template guide
+              </a>
+              .
+            </div>
+          </CardContent>
+        </Card>
+        <LiveSignalCard />
+      </div>
 
       {/* CATEGORIES */}
       <div className="space-y-10">

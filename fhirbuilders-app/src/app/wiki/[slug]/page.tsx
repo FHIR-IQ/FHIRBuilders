@@ -1,6 +1,9 @@
+import fs from "node:fs";
+import path from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { MDXRemote } from "next-mdx-remote/rsc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +15,71 @@ import {
   getNode,
   getRelated,
 } from "@/lib/wiki/graph";
+
+const MDX_DIR = path.join(process.cwd(), "src/content/wiki/topics");
+
+function loadMdxSource(slug: string): string | null {
+  const file = path.join(MDX_DIR, `${slug}.mdx`);
+  if (!fs.existsSync(file)) return null;
+  return fs.readFileSync(file, "utf8");
+}
+
+// shadcn-friendly MDX components — keeps long-form bodies styled to match the
+// rest of the wiki without us having to re-style every Markdown element.
+const MDX_COMPONENTS = {
+  h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h1 className="mt-8 mb-3 text-2xl font-bold text-slate-900" {...props} />
+  ),
+  h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h2 className="mt-7 mb-2 text-xl font-semibold text-slate-900" {...props} />
+  ),
+  h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 className="mt-5 mb-2 text-base font-semibold text-slate-900" {...props} />
+  ),
+  p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
+    <p className="my-3 text-slate-700" {...props} />
+  ),
+  ul: (props: React.HTMLAttributes<HTMLUListElement>) => (
+    <ul className="my-3 list-disc space-y-1 pl-5 text-slate-700" {...props} />
+  ),
+  ol: (props: React.HTMLAttributes<HTMLOListElement>) => (
+    <ol className="my-3 list-decimal space-y-1 pl-5 text-slate-700" {...props} />
+  ),
+  code: (props: React.HTMLAttributes<HTMLElement>) => (
+    <code
+      className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[0.85em] text-slate-800"
+      {...props}
+    />
+  ),
+  pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
+    <pre
+      className="my-4 overflow-x-auto rounded-md bg-slate-900 p-4 text-xs text-slate-100"
+      {...props}
+    />
+  ),
+  a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a
+      className="text-rose-600 hover:underline"
+      target={props.href?.startsWith("http") ? "_blank" : undefined}
+      rel={props.href?.startsWith("http") ? "noopener noreferrer" : undefined}
+      {...props}
+    />
+  ),
+  table: (props: React.HTMLAttributes<HTMLTableElement>) => (
+    <div className="my-4 overflow-x-auto">
+      <table className="w-full border-collapse text-sm" {...props} />
+    </div>
+  ),
+  th: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+    <th className="border-b border-slate-300 px-3 py-2 text-left font-medium text-slate-900" {...props} />
+  ),
+  td: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+    <td className="border-b border-slate-200 px-3 py-2 text-slate-700" {...props} />
+  ),
+  blockquote: (props: React.HTMLAttributes<HTMLQuoteElement>) => (
+    <blockquote className="my-4 border-l-4 border-slate-300 bg-slate-50 px-4 py-2 italic text-slate-700" {...props} />
+  ),
+};
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -37,6 +105,7 @@ export default async function WikiNodePage({ params }: PageProps) {
   const cat = CATEGORY_META[node.category];
   const status = STATUS_META[node.status];
   const related = getRelated(slug);
+  const mdxSource = node.useMdx ? loadMdxSource(slug) : null;
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-10 lg:px-8 lg:py-14">
@@ -75,8 +144,12 @@ export default async function WikiNodePage({ params }: PageProps) {
         <p className="mt-3 text-lg text-slate-600">{node.summary}</p>
       </div>
 
-      {/* BODY */}
-      {node.body ? (
+      {/* BODY — MDX file takes precedence over inline body */}
+      {mdxSource ? (
+        <div className="max-w-none">
+          <MDXRemote source={mdxSource} components={MDX_COMPONENTS} />
+        </div>
+      ) : node.body ? (
         <div className="prose prose-slate prose-sm max-w-none prose-headings:mt-6 prose-headings:font-semibold prose-code:rounded prose-code:bg-slate-100 prose-code:px-1 prose-code:py-0.5 prose-code:font-mono prose-code:text-xs prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:bg-slate-900">
           {node.body.split("\n").map((line, i) => {
             // Lightweight markdown — keeping the renderer tiny so we don't pull in MDX yet.

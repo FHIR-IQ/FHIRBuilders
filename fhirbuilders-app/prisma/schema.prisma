@@ -655,6 +655,40 @@ enum WaitlistStatus {
   CONVERTED     // Became full user
 }
 
+// ============================================
+// Wiki — Live Community Signal
+// ============================================
+// Curated digest of recent activity from Slack channels, RSS feeds, and
+// manually-pasted updates that surface on /wiki as a "Live signal" card.
+// Sources we have bot-token access to (FHIRBuilders workspace) are pulled
+// automatically by /api/cron/wiki-slack-digest. External workspaces (CMS
+// Health Tech Ecosystem, Health Tech Nerds) — where we're a member, not an
+// admin — get manually-entered signals via /api/admin/wiki-signal.
+model WikiSignal {
+  id          String   @id @default(cuid())
+  // Stable source identifier — e.g. "slack:fhirbuilders:announcements",
+  // "slack:cms-health-tech:general" (manual), "rss:cms.gov/news".
+  source      String
+  sourceType  String   // "slack" | "rss" | "manual"
+  title       String
+  summary     String   @db.Text
+  url         String?  // permalink back to original
+  author      String?
+  postedAt    DateTime // when the original message was posted
+  ingestedAt  DateTime @default(now())
+  // Wiki node slugs this signal connects to (e.g. ["npd", "prior-auth-cms-0057"]).
+  // Renderer uses this to cross-link signals into the relevant topic pages.
+  topicSlugs  String[]
+  // Engagement metrics from the source (Slack reactions count, etc.).
+  reactions   Int      @default(0)
+  // Hide without deleting — e.g. when something is off-topic on second read.
+  hidden      Boolean  @default(false)
+
+  @@index([source, postedAt])
+  @@index([postedAt])
+  @@index([hidden, postedAt])
+}
+
 model Feedback {
   id           String   @id @default(cuid())
   email        String?

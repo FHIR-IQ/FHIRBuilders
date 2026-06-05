@@ -1,0 +1,29 @@
+FHIR (pronounced "fire") is the way healthcare apps in 2026 read and write clinical data. It defines ~150 _resources_ — Patient, Observation, Encounter, MedicationRequest, Condition, etc. — and a RESTful API over them. JSON-default, well-typed, with extensible profiles for specific domains.
+
+## Why builders should care
+
+- **Adoption is real.** Every major US EHR (Epic, Oracle/Cerner, athenahealth, Meditech), every CMS-regulated payer, and every aggregator (Particle, Health Gorilla, Datavant, Innovaccer) exposes a FHIR endpoint.
+- **Regulation requires it.** The 21st Century Cures Act + ONC Information Blocking rule mandates patient-app access via FHIR for US providers + payers. CMS-9115 and CMS-0057 extend the requirement to claims and prior auth.
+- **It speaks LLM.** JSON-default means your agent can read and write FHIR without exotic parsing. Claude reads `valueQuantity.value` natively.
+
+## What to pick
+
+Default to **R4** unless you have a specific reason not to. That's what US Core, Blue Button 2.0, DaVinci, and every production EHR endpoint target. R5 has structural breaking changes; adoption is patchy as of 2026. R6 (in ballot) won't land in production until late 2026 at earliest.
+
+## The mental model
+
+A FHIR resource is just a typed JSON document with:
+- An `id` and `resourceType`
+- A `meta` field for versioning and profile claims
+- Domain fields (`code`, `value`, `subject`, etc.) that bind to terminology systems
+
+Resources reference each other via `Reference` objects (`{ "reference": "Patient/123" }`). Bundles let you fetch or write many resources atomically.
+
+## Where to start
+
+1. Hit a public sandbox — the **FHIRBuilders sandbox** (Medplum-backed, Synthea-seeded) or **HAPI** at hapi.fhir.org
+2. `GET /Patient/<id>` and inspect the JSON
+3. Walk one reference (`Patient.generalPractitioner → Practitioner`)
+4. Search with one param (`/Observation?patient=<id>&category=laboratory`)
+
+If you can do those four things end-to-end, you can build almost anything else on FHIR.

@@ -1,0 +1,43 @@
+**Model Context Protocol** is Anthropic's open standard for connecting LLM agents to external tools, data, and resources. For healthcare AI builders, it's the cleanest way to give Claude (or any MCP-aware model) live, scoped, auditable access to FHIR servers, terminology services, EHRs, and clinical knowledge bases.
+
+## Why MCP fits healthcare
+
+Three properties matter:
+
+1. **Tool boundaries are explicit.** Every MCP server declares its tools by name + schema. You can audit what the agent could call, not just what it did call.
+2. **Resources are typed.** A `fhir://Patient/123` resource is different from a free-text blob. Logging is auditable down to the resource type.
+3. **Servers are composable.** Run one MCP server per backend (Medplum, terminology, FHIRBuilders sandbox, GitHub) and let the agent pick the right tool for the question.
+
+## Reference setup for a Cohort 00 build
+
+```text
+Claude Code (agent)
+    ├── MCP: FHIR REST (Medplum sandbox)
+    │     · patient_search, observation_read, condition_create
+    ├── MCP: Terminology
+    │     · code_lookup, valueset_expand
+    ├── MCP: Vector DB (clinical guidelines)
+    │     · semantic_search
+    └── MCP: GitHub
+          · file_read, pr_create
+```
+
+Each server runs locally during dev (stdio transport) and as a hosted service in prod (SSE or HTTP).
+
+## Patterns to copy
+
+- **Allow-list tools per session.** Even if a server exposes 20 tools, your launcher should only expose the ones this session needs.
+- **PHI redaction at the boundary.** See HealthClaw — it sits between the agent and FHIR, redacting PII before context reaches the model and re-injecting on tool calls.
+- **Tool-call audit log.** Persist every tool invocation + arguments + return summary. This is your compliance + debugging trail.
+- **Structured output for clinical claims.** When the agent generates anything clinical-facing, use the model's `tool_use` to force a structured `Recommendation` schema instead of free text.
+
+## Where to learn more
+
+- The **MCP spec** at [modelcontextprotocol.io](https://modelcontextprotocol.io) — start here
+- The **MCP server registry** at [github.com/modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) — reference implementations
+- **HealthClaw** ([healthclaw.io](https://healthclaw.io)) — Eugene's open security layer between agents and clinical data, MCP-native
+- The **Cohort 00 Session 2** workshop ("MCP servers + vector DB") is the cohort's hands-on intro
+
+## The honest caveat
+
+MCP is the right abstraction for healthcare agents — but the standard is young and the ecosystem is still settling on conventions for auth, multi-tenancy, and observability. Expect to write some glue. The bet is that this glue is the right glue.
