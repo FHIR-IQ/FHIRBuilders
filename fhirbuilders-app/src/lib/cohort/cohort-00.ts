@@ -39,6 +39,16 @@ export type CohortSignup = {
   name: string;
   email: string;
   building: string;
+  /** Optional pod assignment — slug into `pods` map. Set Fri before Session 1. */
+  podId?: string;
+};
+
+export type CohortPod = {
+  id: string;             // e.g. "pod-1"
+  name: string;           // display name e.g. "Prior Auth + Claims"
+  theme: string;          // short theme summary
+  emails: string[];       // builder emails — joined to signups by email
+  channelName?: string;   // Slack channel created Fri before Session 1
 };
 
 export type Cohort = {
@@ -53,6 +63,7 @@ export type Cohort = {
   podSize: number;
   sessions: CohortSession[];
   signups: CohortSignup[];
+  pods: CohortPod[];
 };
 
 export const COHORT_00: Cohort = {
@@ -108,6 +119,7 @@ export const COHORT_00: Cohort = {
         "VS Code + Git + Claude Code, fluent. FHIRBuilders sandbox login, one FHIR read deployed.",
       startsAt: "2026-06-08T13:00:00-04:00",
       endsAt: "2026-06-08T14:30:00-04:00",
+      meetUrl: "https://meet.google.com/cjr-azsx-udq",
       mandatory: true,
       driveFolderUrl:
         "https://drive.google.com/drive/folders/1ysomAEmYFJyzTljdP-oNHATEL4hHm43a",
@@ -159,20 +171,93 @@ export const COHORT_00: Cohort = {
       mandatory: true,
     },
   ],
-  // 12 confirmed Cohort 00 signups as of Jun 1, 2026 (8 seats remaining)
+  // 15 confirmed Cohort 00 signups as of Jun 5, 2026 (5 seats remaining)
   signups: [
-    { name: "John Noss", email: "jnoss@livmor.ai", building: "Blue Button integration, then expand" },
-    { name: "Eric Guasch", email: "eguasch@centric-hc.com", building: "Tech for primary-care network operations" },
-    { name: "Divesh Aidasani", email: "daidasani@bayada.com", building: "New EMR for home health" },
-    { name: "Matthew Maher", email: "matthew.maher@myriad.com", building: "FHIR-based prior-auth flow" },
-    { name: "John Lee", email: "johnlee@hitpeakadvisors.com", building: "Anonymous patient tooling" },
-    { name: "Joel Sathiyendra Thiyaheswaran", email: "joelsathiyendra@gmail.com", building: "(scoping at intro call)" },
-    { name: "Mark Gunnels", email: "markgunnels@gmail.com", building: "Experiment → shippable feature" },
-    { name: "Michael E Campbell", email: "mcampbell@indicina.com", building: "FHIR-native build" },
-    { name: "Vanessa Paolantonio", email: "vanessa.paolantonio@yahoo.com", building: "(scoping at intro call)" },
-    { name: "Adam Carewe", email: "adam@nerdmds.com", building: "Anything and everything — narrowing on call" },
-    { name: "Rick Moore", email: "rick@mtcgroupllc.com", building: "FHIR-based medical record locator service" },
-    { name: "Sergei Polevikov", email: "spolevikov@gmail.com", building: "Not sure yet — wants to build" },
+    // Pod 1 — Prior Auth + Claims
+    { name: "Matthew Maher",  email: "matthew.maher@myriad.com",  building: "FHIR-based prior-auth flow",                podId: "pod-1" },
+    { name: "Rick Moore",     email: "rick@mtcgroupllc.com",       building: "FHIR-based medical record locator service", podId: "pod-1" },
+    { name: "John Noss",      email: "jnoss@livmor.ai",            building: "Blue Button integration, then expand",      podId: "pod-1" },
+    // Pod 2 — Home Health + Primary Care Ops
+    { name: "Eric Guasch",     email: "eguasch@centric-hc.com",     building: "Tech for primary-care network operations",  podId: "pod-2" },
+    { name: "Divesh Aidasani", email: "daidasani@bayada.com",       building: "New EMR for home health",                   podId: "pod-2" },
+    { name: "Adam Carewe",     email: "adam@nerdmds.com",           building: "Anything and everything — narrowing on call", podId: "pod-2" },
+    // Pod 3 — Patient-facing Tooling
+    { name: "John Lee",            email: "johnlee@hitpeakadvisors.com",   building: "Anonymous patient tooling",       podId: "pod-3" },
+    { name: "Vanessa Paolantonio", email: "vanessa.paolantonio@yahoo.com", building: "(scoping at intro call)",         podId: "pod-3" },
+    { name: "Jayte Boehler",       email: "jayte.boehler@gmail.com",       building: "Patient-experience tooling",      podId: "pod-3" },
+    // Pod 4 — EMR + Workflow
+    { name: "Mark Gunnels",                    email: "markgunnels@gmail.com",   building: "Experiment → shippable feature",     podId: "pod-4" },
+    { name: "Michael E Campbell",              email: "mcampbell@indicina.com",  building: "FHIR-native build",                   podId: "pod-4" },
+    { name: "Joel Sathiyendra Thiyaheswaran",  email: "joelsathiyendra@gmail.com", building: "(scoping at intro call)",            podId: "pod-4" },
+    // Pod 5 — Exploration + AI Patterns
+    { name: "Sergei Polevikov",  email: "spolevikov@gmail.com",      building: "Not sure yet — wants to build",          podId: "pod-5" },
+    { name: "Matt (studiolab)",  email: "matt@studiolab.io",         building: "AI + healthcare exploration",            podId: "pod-5" },
+    { name: "Eslam Elgebaly",    email: "eslamelgebaly11@outlook.com", building: "Open scope — joining late, ramping up", podId: "pod-5" },
+  ],
+  // Pod assignments — 5 pods of 3, themed by building intent. Channels
+  // (#pod-1 … #pod-5) created Fri Jun 5 before Session 1. Eugene rebalances
+  // after Session 1 if any builder wants to swap.
+  pods: [
+    {
+      id: "pod-1",
+      name: "Prior Auth + Claims",
+      theme:
+        "FHIR-driven prior auth (DaVinci CRD/DTR/PAS) and Blue Button-style claims pipelines. CMS-0057 is the regulatory tailwind.",
+      emails: [
+        "matthew.maher@myriad.com",
+        "rick@mtcgroupllc.com",
+        "jnoss@livmor.ai",
+      ],
+      channelName: "pod-1",
+    },
+    {
+      id: "pod-2",
+      name: "Home Health + Primary Care Ops",
+      theme:
+        "Operational FHIR for home health and primary-care networks — EMR integration, workflow automation, care coordination.",
+      emails: [
+        "eguasch@centric-hc.com",
+        "daidasani@bayada.com",
+        "adam@nerdmds.com",
+      ],
+      channelName: "pod-2",
+    },
+    {
+      id: "pod-3",
+      name: "Patient-Facing Tooling",
+      theme:
+        "Patient-side experiences — anonymous patient apps, intake, experience tooling. SDOH + SDC profiles cluster here.",
+      emails: [
+        "johnlee@hitpeakadvisors.com",
+        "vanessa.paolantonio@yahoo.com",
+        "jayte.boehler@gmail.com",
+      ],
+      channelName: "pod-3",
+    },
+    {
+      id: "pod-4",
+      name: "EMR + Workflow",
+      theme:
+        "FHIR-native EMR builds + provider workflow. US Core + SMART on FHIR is the substrate; shippable features inside provider systems.",
+      emails: [
+        "markgunnels@gmail.com",
+        "mcampbell@indicina.com",
+        "joelsathiyendra@gmail.com",
+      ],
+      channelName: "pod-4",
+    },
+    {
+      id: "pod-5",
+      name: "Exploration + AI Patterns",
+      theme:
+        "Open-scope AI + healthcare exploration — MCP, agent loops, retrieval over clinical content. Pod-1 in spirit but topic later.",
+      emails: [
+        "spolevikov@gmail.com",
+        "matt@studiolab.io",
+        "eslamelgebaly11@outlook.com",
+      ],
+      channelName: "pod-5",
+    },
   ],
 };
 
@@ -214,6 +299,64 @@ export function formatSessionTime(s: CohortSession): string {
     timeZone: "America/New_York",
   });
   return `${day} · ${startTime}–${endTime} ET`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Account linking — connect a logged-in FHIRBuilders user to their cohort row.
+// All matching is case-insensitive on email. The cohort signups list is the
+// authoritative source; we don't write back to it from auth, just look up.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function normalizeEmail(email: string | null | undefined): string | null {
+  if (!email) return null;
+  return email.trim().toLowerCase();
+}
+
+/** True if the email is in any cohort's signup roster. */
+export function isCohortMember(email: string | null | undefined, cohortSlug = "cohort-00"): boolean {
+  const e = normalizeEmail(email);
+  if (!e) return false;
+  const cohort = COHORTS[cohortSlug];
+  return cohort?.signups.some((s) => normalizeEmail(s.email) === e) ?? false;
+}
+
+/** Find the cohort signup row for an email; returns null if not a member. */
+export function getCohortBuilder(
+  email: string | null | undefined,
+  cohortSlug = "cohort-00",
+): CohortSignup | null {
+  const e = normalizeEmail(email);
+  if (!e) return null;
+  const cohort = COHORTS[cohortSlug];
+  return cohort?.signups.find((s) => normalizeEmail(s.email) === e) ?? null;
+}
+
+/** Look up the pod a builder belongs to. Returns null if the builder has no pod assignment yet. */
+export function getPodForEmail(
+  email: string | null | undefined,
+  cohortSlug = "cohort-00",
+): CohortPod | null {
+  const builder = getCohortBuilder(email, cohortSlug);
+  if (!builder?.podId) return null;
+  const cohort = COHORTS[cohortSlug];
+  return cohort?.pods.find((p) => p.id === builder.podId) ?? null;
+}
+
+/** Look up a pod by id. */
+export function getPodById(podId: string, cohortSlug = "cohort-00"): CohortPod | null {
+  return COHORTS[cohortSlug]?.pods.find((p) => p.id === podId) ?? null;
+}
+
+/** Resolve pod members to full signup rows (in pod-defined order). */
+export function getPodMembers(podId: string, cohortSlug = "cohort-00"): CohortSignup[] {
+  const pod = getPodById(podId, cohortSlug);
+  if (!pod) return [];
+  const cohort = COHORTS[cohortSlug];
+  if (!cohort) return [];
+  const byEmail = new Map(cohort.signups.map((s) => [normalizeEmail(s.email)!, s]));
+  return pod.emails
+    .map((e) => byEmail.get(normalizeEmail(e)!))
+    .filter((s): s is CohortSignup => !!s);
 }
 
 // Initials for an avatar fallback ("John Noss" → "JN").

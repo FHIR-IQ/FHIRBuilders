@@ -64,6 +64,13 @@ model User {
   githubUsername    String?
   huggingfaceUsername String?
 
+  // Sign-in tracking — updated by NextAuth events.signIn callback. Powers the
+  // admin cohort roster view (who's set up, who's missing) without polluting
+  // the JWT session.
+  firstSignInAt DateTime?
+  lastSignInAt  DateTime?
+  signInCount   Int       @default(0)
+
   // Relationships
   accounts      Account[]
   sessions      Session[]

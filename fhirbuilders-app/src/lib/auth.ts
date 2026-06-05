@@ -126,6 +126,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
+  events: {
+    // Stamp signin events on the User row. Wrapped in try/catch so a DB hiccup
+    // never blocks the auth flow itself — the user still gets their session.
+    // First successful signin sets both firstSignInAt + lastSignInAt; every
+    // subsequent signin updates lastSignInAt + increments signInCount.
+    async signIn({ user }) {
+      if (!user?.id) return;
+      try {
+        const now = new Date();
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            lastSignInAt: now,
+            signInCount: { increment: 1 },
+            // Only set firstSignInAt if it's currently null
+            firstSignInAt: undefined,
+          },
+        });
+        // Backfill firstSignInAt only if still null — separate query keeps the
+        // primary update fast on every signin.
+        await prisma.$executeRaw`
+          UPDATE "User" SET "firstSignInAt" = ${now}
+          WHERE id = ${user.id} AND "firstSignInAt" IS NULL
+        `;
+      } catch (e) {
+        // Best-effort; never block auth.
+        console.error("[auth.events.signIn] failed to stamp user", e);
+      }
+    },
+  },
 });
 
 // Extended user type
