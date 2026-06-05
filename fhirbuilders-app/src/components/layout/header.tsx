@@ -21,6 +21,7 @@ import {
   Menu,
   FolderOpen,
   BookOpen,
+  BookOpenCheck,
   Lightbulb,
   Sparkles,
   Wrench,
@@ -34,6 +35,7 @@ const navigation = [
   { title: "MCP", href: "/mcp", icon: Wrench, color: "text-blue-600 hover:text-blue-700" },
   { title: "Agent Skills", href: "/openclaw", icon: Sparkles, color: "text-amber-600 hover:text-amber-700" },
   { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical, color: "text-blue-600 hover:text-blue-700" },
+  { title: "Wiki", href: "/wiki", icon: BookOpenCheck, color: "text-violet-600 hover:text-violet-700" },
   { title: "Learn", href: "/learn", icon: BookOpen, color: "text-amber-600 hover:text-amber-700" },
 ];
 

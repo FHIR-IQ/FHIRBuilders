@@ -44,6 +44,9 @@ export function Footer() {
             <Link href="/sandbox/demo" className="text-muted-foreground hover:text-foreground transition-colors">
               Sandbox
             </Link>
+            <Link href="/wiki" className="text-muted-foreground hover:text-foreground transition-colors">
+              Wiki
+            </Link>
             <Link href="/learn" className="text-muted-foreground hover:text-foreground transition-colors">
               Learn
             </Link>
