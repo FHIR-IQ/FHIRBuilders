@@ -94,6 +94,10 @@ export const COHORT_00: Cohort = {
       endsAt: "2026-06-04T20:45:00-04:00",
       meetUrl: "https://meet.google.com/zuk-sunu-ahf",
       mandatory: false,
+      recordingUrl:
+        "https://drive.google.com/file/d/1Lo9bL2OZ4ZCzusCKxN9Ec0L0ldBkJpNg/view",
+      chatTranscriptUrl:
+        "https://drive.google.com/file/d/1li7XmNAhhDAt1kqeFLpQYB191bJ2KY-u/view",
     },
     {
       id: "session-1",
