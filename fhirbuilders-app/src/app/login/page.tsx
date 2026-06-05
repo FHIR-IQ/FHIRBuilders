@@ -7,14 +7,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Loader2, Mail, MessageSquare } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Mail, MessageSquare, Sparkles } from "lucide-react";
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
-  const [mode, setMode] = useState<"options" | "signin" | "signup" | "zulip">("options");
+  const [mode, setMode] = useState<"options" | "magic" | "magic-sent" | "signin" | "signup" | "zulip">("options");
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -23,12 +23,36 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [zulipEmail, setZulipEmail] = useState("");
   const [zulipPassword, setZulipPassword] = useState("");
+  const [magicEmail, setMagicEmail] = useState("");
 
   const handleOAuth = async (provider: string) => {
     setIsLoading(provider);
     try {
       await signIn(provider, { callbackUrl });
     } catch {
+      setIsLoading(null);
+    }
+  };
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading("magic");
+    try {
+      const result = await signIn("resend", {
+        email: magicEmail,
+        callbackUrl,
+        redirect: false,
+      });
+      if (result?.error) {
+        setError("Couldn't send the link — double-check the email and try again.");
+        setIsLoading(null);
+      } else {
+        setMode("magic-sent");
+        setIsLoading(null);
+      }
+    } catch {
+      setError("Something went wrong sending the link.");
       setIsLoading(null);
     }
   };
@@ -116,6 +140,7 @@ function LoginContent() {
     setPassword("");
     setZulipEmail("");
     setZulipPassword("");
+    setMagicEmail("");
   };
 
   return (
@@ -140,6 +165,8 @@ function LoginContent() {
             <CardTitle className="text-2xl">
               {mode === "signup" ? "Create your account" :
                mode === "zulip" ? "Sign in with FHIR Chat" :
+               mode === "magic" ? "Email me a sign-in link" :
+               mode === "magic-sent" ? "Check your inbox" :
                "Welcome to FHIRBuilders"}
             </CardTitle>
             <CardDescription>
@@ -147,6 +174,10 @@ function LoginContent() {
                 ? "Sign up to submit your FHIR apps and join the community"
                 : mode === "zulip"
                 ? "Use your chat.fhir.org account to sign in"
+                : mode === "magic"
+                ? "No password needed. We'll send a link that signs you in."
+                : mode === "magic-sent"
+                ? `We sent a sign-in link to ${magicEmail}. It expires in 24 hours.`
                 : "Sign in to submit apps, share projects, and collaborate"}
             </CardDescription>
           </CardHeader>
@@ -210,14 +241,26 @@ function LoginContent() {
                   </span>
                 </div>
 
+                {/* Magic link — primary email path (no password) */}
                 <Button
-                  variant="outline"
+                  type="button"
                   className="w-full h-11"
-                  onClick={() => { resetForm(); setMode("signin"); }}
+                  onClick={() => { resetForm(); setMode("magic"); }}
+                  disabled={isLoading !== null}
                 >
-                  <Mail className="mr-2 h-5 w-5" />
-                  Continue with Email
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Email me a sign-in link
                 </Button>
+
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => { resetForm(); setMode("signin"); }}
+                    className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Use password instead
+                  </button>
+                </div>
 
                 <div className="text-center pt-2">
                   <p className="text-sm text-muted-foreground">
@@ -234,6 +277,74 @@ function LoginContent() {
                   </Button>
                 </div>
               </>
+            )}
+
+            {/* ── Magic link request ── */}
+            {mode === "magic" && (
+              <form onSubmit={handleMagicLink} className="space-y-3">
+                {error && (
+                  <p className="text-sm text-destructive text-center bg-destructive/10 rounded p-2">
+                    {error}
+                  </p>
+                )}
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <input
+                    type="email"
+                    required
+                    autoFocus
+                    value={magicEmail}
+                    onChange={(e) => setMagicEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <Button type="submit" className="w-full h-11" disabled={isLoading !== null}>
+                  {isLoading === "magic" ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                  )}
+                  Send sign-in link
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  We send the link from{" "}
+                  <span className="font-mono">notifications@fhirbuilders.com</span>. Check
+                  spam if you don&apos;t see it in 30 seconds.
+                </p>
+              </form>
+            )}
+
+            {/* ── Magic link sent confirmation ── */}
+            {mode === "magic-sent" && (
+              <div className="space-y-4 text-center py-2">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                  <CheckCircle2 className="h-8 w-8" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Open the email and click the button. The link is good for{" "}
+                  <span className="font-medium text-foreground">24 hours</span>.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => { resetForm(); setMode("magic"); }}
+                >
+                  Use a different email
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Didn&apos;t arrive? Check spam, then try again — or{" "}
+                  <button
+                    type="button"
+                    onClick={() => { resetForm(); setMode("options"); }}
+                    className="text-primary hover:underline"
+                  >
+                    use another sign-in method
+                  </button>
+                  .
+                </p>
+              </div>
             )}
 
             {/* ── Email sign-in ── */}

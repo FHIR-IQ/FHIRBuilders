@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+import Resend from "next-auth/providers/resend";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { authConfig } from "./auth.config";
@@ -23,6 +24,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       allowDangerousEmailAccountLinking: true,
+    }),
+    // Magic link via Resend — passwordless. The Resend provider uses Resend's
+    // REST API directly (no `resend` npm pkg needed). Requires RESEND_API_KEY
+    // in env + a `from:` address on a Resend-verified domain
+    // (notifications@fhirbuilders.com is verified).
+    // Writes a row to VerificationToken on send; consumes it on callback hit.
+    // Works alongside session.strategy:"jwt" — after click, a JWT session is
+    // issued (no DB session table needed).
+    Resend({
+      apiKey: process.env.RESEND_API_KEY,
+      from: "FHIRBuilders <notifications@fhirbuilders.com>",
     }),
     // Email/password login
     Credentials({
