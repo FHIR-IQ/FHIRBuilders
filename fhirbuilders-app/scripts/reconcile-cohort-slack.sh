@@ -16,8 +16,9 @@
 # Safety rails:
 #   • #general is never archived (Slack treats it specially; can't be done
 #     by bot tokens on most plans).
-#   • Any channel matching pod-N is treated as "future canonical" and
-#     ignored — pod channels get created Fri Jun 5 EOD after assignment.
+#   • Any channel matching pod-N is preserved (never archived) on the off
+#     chance a builder created one ad-hoc, but we don't create them ourselves
+#     — pods live on the website (fhirbuilders.com/cohort/cohort-00/community).
 #   • Anything in PROTECTED below is preserved.
 
 set -euo pipefail
@@ -33,7 +34,7 @@ fi
 API="https://slack.com/api"
 
 # Canonical channel list — must mirror /cohort/cohort-00/channels page exactly.
-# pod-1 … pod-5 are deferred until Friday assignment; not listed here.
+# No per-pod channels by design; pods coordinate via the website + Monday call.
 CANONICAL=(
   announcements
   general
@@ -135,7 +136,7 @@ echo "$CURRENT_NAMES" | sort | sed 's/^/  #/'
 echo ""
 echo "═══ Canonical (from /cohort/cohort-00/channels) ═══"
 for c in "${CANONICAL[@]}"; do echo "  #$c"; done
-echo "  + pod-1 … pod-5 (deferred until Fri Jun 5)"
+echo "  (no per-pod channels — pods live on the website)"
 echo ""
 echo "═══ Diff ═══"
 

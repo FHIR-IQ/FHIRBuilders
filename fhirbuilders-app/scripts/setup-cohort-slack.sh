@@ -240,7 +240,7 @@ Full calendar: ${COHORT_HOME_URL}/calendar"
 Open chat. Threads encouraged. No program questions — use #help-*.|\
 Open chat — intros, FYIs, water-cooler stuff that isn't pod-specific.|\
 👋 *Welcome to FHIR IQ Cohort 00.*\n\n\
-This is the room I told you about — 14 builders, 6 weeks, 5 sessions, one demo day.\n\n\
+This is the room I told you about — 18 builders, 6 weeks, 5 sessions, one demo day.\n\n\
 *How we use Slack:*\n\
 • #announcements — session recaps from me (read-only)\n\
 • #general — open chat (you're here)\n\
@@ -248,8 +248,8 @@ This is the room I told you about — 14 builders, 6 weeks, 5 sessions, one demo
 • #ship-log — your Friday written reports\n\
 • #demos — Friday demos + recordings\n\
 • #help-build, #help-fhir — ask in public, help the next builder\n\
-• #workshops — drop-in Wed sessions\n\
-• #pod-* — your private pod channel (Fri Jun 5 EOD)\n\n\
+• #workshops — drop-in Wed sessions\n\n\
+_No per-pod channels — pods coordinate on the website + Monday call._\n\n\
 *Two rules that matter:*\n\
 1. Default-public. No DMs to me for program questions.\n\
 2. Each channel has one job. If it can wait 4 hours, it goes in Slack — not WhatsApp.\n\n\
@@ -343,8 +343,8 @@ Private channel for the 5 pod mentors + Eugene.|\
 • Pod calibration after Session 1\n\n\
 *Your weekly commitment:*\n\
 • One 45-min pod call/week (you pick the time with your pod)\n\
-• Async Slack triage in your pod channel\n\n\
-Pod assignments + mentor pairings drop Fri Jun 5 EOD."
+• Async triage in #help-build (no per-pod channels)\n\n\
+Pod assignments live at fhirbuilders.com/cohort/cohort-00/community."
 
 )
 
@@ -383,5 +383,6 @@ echo "  2. Workspace settings → Default channels for new joiners:"
 echo "     #general, #announcements, #help-build"
 echo "  3. Workspace icon + name: FHIRBuilders Cohort 00"
 echo ""
-echo "Pod channels (#pod-1 … #pod-5) get created Fri Jun 5 EOD after pod assignment."
+echo "Pods live on the website (fhirbuilders.com/cohort/cohort-00/community) —"
+echo "no per-pod Slack channels by design (fewer channels = more signal)."
 echo "Rerun this script anytime — already-created channels are detected + skipped."

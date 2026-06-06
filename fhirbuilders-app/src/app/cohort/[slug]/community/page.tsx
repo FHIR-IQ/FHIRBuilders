@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Hash, Linkedin, Users } from "lucide-react";
+import { ExternalLink, Linkedin, Users } from "lucide-react";
 import { getCohortBySlug, getPodMembers, initialsFromName } from "@/lib/cohort/cohort-00";
 
 // LinkedIn URLs captured from /api/workshop-signup notifications.
@@ -41,20 +41,20 @@ export default async function CommunityPage({ params }: PageProps) {
         </h1>
         <p className="mt-2 max-w-2xl text-slate-600">
           {cohort.signups.length} builders signed up so far, {cohort.cap - cohort.signups.length}{" "}
-          seats remaining. Pod assignments live below — {cohort.pods.length} pods of{" "}
-          {Math.round(cohort.signups.length / cohort.pods.length)} themed by building intent.
+          seats remaining. Pod assignments live below — {cohort.pods.length} pods of 3–4 themed by
+          building intent.
         </p>
       </div>
 
-      {/* PODS — themed groupings of builders. Channels (#pod-1 … #pod-5) land in
-          Slack before Session 1; the channelName here is the canonical name. */}
+      {/* PODS — themed groupings of builders. No per-pod Slack channels (kept
+          deliberately light); pods coordinate via this page + the calendar. */}
       <section className="mb-12">
         <div className="mb-4 flex items-baseline justify-between border-b border-slate-200 pb-3">
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Pods</h2>
             <p className="mt-1 text-sm text-slate-500">
-              3 builders per pod, themed by what you said you&apos;re building. Swap requests:
-              ping #help-build before Session 1.
+              3–4 builders per pod, themed by what you said you&apos;re building. No separate Slack
+              channels — coordinate in #cohort-00-general; swap requests ping #help-build.
             </p>
           </div>
           <span className="font-mono text-xs text-slate-400">{cohort.pods.length} pods</span>
@@ -70,12 +70,7 @@ export default async function CommunityPage({ params }: PageProps) {
                       <span className="font-mono text-xs text-violet-700">{pod.id}</span>{" "}
                       <span className="text-slate-900">· {pod.name}</span>
                     </CardTitle>
-                    {pod.channelName && (
-                      <Badge variant="outline" className="border-violet-300 bg-white text-violet-700">
-                        <Hash className="mr-0.5 h-3 w-3" />
-                        {pod.channelName}
-                      </Badge>
-                    )}
+                    <span className="font-mono text-[10px] text-slate-400">{members.length} builders</span>
                   </div>
                   <CardDescription className="text-xs">{pod.theme}</CardDescription>
                 </CardHeader>

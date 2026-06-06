@@ -48,7 +48,10 @@ export type CohortPod = {
   name: string;           // display name e.g. "Prior Auth + Claims"
   theme: string;          // short theme summary
   emails: string[];       // builder emails — joined to signups by email
-  channelName?: string;   // Slack channel created Fri before Session 1
+  // No per-pod Slack channels — we intentionally don't fragment the workspace.
+  // Pods coordinate via the calendar + community page; cross-pod chat happens
+  // in #cohort-00-general + #help-build. Eugene's call after Wed intro: fewer
+  // channels = more signal.
 };
 
 export type Cohort = {
@@ -171,32 +174,39 @@ export const COHORT_00: Cohort = {
       mandatory: true,
     },
   ],
-  // 15 confirmed Cohort 00 signups as of Jun 5, 2026 (5 seats remaining)
+  // 18 confirmed Cohort 00 signups as of Jun 5, 2026 (2 seats remaining).
+  // 4 more interested but pending email confirmation — see PENDING_REGISTRATIONS
+  // below. Joel Sathiyendra (joelsathiyendra@gmail.com) confirmed for Cohort 01
+  // after schedule conflict — see DEFERRED_TO_NEXT_COHORT.
   signups: [
     // Pod 1 — Prior Auth + Claims
     { name: "Matthew Maher",  email: "matthew.maher@myriad.com",  building: "FHIR-based prior-auth flow",                podId: "pod-1" },
     { name: "Rick Moore",     email: "rick@mtcgroupllc.com",       building: "FHIR-based medical record locator service", podId: "pod-1" },
     { name: "John Noss",      email: "jnoss@livmor.ai",            building: "Blue Button integration, then expand",      podId: "pod-1" },
     // Pod 2 — Home Health + Primary Care Ops
-    { name: "Eric Guasch",     email: "eguasch@centric-hc.com",     building: "Tech for primary-care network operations",  podId: "pod-2" },
-    { name: "Divesh Aidasani", email: "daidasani@bayada.com",       building: "New EMR for home health",                   podId: "pod-2" },
+    { name: "Eric Guasch",     email: "eguasch@centric-hc.com",     building: "Tech for primary-care network operations",   podId: "pod-2" },
+    { name: "Divesh Aidasani", email: "daidasani@bayada.com",       building: "New EMR for home health",                    podId: "pod-2" },
     { name: "Adam Carewe",     email: "adam@nerdmds.com",           building: "Anything and everything — narrowing on call", podId: "pod-2" },
+    { name: "Adnan Lakdawala", email: "adnanmlakdawala@gmail.com",  building: "(scoping — direct outreach, late add)",      podId: "pod-2" },
     // Pod 3 — Patient-facing Tooling
-    { name: "John Lee",            email: "johnlee@hitpeakadvisors.com",   building: "Anonymous patient tooling",       podId: "pod-3" },
-    { name: "Vanessa Paolantonio", email: "vanessa.paolantonio@yahoo.com", building: "(scoping at intro call)",         podId: "pod-3" },
-    { name: "Jayte Boehler",       email: "jayte.boehler@gmail.com",       building: "Patient-experience tooling",      podId: "pod-3" },
+    { name: "John Lee",            email: "johnlee@hitpeakadvisors.com",   building: "Anonymous patient tooling",          podId: "pod-3" },
+    { name: "Vanessa Paolantonio", email: "vanessa.paolantonio@yahoo.com", building: "(scoping at intro call)",            podId: "pod-3" },
+    { name: "Jayte Boehler",       email: "jayte.boehler@gmail.com",       building: "Patient-experience tooling",         podId: "pod-3" },
+    { name: "Kay (Lanyard Health)", email: "kay@lanyardhealth.com",         building: "Care navigation / patient-facing — Lanyard Health", podId: "pod-3" },
     // Pod 4 — EMR + Workflow
-    { name: "Mark Gunnels",                    email: "markgunnels@gmail.com",   building: "Experiment → shippable feature",     podId: "pod-4" },
-    { name: "Michael E Campbell",              email: "mcampbell@indicina.com",  building: "FHIR-native build",                   podId: "pod-4" },
-    { name: "Joel Sathiyendra Thiyaheswaran",  email: "joelsathiyendra@gmail.com", building: "(scoping at intro call)",            podId: "pod-4" },
+    { name: "Mark Gunnels",     email: "markgunnels@gmail.com",  building: "Experiment → shippable feature",          podId: "pod-4" },
+    { name: "Michael E Campbell", email: "mcampbell@indicina.com", building: "FHIR-native build",                       podId: "pod-4" },
+    { name: "Jagnyesh",          email: "jagnyesh@gmail.com",     building: "(scoping — direct outreach, late add)",   podId: "pod-4" },
     // Pod 5 — Exploration + AI Patterns
-    { name: "Sergei Polevikov",  email: "spolevikov@gmail.com",      building: "Not sure yet — wants to build",          podId: "pod-5" },
-    { name: "Matt (studiolab)",  email: "matt@studiolab.io",         building: "AI + healthcare exploration",            podId: "pod-5" },
-    { name: "Eslam Elgebaly",    email: "eslamelgebaly11@outlook.com", building: "Open scope — joining late, ramping up", podId: "pod-5" },
+    { name: "Sergei Polevikov",  email: "spolevikov@gmail.com",        building: "Not sure yet — wants to build",          podId: "pod-5" },
+    { name: "Matt (studiolab)",  email: "matt@studiolab.io",            building: "AI + healthcare exploration",            podId: "pod-5" },
+    { name: "Eslam Elgebaly",    email: "eslamelgebaly11@outlook.com",  building: "Open scope — joining late, ramping up",  podId: "pod-5" },
+    { name: "Medtec",            email: "medtec1@gmail.com",            building: "(scoping — direct outreach, late add)",  podId: "pod-5" },
   ],
-  // Pod assignments — 5 pods of 3, themed by building intent. Channels
-  // (#pod-1 … #pod-5) created Fri Jun 5 before Session 1. Eugene rebalances
-  // after Session 1 if any builder wants to swap.
+  // Pod assignments — 5 pods of 3–4, themed by building intent. NO per-pod
+  // Slack channels (deliberate — fewer channels, more signal). Pods coordinate
+  // via calendar + community page; cross-pod chat happens in #cohort-00-general
+  // and #help-build. Eugene rebalances after Session 1 if anyone wants to swap.
   pods: [
     {
       id: "pod-1",
@@ -208,7 +218,6 @@ export const COHORT_00: Cohort = {
         "rick@mtcgroupllc.com",
         "jnoss@livmor.ai",
       ],
-      channelName: "pod-1",
     },
     {
       id: "pod-2",
@@ -219,20 +228,20 @@ export const COHORT_00: Cohort = {
         "eguasch@centric-hc.com",
         "daidasani@bayada.com",
         "adam@nerdmds.com",
+        "adnanmlakdawala@gmail.com",
       ],
-      channelName: "pod-2",
     },
     {
       id: "pod-3",
       name: "Patient-Facing Tooling",
       theme:
-        "Patient-side experiences — anonymous patient apps, intake, experience tooling. SDOH + SDC profiles cluster here.",
+        "Patient-side experiences — anonymous patient apps, intake, care navigation, experience tooling. SDOH + SDC profiles cluster here.",
       emails: [
         "johnlee@hitpeakadvisors.com",
         "vanessa.paolantonio@yahoo.com",
         "jayte.boehler@gmail.com",
+        "kay@lanyardhealth.com",
       ],
-      channelName: "pod-3",
     },
     {
       id: "pod-4",
@@ -242,9 +251,8 @@ export const COHORT_00: Cohort = {
       emails: [
         "markgunnels@gmail.com",
         "mcampbell@indicina.com",
-        "joelsathiyendra@gmail.com",
+        "jagnyesh@gmail.com",
       ],
-      channelName: "pod-4",
     },
     {
       id: "pod-5",
@@ -255,11 +263,68 @@ export const COHORT_00: Cohort = {
         "spolevikov@gmail.com",
         "matt@studiolab.io",
         "eslamelgebaly11@outlook.com",
+        "medtec1@gmail.com",
       ],
-      channelName: "pod-5",
     },
   ],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pending registrations — direct outreach (LinkedIn DM or referral) where we
+// don't have a confirmed email yet. These people get manually invited to the
+// workshop + cohort once we capture an email. Maintained inline so we can
+// see the full pipeline + clear them out as emails come in.
+// ─────────────────────────────────────────────────────────────────────────────
+export type PendingRegistration = {
+  name: string;
+  linkedinUrl?: string;
+  website?: string;
+  note?: string;
+  source: "linkedin-dm" | "referral" | "direct-outreach";
+  capturedAt: string; // ISO
+};
+
+export const PENDING_REGISTRATIONS: PendingRegistration[] = [
+  {
+    name: "Matthew Lanphier",
+    linkedinUrl: "https://www.linkedin.com/in/matthew-lanphier-1aa29180",
+    source: "direct-outreach",
+    capturedAt: "2026-06-05T15:00:00-04:00",
+    note: "Reach out via LinkedIn DM — capture email for cohort + workshop",
+  },
+  {
+    name: "Pradeep Podila",
+    linkedinUrl: "https://www.linkedin.com/in/pradeeppodila/",
+    source: "direct-outreach",
+    capturedAt: "2026-06-05T15:00:00-04:00",
+    note: "Reach out via LinkedIn DM — capture email for cohort + workshop",
+  },
+  {
+    name: "Alex Thomas",
+    website: "https://www.alex-thomas.net",
+    source: "direct-outreach",
+    capturedAt: "2026-06-05T15:00:00-04:00",
+    note: "Contact form on alex-thomas.net — capture email",
+  },
+  {
+    name: "Sweetram",
+    linkedinUrl: "https://www.linkedin.com/in/sweetram/",
+    source: "direct-outreach",
+    capturedAt: "2026-06-05T15:00:00-04:00",
+    note: "Reach out via LinkedIn DM — capture email for cohort + workshop",
+  },
+];
+
+// Builders who showed interest but won't make Cohort 00 — invite to Cohort 01
+// when scheduling lands. Kept for the cohort-01 kickoff comms.
+export const DEFERRED_TO_NEXT_COHORT: Array<{ name: string; email: string; reason: string; deferredAt: string }> = [
+  {
+    name: "Joel Sathiyendra Thiyaheswaran",
+    email: "joelsathiyendra@gmail.com",
+    reason: "Schedule conflict for Cohort 00 — confirmed interest in Cohort 01",
+    deferredAt: "2026-06-05",
+  },
+];
 
 export const COHORTS: Record<string, Cohort> = {
   "cohort-00": COHORT_00,

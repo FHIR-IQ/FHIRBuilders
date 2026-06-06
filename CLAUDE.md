@@ -23,7 +23,25 @@ npx prisma db push   # Push schema changes to database
 npx prisma generate  # Generate Prisma client
 npx tsx prisma/seed.ts         # Seed projects
 npx tsx prisma/seed-problems.ts  # Seed clinical problems
+
+# One-off cohort tooling (require SLACK_BOT_TOKEN env var):
+bash scripts/setup-cohort-slack.sh             # idempotent: create 10 cohort channels + topics + pinned welcomes
+bash scripts/setup-cohort-slack.sh --dry-run   # preview without API calls
+bash scripts/slack-invite-self.sh "$SLACK_USER_ID"     # invite a user to all cohort channels (bot can't auto-add the workspace owner)
+bash scripts/reconcile-cohort-slack.sh         # diff workspace against /cohort/cohort-00/channels canonical list
+bash scripts/reconcile-cohort-slack.sh --apply # archive extras (never archives #general or pod-N)
+
+# Nudge never-signed-in cohort builders (Resend transactional email):
+DATABASE_URL=$(grep ^DATABASE_URL .env.local | sed 's/^DATABASE_URL=//' | tr -d '"') \
+RESEND_API_KEY=$(grep ^RESEND_API_KEY .env.local | sed 's/^RESEND_API_KEY=//' | tr -d '"') \
+  npx tsx scripts/send-cohort-nudge.ts              # dry-run, prints recipients
+  npx tsx scripts/send-cohort-nudge.ts --send       # actually fire
+  npx tsx scripts/send-cohort-nudge.ts --send --include-all  # everyone, not just non-signed-in
 ```
+
+**No per-pod Slack channels.** Pods coordinate via the website (`/cohort/cohort-00/community`) and the Monday call. Earlier scaffolding (setup-cohort-slack.sh, reconcile script, cohort-00.ts) reserved `pod-1`…`pod-5` namespace; we ripped those out 2026-06-05 — fewer channels = more signal, easier for Eugene to monitor. The reconcile script still safe-lists `pod-N` so it won't archive any ad-hoc pod channel a builder creates.
+
+The scripts use a strict env-var-via-quoted-heredoc pattern for JSON bodies because macOS bash 3.2 does brace expansion on `{...}` literals inside nested `$(python3 -c "...")`, mangling dict literals. Don't refactor to the simpler `python3 -c "json.dumps({...})"` style — it will silently break on macOS.
 
 ## Tech Stack
 
@@ -32,7 +50,7 @@ npx tsx prisma/seed-problems.ts  # Seed clinical problems
 - **Auth**: NextAuth.js v5 beta (GitHub, Google OAuth, Credentials) with JWT sessions
 - **UI**: TailwindCSS 4, shadcn/ui (Radix UI), lucide-react icons
 - **FHIR**: Medplum SDK (@medplum/core, @medplum/react) for healthcare data
-- **AI**: Anthropic SDK (@anthropic-ai/sdk) for AI analysis features
+- **AI**: Anthropic SDK (@anthropic-ai/sdk) for analysis features; OpenClaw generation uses a BYOK multi-provider client (`lib/openclaw/ai-client.ts`) duck-typing the Anthropic SDK interface to support both Anthropic (Claude) and OpenAI (GPT-4o/Codex)
 - **Testing**: Vitest with @vitejs/plugin-react, coverage via v8
 - **State**: React Query (@tanstack/react-query)
 - **Validation**: Zod v4
@@ -47,6 +65,7 @@ npx tsx prisma/seed-problems.ts  # Seed clinical problems
 - `components/layout/` - Header and Footer (shared nav structure)
 - `lib/` - Core utilities and services
 - `lib/openclaw/` - AI-powered FHIR app generation system (orchestrator, code-generator, templates, schema validation)
+- `lib/cohort/` - Cohort experience seed data: `cohort-00.ts` (sessions, signups, helpers like `nextSession`, `formatSessionTime`) and `prereqs.ts` (priority-banded readiness checklist). Phase 1 — hardcoded; future `Cohort`, `CohortEvent`, `WeeklyCommitment`, `PreReqCheck` Prisma models will replace these.
 
 ### Key Modules
 
@@ -72,14 +91,37 @@ Primary nav is defined in `components/layout/header.tsx` as a `navigation` array
 
 Current nav: Problems | Projects | MCP | Agent Skills | Sandbox | Learn
 
+Other notable pages not in the primary nav: `showcase/` (with `[slug]` detail and `submit/`), `u/[id]` (public user profiles), `get-started/`, `faq/`, `early-access/`.
+
+**Cohort routes own their own chrome.** Both `Header` and `Footer` are client components that read `usePathname()` and return `null` when the path starts with `/cohort`. The cohort subtree (`app/cohort/[slug]/layout.tsx`) wraps its children in a left-sidebar shell (Accountable-style). When debugging "where did the top nav go" — that's by design on cohort pages, not a bug.
+
+### Cohort experience (`/cohort/[slug]`)
+
+Inside-the-house surface for active cohort members, modeled on Accountable. Architecture:
+
+- **`app/cohort/[slug]/layout.tsx`** — server component, renders the persistent sidebar + main content area. Bg `bg-slate-50`.
+- **`app/cohort/[slug]/_components/cohort-sidebar.tsx`** — client component (needs `usePathname` for active state). 11 nav entries: Home, Pre-flight, Bulletin, Reflect, Plan, Calendar, Community, Channels, Messages (external Slack), Meeting, Workshops, The Lab. Brand chip top-left, streak widget + Help/Support bottom-left.
+- **Sub-route pages** — each tab is its own server component under `app/cohort/[slug]/<name>/page.tsx`. All read data from `lib/cohort/cohort-00.ts` and `lib/cohort/prereqs.ts`.
+- **Two client islands** —
+  - `_components/commitments-widget.tsx` (3-slot weekly commitments + streak, localStorage-backed; Phase 2 → `WeeklyCommitment` Prisma model).
+  - `prereqs/_components/prereqs-checklist.tsx` (priority-banded checkboxes, localStorage-backed; Phase 2 → `PreReqCheck` Prisma model).
+
+**Adding a new tab:** create `app/cohort/[slug]/<name>/page.tsx` (server component) AND add a `{ label, href: "/<name>", icon }` entry to the `NAV` array in `_components/cohort-sidebar.tsx`. The sidebar handles active highlighting from `pathname === \`${base}${item.href}\``.
+
+**Pod channels** are intentionally deferred — pod-1 through pod-5 will be created Fri before Session 1 once pod assignments are finalized. The `/channels` directory page (`app/cohort/[slug]/channels/page.tsx`) and the `setup-cohort-slack.sh` script both reflect this — neither creates `pod-N` channels yet.
+
 ### API Routes
 
 - `/api/auth/[...nextauth]` - NextAuth handlers
+- `/api/auth/register` - Credentials sign-up (bcrypt)
 - `/api/apps/[id]/` - App CRUD, comments, ratings, sharing, upvotes, crossposting
 - `/api/openclaw/` - AI generation channels, status, webhooks
+- `/api/openclaw/generate`, `/api/openclaw/generate-skill` - BYOK app/skill generation (Anthropic or OpenAI)
 - `/api/ai/analyze` - AI analysis endpoint
 - `/api/projects` - GET/POST SharedProject records
 - `/api/projects/[id]` - Single project, upvote, fork
+- `/api/projects/digest` - Project digest aggregation
+- `/api/users/[id]` - Public user data
 - `/api/problems` - GET (with category/status/sort filters), POST clinical problems
 - `/api/problems/[id]` - GET single, PATCH to link projects
 - `/api/problems/[id]/support` - POST increment supportCount
@@ -129,3 +171,9 @@ Required (see `.env.example`):
 ## Path Alias
 
 `@/*` maps to `./src/*` (configured in tsconfig.json)
+
+## Security notes
+
+- `.claude/settings.local.json` is **gitignored** as of `d5b5d38` after Neon flagged an exposed DATABASE_URL token in an earlier commit of that file. The Neon role password was rotated; old credential is dead. Don't re-add the file to the index even if `git add -A` tries to.
+- Cohort + workspace bootstrap scripts (`scripts/*.sh`) need `SLACK_BOT_TOKEN` exported in the calling shell — they don't read from `.env*` to avoid that file being on disk in a shell with `set -x` or being scraped by an MCP server.
+- Rotation playbook for Neon (since `neonctl 2.21.x` doesn't expose `roles reset-password`): `POST https://console.neon.tech/api/v2/projects/{id}/branches/{id}/roles/{role}/reset_password` with the bearer token from `~/.config/neonctl/credentials.json`. Then update all three Vercel env scopes (Production, Preview, Development) — Vercel CLI refuses to add to "all preview branches" non-interactively, so use the API endpoint `POST /v10/projects/{id}/env?teamId=...&upsert=true` for that one scope.
