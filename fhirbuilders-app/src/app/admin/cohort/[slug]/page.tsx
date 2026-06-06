@@ -13,7 +13,13 @@ import {
   Lock,
   Users,
 } from "lucide-react";
-import { getCohortBySlug, initialsFromName } from "@/lib/cohort/cohort-00";
+import {
+  DEFERRED_TO_NEXT_COHORT,
+  PENDING_REGISTRATIONS,
+  SUPPORTERS,
+  getCohortBySlug,
+  initialsFromName,
+} from "@/lib/cohort/cohort-00";
 
 export const metadata: Metadata = {
   title: "Cohort admin",
@@ -248,6 +254,98 @@ export default async function CohortAdminPage({ params }: PageProps) {
           </table>
         </CardContent>
       </Card>
+
+      {/* SUPPORTERS — observers/advisors, not builders. No pod, no commitment.
+          Added 2026-06-05; cohort layout doesn't gate them, calendar invite is
+          optional. We don't show this section on the public community page. */}
+      {SUPPORTERS.length > 0 && (
+        <Card className="mt-8 border-slate-200 bg-slate-50/40">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-slate-900">Supporters & observers</CardTitle>
+            <CardDescription className="text-xs">
+              Invited to follow the cohort but not expected to build. Optional attendees on the
+              Monday call; visible on the public community page is opt-in (not by default).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 pt-1">
+            {SUPPORTERS.map((s) => (
+              <div key={s.email} className="rounded-md border border-slate-200 bg-white p-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-medium text-slate-900">{s.name}</span>
+                  <span className="font-mono text-[11px] text-slate-500">{s.email}</span>
+                </div>
+                {s.title && (
+                  <p className="mt-1 text-xs text-slate-600">{s.title}</p>
+                )}
+                {s.affiliation && (
+                  <p className="mt-0.5 text-[11px] text-slate-500">{s.affiliation}</p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* PENDING REGISTRATIONS — no email captured yet. Need DM outreach. */}
+      {PENDING_REGISTRATIONS.length > 0 && (
+        <Card className="mt-6 border-amber-200 bg-amber-50/40">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-slate-900">Pending registrations</CardTitle>
+            <CardDescription className="text-xs">
+              Direct outreach — need to capture an email before cohort enrollment.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1.5 pt-1">
+            {PENDING_REGISTRATIONS.map((p) => (
+              <div
+                key={p.name}
+                className="flex items-center justify-between gap-3 rounded-md bg-white p-2.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium text-slate-900">{p.name}</div>
+                  {p.note && <div className="text-[11px] text-slate-500">{p.note}</div>}
+                </div>
+                {(p.linkedinUrl || p.website) && (
+                  <a
+                    href={p.linkedinUrl ?? p.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 text-[11px] text-blue-600 underline hover:text-blue-800"
+                  >
+                    {p.linkedinUrl ? "LinkedIn" : "Website"}
+                  </a>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* DEFERRED — confirmed no for this cohort, invite to next. */}
+      {DEFERRED_TO_NEXT_COHORT.length > 0 && (
+        <Card className="mt-6 border-slate-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-slate-900">Deferred to Cohort 01</CardTitle>
+            <CardDescription className="text-xs">
+              Confirmed interest in the next cohort. Re-invite when Cohort 01 scheduling lands.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1.5 pt-1">
+            {DEFERRED_TO_NEXT_COHORT.map((d) => (
+              <div
+                key={d.email}
+                className="flex items-baseline justify-between gap-3 rounded-md bg-slate-50 p-2.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium text-slate-900">{d.name}</div>
+                  <div className="text-[11px] text-slate-500">{d.reason}</div>
+                </div>
+                <span className="flex-shrink-0 font-mono text-[11px] text-slate-500">{d.email}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* QUICK LINKS */}
       <div className="mt-6 flex flex-wrap gap-2">

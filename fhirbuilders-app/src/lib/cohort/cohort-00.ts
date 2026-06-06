@@ -326,6 +326,49 @@ export const DEFERRED_TO_NEXT_COHORT: Array<{ name: string; email: string; reaso
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Supporters & observers — invited to follow the cohort but NOT expected to
+// build. Get the Monday call invite (as optional attendees) + Slack invite +
+// public roster page access. No pod, no weekly commitment, no Demo Day pitch.
+// Useful for advisors, exec sponsors, ecosystem contacts, prospective Cohort 01
+// participants who want to lurk first.
+// ─────────────────────────────────────────────────────────────────────────────
+export type CohortSupporter = {
+  name: string;
+  email: string;
+  title?: string;
+  affiliation?: string;
+  /** Where they came from — direct outreach, intro, etc. */
+  source?: string;
+  addedAt: string; // ISO date
+};
+
+export const SUPPORTERS: CohortSupporter[] = [
+  {
+    name: "Bipinkumar G Rathod",
+    email: "bipin4uk@yahoo.co.uk",
+    title:
+      "Consultant & Business Partner · Advisory Council member, Harvard Business Review · Consultant, UNDP",
+    affiliation: "African Medical City — Ghana (Digital health & infrastructure)",
+    source: "direct outreach",
+    addedAt: "2026-06-05",
+  },
+  {
+    name: "Ellen Brown",
+    email: "ebrown@healthcareactually.com",
+    affiliation: "Healthcare Actually",
+    source: "direct outreach",
+    addedAt: "2026-06-05",
+  },
+  {
+    name: "Steph Habif",
+    email: "stephhabif@google.com",
+    affiliation: "Google",
+    source: "direct outreach",
+    addedAt: "2026-06-05",
+  },
+];
+
 export const COHORTS: Record<string, Cohort> = {
   "cohort-00": COHORT_00,
 };
