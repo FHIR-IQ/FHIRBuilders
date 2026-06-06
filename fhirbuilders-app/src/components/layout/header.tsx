@@ -24,6 +24,7 @@ import {
   BookOpenCheck,
   Lightbulb,
   Sparkles,
+  Users,
   Wrench,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -37,6 +38,10 @@ const navigation = [
   { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical, color: "text-blue-600 hover:text-blue-700" },
   { title: "Wiki", href: "/wiki", icon: BookOpenCheck, color: "text-violet-600 hover:text-violet-700" },
   { title: "Learn", href: "/learn", icon: BookOpen, color: "text-amber-600 hover:text-amber-700" },
+  // Cohort — always visible. Routing handled by /cohort/page.tsx:
+  //   * signed-in cohort member → redirects to /cohort/cohort-00
+  //   * everyone else → public landing page with waitlist
+  { title: "Cohort", href: "/cohort", icon: Users, color: "text-fuchsia-600 hover:text-fuchsia-700" },
 ];
 
 export function Header() {

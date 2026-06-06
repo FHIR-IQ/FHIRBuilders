@@ -30,7 +30,15 @@ import {
   Trophy,
   ArrowUp,
   Activity,
+  Users,
 } from "lucide-react";
+import {
+  COHORT_00,
+  formatSessionTime,
+  getCohortBuilder,
+  getPodForEmail,
+  nextSession,
+} from "@/lib/cohort/cohort-00";
 
 // Type definitions based on API response
 interface GeneratedApp {
@@ -172,8 +180,53 @@ export default function DashboardPage() {
             <User className="mr-2 h-4 w-4" />
             Edit Profile
           </Link>
-        </Button>
+          </Button>
       </div>
+
+      {/* Cohort-member banner — only renders if this account is linked to a
+          cohort signup. Surfaces "you're in Cohort 00" + the next session +
+          the pod assignment, with a one-click jump back to /cohort. */}
+      {(() => {
+        const builder = getCohortBuilder(session?.user?.email);
+        if (!builder) return null;
+        const pod = getPodForEmail(session?.user?.email);
+        const next = nextSession(COHORT_00);
+        return (
+          <Card className="mb-8 border-fuchsia-200 bg-gradient-to-r from-fuchsia-50/60 to-violet-50/40">
+            <CardContent className="flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-fuchsia-100 p-2 text-fuchsia-700">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-900">{COHORT_00.name}</span>
+                    {pod && (
+                      <Badge variant="outline" className="border-fuchsia-300 bg-white text-[10px] text-fuchsia-700">
+                        {pod.id} · {pod.name}
+                      </Badge>
+                    )}
+                  </div>
+                  {next ? (
+                    <p className="mt-0.5 text-xs text-slate-600">
+                      Next up: <strong>{next.title}</strong> · {formatSessionTime(next)}
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 text-xs text-slate-600">
+                      All scheduled sessions complete. Demo Day artifacts on the cohort home.
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Button asChild size="sm" className="bg-fuchsia-600 hover:bg-fuchsia-700">
+                <Link href="/cohort/cohort-00">
+                  Open cohort <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-5 mb-8">
