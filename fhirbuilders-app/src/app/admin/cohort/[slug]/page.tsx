@@ -19,21 +19,13 @@ import {
   SUPPORTERS,
   getCohortBySlug,
   initialsFromName,
+  isCohortAdmin,
 } from "@/lib/cohort/cohort-00";
 
 export const metadata: Metadata = {
   title: "Cohort admin",
   description: "Admin roster + signin tracking for cohort participants.",
 };
-
-function adminEmails(): Set<string> {
-  return new Set(
-    (process.env.ADMIN_EMAILS ?? "eugene.vestel@gmail.com")
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
 
 function timeAgo(d: Date | null): string {
   if (!d) return "—";
@@ -70,7 +62,7 @@ export default async function CohortAdminPage({ params }: PageProps) {
   if (!session?.user) {
     redirect(`/login?callbackUrl=${encodeURIComponent(`/admin/cohort/${slug}`)}`);
   }
-  if (!email || !adminEmails().has(email)) {
+  if (!isCohortAdmin(email)) {
     return (
       <div className="container mx-auto max-w-2xl px-4 py-20 text-center">
         <Lock className="mx-auto mb-4 h-10 w-10 text-slate-400" />

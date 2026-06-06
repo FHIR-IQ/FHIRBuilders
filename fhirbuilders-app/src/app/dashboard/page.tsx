@@ -37,6 +37,7 @@ import {
   formatSessionTime,
   getCohortBuilder,
   getPodForEmail,
+  isCohortAdmin,
   nextSession,
 } from "@/lib/cohort/cohort-00";
 
@@ -183,13 +184,15 @@ export default function DashboardPage() {
           </Button>
       </div>
 
-      {/* Cohort-member banner — only renders if this account is linked to a
-          cohort signup. Surfaces "you're in Cohort 00" + the next session +
-          the pod assignment, with a one-click jump back to /cohort. */}
+      {/* Cohort banner — renders for cohort builders AND cohort admins
+          (Eugene). Builder variant shows pod assignment; admin variant shows
+          "Organizer" + a jump to the admin roster. */}
       {(() => {
-        const builder = getCohortBuilder(session?.user?.email);
-        if (!builder) return null;
-        const pod = getPodForEmail(session?.user?.email);
+        const email = session?.user?.email;
+        const builder = getCohortBuilder(email);
+        const admin = isCohortAdmin(email);
+        if (!builder && !admin) return null;
+        const pod = builder ? getPodForEmail(email) : null;
         const next = nextSession(COHORT_00);
         return (
           <Card className="mb-8 border-fuchsia-200 bg-gradient-to-r from-fuchsia-50/60 to-violet-50/40">
@@ -201,11 +204,15 @@ export default function DashboardPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-900">{COHORT_00.name}</span>
-                    {pod && (
+                    {pod ? (
                       <Badge variant="outline" className="border-fuchsia-300 bg-white text-[10px] text-fuchsia-700">
                         {pod.id} · {pod.name}
                       </Badge>
-                    )}
+                    ) : admin ? (
+                      <Badge variant="outline" className="border-amber-300 bg-amber-50 text-[10px] text-amber-700">
+                        Organizer
+                      </Badge>
+                    ) : null}
                   </div>
                   {next ? (
                     <p className="mt-0.5 text-xs text-slate-600">
@@ -218,11 +225,18 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-              <Button asChild size="sm" className="bg-fuchsia-600 hover:bg-fuchsia-700">
-                <Link href="/cohort/cohort-00">
-                  Open cohort <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                </Link>
-              </Button>
+              <div className="flex gap-2">
+                {admin && (
+                  <Button asChild size="sm" variant="outline" className="border-amber-300 bg-white text-amber-800 hover:bg-amber-50">
+                    <Link href="/admin/cohort/cohort-00">Admin</Link>
+                  </Button>
+                )}
+                <Button asChild size="sm" className="bg-fuchsia-600 hover:bg-fuchsia-700">
+                  <Link href="/cohort/cohort-00">
+                    Open cohort <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         );

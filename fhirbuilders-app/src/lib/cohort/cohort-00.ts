@@ -420,6 +420,28 @@ function normalizeEmail(email: string | null | undefined): string | null {
   return email.trim().toLowerCase();
 }
 
+/**
+ * Cohort admin = anyone listed in ADMIN_EMAILS (comma-separated env var).
+ * Eugene is the default. Admins get:
+ *   - access to /admin/cohort/[slug]
+ *   - bypass on the cohort layout's member gate (preview as anyone)
+ *   - the dashboard banner rendered as "Organizer" instead of "Builder"
+ *
+ * Keep this in sync with the parallel inline checks in app/admin/cohort/[slug]
+ * and app/cohort/[slug]/layout — single source of truth.
+ */
+export function isCohortAdmin(email: string | null | undefined): boolean {
+  const e = normalizeEmail(email);
+  if (!e) return false;
+  const admins = new Set(
+    (process.env.ADMIN_EMAILS ?? "eugene.vestel@gmail.com")
+      .split(",")
+      .map((x) => x.trim().toLowerCase())
+      .filter(Boolean),
+  );
+  return admins.has(e);
+}
+
 /** True if the email is in any cohort's signup roster. */
 export function isCohortMember(email: string | null | undefined, cohortSlug = "cohort-00"): boolean {
   const e = normalizeEmail(email);
