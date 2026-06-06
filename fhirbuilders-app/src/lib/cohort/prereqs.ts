@@ -94,22 +94,11 @@ export const PREREQS: PreReqGroup[] = [
         id: "claude-plan",
         title: "Claude paid plan — Pro or Max",
         description:
-          "Free tier hits limits fast on sustained agentic work. Pro ($20/mo) is fine for most pods; Max ($100/mo or $200/mo) is what you want if you're shipping daily.",
+          "This is the one thing you actually need. Claude Code on Pro ($20/mo) is enough for Session 1 and most pods; Max ($100/mo or $200/mo) is what you want if you're shipping daily. No separate API key required to start — your Claude plan covers Claude Code usage.",
         notes:
-          "Tip: Max comes with included Claude Code usage that more than pays for itself if you're coding 4+ hours/day.",
+          "Tip: Max comes with included Claude Code usage that more than pays for itself if you're coding 4+ hours/day. An Anthropic API key is only needed later for advanced setups (BYOK agent generation, MCP servers, OpenAI/Gemini side-by-side workflows) — not for Session 1.",
         kind: "verify",
         links: [{ label: "Pick a plan", href: "https://claude.com/upgrade" }],
-      },
-      {
-        id: "anthropic-api-key",
-        title: "Anthropic API key",
-        description:
-          "Separate from your Claude plan — needed for BYOK agent generation in FHIRBuilders OpenClaw and for the Anthropic SDK directly.",
-        kind: "verify",
-        links: [
-          { label: "Get a key", href: "https://console.anthropic.com/settings/keys" },
-          { label: "API docs", href: "https://docs.anthropic.com" },
-        ],
       },
     ],
   },
@@ -137,12 +126,19 @@ export const PREREQS: PreReqGroup[] = [
         links: [{ label: "Sign up", href: "https://vercel.com/signup" }],
       },
       {
-        id: "openai-api-key",
-        title: "OpenAI API key (optional)",
+        id: "llm-api-key",
+        title: "Any LLM API key (optional, free tier is fine)",
         description:
-          "Useful for multi-provider workflows — FHIRBuilders OpenClaw supports BYOK for both Anthropic and OpenAI side-by-side.",
+          "For later weeks when we wire up MCP servers and BYOK agent generation in OpenClaw. ANY provider works — Gemini and Groq both have free tiers that are plenty for the cohort. Anthropic and OpenAI are paid but give you the most flexibility. Skip until Week 3 unless you already have one.",
+        notes:
+          "Recommended for the cohort: Groq (free, fast Llama/Mixtral inference) or Google Gemini (free tier, huge context window). Both work with the same SDK patterns we'll use.",
         kind: "verify",
-        links: [{ label: "Get a key", href: "https://platform.openai.com/api-keys" }],
+        links: [
+          { label: "Groq (free)", href: "https://console.groq.com/keys" },
+          { label: "Gemini (free)", href: "https://aistudio.google.com/app/apikey" },
+          { label: "Anthropic", href: "https://console.anthropic.com/settings/keys" },
+          { label: "OpenAI", href: "https://platform.openai.com/api-keys" },
+        ],
       },
       {
         id: "loom",
