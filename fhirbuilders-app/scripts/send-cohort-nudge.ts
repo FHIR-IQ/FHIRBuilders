@@ -29,6 +29,7 @@ const INCLUDE_ALL = process.argv.includes("--include-all");
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM = "FHIRBuilders <notifications@fhirbuilders.com>";
 const REPLY_TO = "eugene.vestel@gmail.com";
+const ALWAYS_CC = { name: "Eugene Vestel", email: "eugene.vestel@gmail.com" };
 const HOME_URL = "https://fhirbuilders.com/cohort/cohort-00";
 const LOGIN_URL = "https://fhirbuilders.com/login?callbackUrl=%2Fcohort%2Fcohort-00";
 const COMMUNITY_URL = "https://fhirbuilders.com/cohort/cohort-00/community";
@@ -143,9 +144,13 @@ async function main() {
         .map((u) => u.email?.toLowerCase()),
     );
 
-    const recipients = COHORT_00.signups.filter((s) =>
+    const filtered = COHORT_00.signups.filter((s) =>
       INCLUDE_ALL ? true : !signedIn.has(s.email.toLowerCase()),
     );
+    const alreadyIncluded = filtered.some(
+      (s) => s.email.toLowerCase() === ALWAYS_CC.email.toLowerCase(),
+    );
+    const recipients = alreadyIncluded ? filtered : [ALWAYS_CC, ...filtered];
 
     console.log(
       `Cohort 00: ${COHORT_00.signups.length} signups, ${signedIn.size} already signed in.`,
