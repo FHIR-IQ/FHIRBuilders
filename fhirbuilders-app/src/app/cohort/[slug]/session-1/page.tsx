@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -194,6 +195,12 @@ export default async function Session1Page({ params }: PageProps) {
               <Calendar className="h-4 w-4 text-slate-400" />
               {formatSessionTime(session)}
             </span>
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/cohort/${slug}/session-1/learn`}>
+                <BookOpen className="mr-2 h-3.5 w-3.5" />
+                Study Guide
+              </Link>
+            </Button>
             {session.meetUrl && (
               <Button size="sm" asChild>
                 <a href={session.meetUrl} target="_blank" rel="noopener noreferrer">

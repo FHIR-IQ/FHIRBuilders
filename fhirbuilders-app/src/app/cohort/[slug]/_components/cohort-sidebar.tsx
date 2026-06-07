@@ -23,6 +23,7 @@ const NAV = [
   { label: "Home", href: "", icon: Home },
   { label: "Pre-flight", href: "/prereqs", icon: ListChecks },
   { label: "Session 1", href: "/session-1", icon: BookOpen },
+  { label: "Learn", href: "/session-1/learn", icon: GraduationCap },
   { label: "Bulletin", href: "/bulletin", icon: Newspaper },
   { label: "Reflect", href: "/reflect", icon: NotebookPen },
   { label: "Plan", href: "/plan", icon: Sparkles },
