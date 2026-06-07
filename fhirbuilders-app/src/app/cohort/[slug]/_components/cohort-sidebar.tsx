@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BookOpen,
   Calendar,
   CircleHelp,
   Flame,
@@ -21,6 +22,7 @@ import {
 const NAV = [
   { label: "Home", href: "", icon: Home },
   { label: "Pre-flight", href: "/prereqs", icon: ListChecks },
+  { label: "Session 1", href: "/session-1", icon: BookOpen },
   { label: "Bulletin", href: "/bulletin", icon: Newspaper },
   { label: "Reflect", href: "/reflect", icon: NotebookPen },
   { label: "Plan", href: "/plan", icon: Sparkles },
