@@ -174,9 +174,11 @@ export const COHORT_00: Cohort = {
       mandatory: true,
     },
   ],
-  // 18 confirmed Cohort 00 signups as of Jun 5, 2026 (2 seats remaining).
-  // 4 more interested but pending email confirmation — see PENDING_REGISTRATIONS
-  // below. Joel Sathiyendra (joelsathiyendra@gmail.com) confirmed for Cohort 01
+  // 20 confirmed Cohort 00 signups as of Jun 8, 2026 (at cap).
+  // Adam Carewe moved to observer Jun 8 — not participating as builder.
+  // Matt Lanphier confirmed via workshop signup Jun 6 (was in PENDING_REGISTRATIONS).
+  // Greg Barabell (Virginia DMAS) and Benji Graham (ICF) added Jun 8 via workshop.
+  // Joel Sathiyendra (joelsathiyendra@gmail.com) confirmed for Cohort 01
   // after schedule conflict — see DEFERRED_TO_NEXT_COHORT.
   signups: [
     // Pod 1 — Prior Auth + Claims
@@ -186,7 +188,6 @@ export const COHORT_00: Cohort = {
     // Pod 2 — Home Health + Primary Care Ops
     { name: "Eric Guasch",     email: "eguasch@centric-hc.com",     building: "Tech for primary-care network operations",   podId: "pod-2" },
     { name: "Divesh Aidasani", email: "daidasani@bayada.com",       building: "New EMR for home health",                    podId: "pod-2" },
-    { name: "Adam Carewe",     email: "adam@nerdmds.com",           building: "Anything and everything — narrowing on call", podId: "pod-2" },
     { name: "Adnan Lakdawala", email: "adnanmlakdawala@gmail.com",  building: "(scoping — direct outreach, late add)",      podId: "pod-2" },
     // Pod 3 — Patient-facing Tooling
     { name: "John Lee",            email: "johnlee@hitpeakadvisors.com",   building: "Anonymous patient tooling",          podId: "pod-3" },
@@ -202,6 +203,10 @@ export const COHORT_00: Cohort = {
     { name: "Matt (studiolab)",  email: "matt@studiolab.io",            building: "AI + healthcare exploration",            podId: "pod-5" },
     { name: "Eslam Elgebaly",    email: "eslamelgebaly11@outlook.com",  building: "Open scope — joining late, ramping up",  podId: "pod-5" },
     { name: "Medtec",            email: "medtec1@gmail.com",            building: "(scoping — direct outreach, late add)",  podId: "pod-5" },
+    // Added Jun 8 via workshop signups — pod assignments TBD after Session 1
+    { name: "Matt Lanphier",   email: "mlanphie@gmail.com",               building: "FHIR learning — ships personal projects (medicaidmonitor.org)" },
+    { name: "Greg Barabell",   email: "greg.barabell@dmas.virginia.gov",  building: "(scoping — Virginia DMAS)" },
+    { name: "Benji Graham",    email: "benjamin.graham@icf.com",           building: "(scoping — ICF consulting)" },
   ],
   // Pod assignments — 5 pods of 3–4, themed by building intent. NO per-pod
   // Slack channels (deliberate — fewer channels, more signal). Pods coordinate
@@ -227,7 +232,6 @@ export const COHORT_00: Cohort = {
       emails: [
         "eguasch@centric-hc.com",
         "daidasani@bayada.com",
-        "adam@nerdmds.com",
         "adnanmlakdawala@gmail.com",
       ],
     },
@@ -286,13 +290,6 @@ export type PendingRegistration = {
 
 export const PENDING_REGISTRATIONS: PendingRegistration[] = [
   {
-    name: "Matthew Lanphier",
-    linkedinUrl: "https://www.linkedin.com/in/matthew-lanphier-1aa29180",
-    source: "direct-outreach",
-    capturedAt: "2026-06-05T15:00:00-04:00",
-    note: "Reach out via LinkedIn DM — capture email for cohort + workshop",
-  },
-  {
     name: "Pradeep Podila",
     linkedinUrl: "https://www.linkedin.com/in/pradeeppodila/",
     source: "direct-outreach",
@@ -344,6 +341,13 @@ export type CohortSupporter = {
 };
 
 export const SUPPORTERS: CohortSupporter[] = [
+  {
+    name: "Adam Carewe",
+    email: "adam@nerdmds.com",
+    affiliation: "NerdMDs",
+    source: "cohort-00 builder → moved to observer Jun 8",
+    addedAt: "2026-06-08",
+  },
   {
     name: "Bipinkumar G Rathod",
     email: "bipin4uk@yahoo.co.uk",
