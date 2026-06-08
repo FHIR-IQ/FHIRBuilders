@@ -174,10 +174,10 @@ export const COHORT_00: Cohort = {
       mandatory: true,
     },
   ],
-  // 20 confirmed Cohort 00 signups as of Jun 8, 2026 (at cap).
-  // Adam Carewe moved to observer Jun 8 — not participating as builder.
+  // 19 confirmed Cohort 00 signups as of Jun 8, 2026 (1 seat remaining).
+  // Adam Carewe + Benji Graham moved to observer Jun 8 — not participating as builders.
   // Matt Lanphier confirmed via workshop signup Jun 6 (was in PENDING_REGISTRATIONS).
-  // Greg Barabell (Virginia DMAS) and Benji Graham (ICF) added Jun 8 via workshop.
+  // Greg Barabell (Virginia DMAS) added Jun 8 via workshop.
   // Joel Sathiyendra (joelsathiyendra@gmail.com) confirmed for Cohort 01
   // after schedule conflict — see DEFERRED_TO_NEXT_COHORT.
   signups: [
@@ -206,7 +206,6 @@ export const COHORT_00: Cohort = {
     // Added Jun 8 via workshop signups — pod assignments TBD after Session 1
     { name: "Matt Lanphier",   email: "mlanphie@gmail.com",               building: "FHIR learning — ships personal projects (medicaidmonitor.org)" },
     { name: "Greg Barabell",   email: "greg.barabell@dmas.virginia.gov",  building: "(scoping — Virginia DMAS)" },
-    { name: "Benji Graham",    email: "benjamin.graham@icf.com",           building: "(scoping — ICF consulting)" },
   ],
   // Pod assignments — 5 pods of 3–4, themed by building intent. NO per-pod
   // Slack channels (deliberate — fewer channels, more signal). Pods coordinate
@@ -341,6 +340,13 @@ export type CohortSupporter = {
 };
 
 export const SUPPORTERS: CohortSupporter[] = [
+  {
+    name: "Benji Graham",
+    email: "benjamin.graham@icf.com",
+    affiliation: "ICF",
+    source: "cohort-00 builder → moved to observer Jun 8",
+    addedAt: "2026-06-08",
+  },
   {
     name: "Adam Carewe",
     email: "adam@nerdmds.com",
