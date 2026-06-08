@@ -128,6 +128,10 @@ export const COHORT_00: Cohort = {
         "https://drive.google.com/drive/folders/1ysomAEmYFJyzTljdP-oNHATEL4hHm43a",
       notebookLmUrl:
         "https://notebooklm.google.com/notebook/3e2285b5-07e1-405d-9887-6b737d64bb5a",
+      recordingUrl:
+        "https://drive.google.com/file/d/1lszSNGFXU2zip-lIbRkIU3f2YrActjTe/view",
+      chatTranscriptUrl:
+        "https://otter.ai/u/SnfKkp_t5xHRYWDDVd9VgZ_FPiw?utm_source=copy_url",
     },
     {
       id: "session-2",
