@@ -341,6 +341,12 @@ export type CohortSupporter = {
 
 export const SUPPORTERS: CohortSupporter[] = [
   {
+    name: "Dr. Gigi Magan",
+    email: "yimdriuskam@gmail.com",
+    source: "direct invite",
+    addedAt: "2026-06-08",
+  },
+  {
     name: "Benji Graham",
     email: "benjamin.graham@icf.com",
     affiliation: "ICF",
