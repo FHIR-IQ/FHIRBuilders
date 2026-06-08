@@ -268,6 +268,11 @@ function ItemRow({
           {item.notes && (
             <p className="mt-1.5 text-xs italic text-slate-500">{item.notes}</p>
           )}
+          {item.code && item.code.length > 0 && (
+            <pre className="mt-2.5 overflow-x-auto rounded-md bg-slate-900 px-3 py-2 font-mono text-xs leading-relaxed text-slate-100">
+              <code>{item.code.join("\n")}</code>
+            </pre>
+          )}
           {item.links && item.links.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {item.links.map((link) =>
