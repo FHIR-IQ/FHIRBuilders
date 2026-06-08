@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "fhirbuilders-cohort",
+  "displayName": "FHIRBuilders Cohort Skills",
+  "version": "1.0.0",
+  "description": "Cohort skill pack for FHIRBuilders: a teaching-grade security review (secrets + PHI/PII hygiene) and a one-command installer.",
+  "author": {
+    "name": "FHIRBuilders Cohort",
+    "url": "https://fhirbuilders.com"
+  },
+  "homepage": "https://fhirbuilders.com",
+  "repository": "https://github.com/fhir-iq/fhirbuilders",
+  "license": "MIT",
+  "keywords": ["fhir", "healthcare", "security", "phi", "secrets", "hipaa", "cohort"]
+}

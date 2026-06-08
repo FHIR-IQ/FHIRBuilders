@@ -18,6 +18,8 @@ export type PreReqItem = {
   links?: PreReqLink[];
   /** Italic notes from Eugene, displayed below description. */
   notes?: string;
+  /** Copy-pasteable commands, rendered as a monospace block (one line each). */
+  code?: string[];
   /** "verify" = checkable action item. "info" = read-only reference card. */
   kind: "verify" | "info";
   /** TODO marker — content placeholder for Eugene to expand. */
@@ -213,14 +215,20 @@ export const PREREQS: PreReqGroup[] = [
     items: [
       {
         id: "skills-list",
-        title: "Eugene's Claude Code skills",
+        title: "FHIRBuilders Claude Code skill pack",
         description:
-          "Curated skills for healthcare FHIR work — FHIR resource scaffolding, SMART-on-FHIR auth, Medplum patterns, terminology lookups.",
-        notes: "TODO: Eugene to publish the exact skill list before Session 1.",
-        todo: true,
+          "Our cohort skills install as a Claude Code plugin. First up is security-review — a teaching-grade pass for the two things healthcare builders leak most: secrets (API keys, tokens, DB URLs) and PHI/PII (real patient data in code, logs, or LLM prompts). It complements the built-in /security-review, which only scans the diff for code vulnerabilities. Add the marketplace once, install the pack, then run it as /fhirbuilders-cohort:security-review.",
+        notes:
+          "Common gotcha: there is no `claude skills install <url>` command, and a single .md file is NOT a skill — a skill is a directory with a SKILL.md inside. If installing from a raw GitHub .md URL gave you nothing, that's why. Use the two plugin commands above instead.",
         kind: "info",
+        code: [
+          "/plugin marketplace add fhir-iq/fhirbuilders",
+          "/plugin install fhirbuilders-cohort@fhirbuilders",
+        ],
         links: [
-          { label: "Claude Code skills docs", href: "https://docs.anthropic.com/en/docs/claude-code/skills" },
+          { label: "Skill pack source", href: "https://github.com/FHIR-IQ/FHIRBuilders/tree/main/skills/fhirbuilders-cohort" },
+          { label: "Skills docs", href: "https://code.claude.com/docs/en/skills" },
+          { label: "Plugin marketplaces", href: "https://code.claude.com/docs/en/plugin-marketplaces" },
         ],
       },
       {

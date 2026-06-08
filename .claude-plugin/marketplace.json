@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace-manifest.json",
+  "name": "fhirbuilders",
+  "description": "FHIRBuilders plugin marketplace — skill packs for the healthcare builder cohort.",
+  "owner": {
+    "name": "FHIRBuilders Cohort",
+    "url": "https://fhirbuilders.com"
+  },
+  "plugins": [
+    {
+      "name": "fhirbuilders-cohort",
+      "source": "./skills/fhirbuilders-cohort",
+      "description": "Teaching-grade security review (secrets + PHI/PII hygiene) and a one-command installer for cohort builders.",
+      "version": "1.0.0",
+      "author": {
+        "name": "FHIRBuilders Cohort",
+        "url": "https://fhirbuilders.com"
+      },
+      "license": "MIT",
+      "category": "security",
+      "keywords": ["fhir", "healthcare", "security", "phi", "secrets", "hipaa", "cohort"]
+    }
+  ]
+}
