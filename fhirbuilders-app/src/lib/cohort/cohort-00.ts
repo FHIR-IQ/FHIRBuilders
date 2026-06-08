@@ -188,7 +188,7 @@ export const COHORT_00: Cohort = {
     // Pod 2 — Home Health + Primary Care Ops
     { name: "Eric Guasch",     email: "eguasch@centric-hc.com",     building: "Tech for primary-care network operations",   podId: "pod-2" },
     { name: "Divesh Aidasani", email: "daidasani@bayada.com",       building: "New EMR for home health",                    podId: "pod-2" },
-    { name: "Adnan Lakdawala", email: "adnanmlakdawala@gmail.com",  building: "(scoping — direct outreach, late add)",      podId: "pod-2" },
+    { name: "Adnan Lakdawala", email: "adnanmlakdawala@gmail.com",  building: "SMART on FHIR app — home health clinical notes → LLM audit Q&A", podId: "pod-2" },
     // Pod 3 — Patient-facing Tooling
     { name: "John Lee",            email: "johnlee@hitpeakadvisors.com",   building: "Anonymous patient tooling",          podId: "pod-3" },
     { name: "Vanessa Paolantonio", email: "vanessa.paolantonio@yahoo.com", building: "(scoping at intro call)",            podId: "pod-3" },
