@@ -474,12 +474,16 @@ export function isCohortAdmin(email: string | null | undefined): boolean {
   return admins.has(e);
 }
 
-/** True if the email is in any cohort's signup roster. */
+/** True if the email is in any cohort's signup roster OR supporters list. */
 export function isCohortMember(email: string | null | undefined, cohortSlug = "cohort-00"): boolean {
   const e = normalizeEmail(email);
   if (!e) return false;
   const cohort = COHORTS[cohortSlug];
-  return cohort?.signups.some((s) => normalizeEmail(s.email) === e) ?? false;
+  if (!cohort) return false;
+  return (
+    cohort.signups.some((s) => normalizeEmail(s.email) === e) ||
+    SUPPORTERS.some((s) => normalizeEmail(s.email) === e)
+  );
 }
 
 /** Find the cohort signup row for an email; returns null if not a member. */
