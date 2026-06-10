@@ -350,6 +350,13 @@ export type CohortSupporter = {
 
 export const SUPPORTERS: CohortSupporter[] = [
   {
+    name: "Gail Hamilton",
+    email: "ghamilton@veloxmetadata.com",
+    affiliation: "Velox Metadata",
+    source: "direct request via Slack Jun 10",
+    addedAt: "2026-06-10",
+  },
+  {
     name: "Dr. Gigi Magan",
     email: "yimdriuskam@gmail.com",
     source: "direct invite",
