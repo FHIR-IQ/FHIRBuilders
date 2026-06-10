@@ -206,7 +206,7 @@ export const COHORT_00: Cohort = {
     { name: "Sergei Polevikov",  email: "spolevikov@gmail.com",        building: "Not sure yet — wants to build",          podId: "pod-5" },
     { name: "Matt (studiolab)",  email: "matt@studiolab.io",            building: "AI + healthcare exploration",            podId: "pod-5" },
     { name: "Eslam Elgebaly",    email: "eslamelgebaly11@outlook.com",  building: "Open scope — joining late, ramping up",  podId: "pod-5" },
-    { name: "Medtec",            email: "medtec1@gmail.com",            building: "(scoping — direct outreach, late add)",  podId: "pod-5" },
+    { name: "Erez S.",           email: "medtec1@gmail.com",            building: "(scoping — direct outreach, late add)",  podId: "pod-5" },
     // Added Jun 8 via workshop signups — pod assignments TBD after Session 1
     { name: "Greg Barabell",   email: "greg.barabell@dmas.virginia.gov",  building: "(scoping — Virginia DMAS)" },
   ],
