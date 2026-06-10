@@ -178,9 +178,9 @@ export const COHORT_00: Cohort = {
       mandatory: true,
     },
   ],
-  // 19 confirmed Cohort 00 signups as of Jun 8, 2026 (1 seat remaining).
+  // 18 confirmed Cohort 00 signups as of Jun 10, 2026 (2 seats remaining).
   // Adam Carewe + Benji Graham moved to observer Jun 8 — not participating as builders.
-  // Matt Lanphier confirmed via workshop signup Jun 6 (was in PENDING_REGISTRATIONS).
+  // Matt Lanphier → Cohort 01 (was traveling, missed Session 1; Eugene confirmed Jun 7).
   // Greg Barabell (Virginia DMAS) added Jun 8 via workshop.
   // Joel Sathiyendra (joelsathiyendra@gmail.com) confirmed for Cohort 01
   // after schedule conflict — see DEFERRED_TO_NEXT_COHORT.
@@ -208,7 +208,6 @@ export const COHORT_00: Cohort = {
     { name: "Eslam Elgebaly",    email: "eslamelgebaly11@outlook.com",  building: "Open scope — joining late, ramping up",  podId: "pod-5" },
     { name: "Medtec",            email: "medtec1@gmail.com",            building: "(scoping — direct outreach, late add)",  podId: "pod-5" },
     // Added Jun 8 via workshop signups — pod assignments TBD after Session 1
-    { name: "Matt Lanphier",   email: "mlanphie@gmail.com",               building: "FHIR learning — ships personal projects (medicaidmonitor.org)" },
     { name: "Greg Barabell",   email: "greg.barabell@dmas.virginia.gov",  building: "(scoping — Virginia DMAS)" },
   ],
   // Pod assignments — 5 pods of 3–4, themed by building intent. NO per-pod
@@ -323,6 +322,12 @@ export const DEFERRED_TO_NEXT_COHORT: Array<{ name: string; email: string; reaso
     email: "joelsathiyendra@gmail.com",
     reason: "Schedule conflict for Cohort 00 — confirmed interest in Cohort 01",
     deferredAt: "2026-06-05",
+  },
+  {
+    name: "Matt Lanphier",
+    email: "mlanphie@gmail.com",
+    reason: "Traveling during Session 1, missed it — Eugene confirmed Cohort 01 via email Jun 7",
+    deferredAt: "2026-06-07",
   },
 ];
 
