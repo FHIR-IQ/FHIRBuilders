@@ -26,6 +26,7 @@ import {
   CheckCircle,
   ExternalLink,
   Copy,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -352,6 +353,115 @@ If you're still getting wrong codes, double-check the skill is active and rephra
 \`\`\`
 
 This is one of the subtle FHIR R4 details that the skill knows. If Claude generates the wrong pattern, it may be using generic patterns - try being more explicit: "Generate an Encounter resource with the correct class structure (Coding, not CodeableConcept)".`,
+      },
+    ],
+  },
+  {
+    id: "phi-records",
+    title: "PHI Redaction & Real Health Records",
+    icon: Shield,
+    description: "Connecting real health data safely with AI guardrails",
+    questions: [
+      {
+        q: "What is HealthClawGuardrails and where can I get the PHI redaction script?",
+        a: `HealthClawGuardrails is an open-source guardrail proxy that sits between any AI agent and any FHIR server. It enforces PHI redaction, immutable audit trails, and human-in-the-loop controls before clinical data reaches an LLM.
+
+**The PHI redaction script is at:**
+\`\`\`
+https://github.com/aks129/HealthClawGuardrails/blob/main/r6/redaction.py
+\`\`\`
+
+**What it redacts (HIPAA Safe Harbor):**
+• Names → truncated to initials
+• Identifiers (MRN, SSN, account numbers) → masked
+• Addresses → stripped
+• Birthdates → coarsened to year only
+• Telecom (phone, email) → stripped
+
+The script is designed to run in-process during FHIR bundle export — data is redacted before it ever touches the AI layer. Fork it freely for your own builds.`,
+      },
+      {
+        q: "How does the connected health records pipeline work end-to-end?",
+        a: `Gene's reference implementation connects three record sources through one guardrail stack:
+
+**Sources:**
+1. **TEFCA/QHIN (Fasten Connect)** — Nationwide record network. Identity verified via CLEAR/ID.me. Records arrive as a webhook push within 5–45 minutes.
+2. **SMART on FHIR (MEDENT)** — Direct patient standalone launch against a practice EHR. Uses PKCE authorization + an OAuth callback broker hosted on Railway (needed for the HTTPS redirect URI requirement).
+3. **Health Bank One** — Patient-owned verified record vault with insurance context.
+
+**Through HealthClawGuardrails:**
+→ PHI redaction (names, IDs, addresses, birthdates)
+→ FHIR AuditEvent recorded for every read
+→ Human-in-the-loop block on any proposed write
+→ Curatr data quality checks
+
+**Then to the AI layer (OpenClaw/Claude)** — only sees redacted, audited data.
+
+Full write-up: [I Connected My Own Health Records](https://evestel.substack.com/p/i-connected-my-own-health-records)`,
+      },
+      {
+        q: "Why does my FHIR data sometimes have wrong or outdated information?",
+        a: `This is one of the central findings from Gene's real-world test. Technical infrastructure works — the problem is clinical workflow.
+
+**Three real data quality bugs found in one patient's records:**
+
+1. **Unconfirmed diagnosis marked as confirmed** — A working hypothesis from a dermatology visit in 2023 was never resolved, but \`verificationStatus\` stayed \`confirmed\`. AI systems treat this as current, active condition.
+
+2. **Incomplete immunization data via TEFCA** — TEFCA returned 7 immunizations; the practice EHR had 27. Nationwide networks don't always have complete records.
+
+3. **Broken procedure closure loop** — A colonoscopy was completed with pathology, but the original \`ServiceRequest\` stayed open and was never linked to the \`DiagnosticReport\`. Care gap detection systems incorrectly flag this as outstanding.
+
+**What this means for builders:**
+• Treat problem lists as starting points for review, not ground truth
+• Surface provenance metadata (coding date, originating provider)
+• Don't trust \`ServiceRequest.status\` without checking linked \`DiagnosticReport\`
+• Build human review into any clinical decision flow
+
+"Structured data is accurate data" is still false.`,
+      },
+      {
+        q: "What technical gotchas should I know when implementing SMART on FHIR patient access?",
+        a: `Two sharp edges from the reference implementation:
+
+**1. Missing patient claim in token response**
+Some EHRs (like MEDENT) don't include the \`patient\` claim in the token exchange response, even though the spec requires it. Workaround:
+\`\`\`python
+# Call the introspection endpoint instead
+response = requests.post(
+    introspect_url,
+    auth=(client_id, ""),  # HTTP Basic, empty password
+    data={"token": access_token}
+)
+patient_id = response.json()["sub"]
+\`\`\`
+
+**2. OAuth callback requires a public HTTPS URL**
+Practice EHRs and Health Bank One require a real HTTPS redirect URI — \`localhost\` won't work. Solution: deploy a tiny callback broker (Railway works well) that:
+- Receives the OAuth redirect with the auth code
+- Stores it keyed by \`state\` parameter
+- Your local script polls to retrieve it
+
+\`\`\`python
+# scripts/medent_oauth.py in HealthClawGuardrails
+# Full PKCE flow + callback polling pattern
+\`\`\`
+
+**3. Not all FHIR is FHIR**
+Health Bank One returns \`{"result": "<xml>..."}\` — proprietary XML wrapped in JSON, not FHIR R4. Parse defensively.`,
+      },
+      {
+        q: "Can I use Gene's vendor agreements (Fasten, HealthEx, Flexpa, etc.) for my project?",
+        a: `Not yet — Gene's access to Fasten Connect, HealthEx, Health Bank One, Flexpa, MEDENT, and CLEAR is under his own personal agreements.
+
+He's actively negotiating packages that cohort builders could opt into for future cohorts. Watch for announcements.
+
+**What you can do now:**
+• **HealthClawGuardrails** — fully open source, fork and use freely
+• **Railway** — free tier works for the OAuth callback broker
+• **Medplum sandbox** — available directly in The Lab (no agreement needed)
+• Sign up for free tiers or developer access directly with each vendor
+
+The reference stack is there to show you the architecture — not every piece needs to be production-ready for Demo Day.`,
       },
     ],
   },
