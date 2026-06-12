@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/cron/slack-qa",
-      "schedule": "0 */2 * * *"
+      "schedule": "0 12 * * *"
     }
   ],
   "headers": [
