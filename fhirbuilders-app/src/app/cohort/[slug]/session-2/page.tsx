@@ -204,11 +204,27 @@ export default async function Session2Page({ params }: PageProps) {
                 Study Guide
               </Link>
             </Button>
-            {session.meetUrl && (
+            {session.recordingUrl && (
+              <Button size="sm" asChild>
+                <a href={session.recordingUrl} target="_blank" rel="noopener noreferrer">
+                  <Video className="mr-2 h-3.5 w-3.5" />
+                  Watch Recording
+                </a>
+              </Button>
+            )}
+            {!session.recordingUrl && session.meetUrl && (
               <Button size="sm" asChild>
                 <a href={session.meetUrl} target="_blank" rel="noopener noreferrer">
                   <Video className="mr-2 h-3.5 w-3.5" />
                   Join on Google Meet
+                </a>
+              </Button>
+            )}
+            {session.chatTranscriptUrl && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={session.chatTranscriptUrl} target="_blank" rel="noopener noreferrer">
+                  Chat transcript
+                  <ExternalLink className="ml-1.5 h-3 w-3" />
                 </a>
               </Button>
             )}

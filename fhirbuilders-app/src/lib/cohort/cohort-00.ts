@@ -142,7 +142,12 @@ export const COHORT_00: Cohort = {
         "Live FHIR hands for your agent. Synthea, Medplum, the four tools that actually earn their seat.",
       startsAt: "2026-06-15T13:00:00-04:00",
       endsAt: "2026-06-15T14:30:00-04:00",
+      meetUrl: "https://meet.google.com/cjr-azsx-udq",
       mandatory: true,
+      recordingUrl:
+        "https://drive.google.com/file/d/1tXQS1zZodCtPEx0lrqn_4HLaDMiVMtG0/view",
+      chatTranscriptUrl:
+        "https://drive.google.com/file/d/1vzGYP30XFfCDRVgrDb8PB8jZUQP2aecq/view",
     },
     {
       id: "session-3",
