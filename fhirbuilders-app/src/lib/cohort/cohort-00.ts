@@ -153,11 +153,12 @@ export const COHORT_00: Cohort = {
       id: "session-3",
       kind: "session",
       weekNumber: 3,
-      title: "Session 3 — FHIR-native workflows",
+      title: "Session 3 — Catch up + project kick-off",
       description:
-        "Survey → intervention. Screening → referral. Real FHIR R4 resources, your primary user flow end-to-end.",
-      startsAt: "2026-06-22T13:00:00-04:00",
-      endsAt: "2026-06-22T14:30:00-04:00",
+        "No new theory this week — pure hands-on. Get unstuck, open Claude Code, push your project forward. If you haven't started yet, this is the session to change that.",
+      startsAt: "2026-07-01T18:30:00-04:00",
+      endsAt: "2026-07-01T20:00:00-04:00",
+      meetUrl: "https://meet.google.com/cjr-azsx-udq",
       mandatory: true,
     },
     {
@@ -167,8 +168,9 @@ export const COHORT_00: Cohort = {
       title: "Session 4 — You ship one real slice",
       description:
         "Deployed. Tested. Watched by a real user before session 5. Mandatory live — this is the session you cannot miss.",
-      startsAt: "2026-06-29T13:00:00-04:00",
-      endsAt: "2026-06-29T14:30:00-04:00",
+      startsAt: "2026-07-08T18:30:00-04:00",
+      endsAt: "2026-07-08T20:00:00-04:00",
+      meetUrl: "https://meet.google.com/cjr-azsx-udq",
       mandatory: true,
     },
     {
@@ -178,8 +180,9 @@ export const COHORT_00: Cohort = {
       title: "Session 5 — Demos + what's next",
       description:
         "Public Demo Day. 90-sec pitch + 3-min demo. Senior leaders + Cohort 01 waitlist watching.",
-      startsAt: "2026-07-03T13:00:00-04:00",
-      endsAt: "2026-07-03T15:00:00-04:00",
+      startsAt: "2026-07-15T18:30:00-04:00",
+      endsAt: "2026-07-15T20:30:00-04:00",
+      meetUrl: "https://meet.google.com/cjr-azsx-udq",
       mandatory: true,
     },
   ],
