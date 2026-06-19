@@ -58,9 +58,9 @@ export function Header() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center space-x-2">
             <div className="flex h-7 w-7 items-center justify-center rounded bg-primary text-primary-foreground font-bold text-sm">
-              FB
+              HA
             </div>
-            <span className="font-semibold hidden sm:inline-block">FHIRBuilders</span>
+            <span className="font-semibold hidden sm:inline-block">Healthcare AI Builders</span>
           </Link>
 
           {/* Desktop Navigation - color-coded by section */}

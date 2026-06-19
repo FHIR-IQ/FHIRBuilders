@@ -200,7 +200,7 @@ export default async function CohortIndexPage() {
       </section>
 
       <footer className="mt-12 border-t border-slate-200 pt-6 text-xs text-slate-500">
-        Cohort runs free — funded by FHIR IQ + the FHIRBuilders community.
+        Cohort runs free — funded by FHIR IQ + the Healthcare AI Builders community.
         Questions? <a className="underline" href="mailto:eugene.vestel@gmail.com">eugene.vestel@gmail.com</a>
       </footer>
     </div>

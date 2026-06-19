@@ -71,7 +71,7 @@ export type Cohort = {
 
 export const COHORT_00: Cohort = {
   slug: "cohort-00",
-  name: "FHIR IQ Cohort 00",
+  name: "Healthcare AI Builders · Cohort 00",
   status: "upcoming",
   cap: 20,
   startsAt: "2026-06-08T13:00:00-04:00",

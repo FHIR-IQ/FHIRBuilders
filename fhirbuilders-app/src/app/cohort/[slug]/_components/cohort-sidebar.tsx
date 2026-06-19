@@ -9,6 +9,7 @@ import {
   Flame,
   FlaskConical,
   GraduationCap,
+  Heart,
   Home,
   ListChecks,
   MessageSquare,
@@ -36,6 +37,7 @@ const NAV = [
   { label: "Meeting", href: "/meeting", icon: Video },
   { label: "Workshops", href: "/workshops", icon: GraduationCap },
   { label: "The Lab", href: "/lab", icon: FlaskConical },
+  { label: "Support", href: "/contribute", icon: Heart },
 ] as const;
 
 const SLACK_URL =
@@ -54,7 +56,7 @@ export function CohortSidebar() {
           href={base}
           className="flex items-baseline gap-1 font-serif text-2xl font-bold tracking-tight text-slate-900"
         >
-          FHIRBuilders<span className="text-rose-600">.</span>
+          Healthcare AI Builders<span className="text-rose-600">.</span>
         </Link>
         <div className="mt-1.5 flex items-center gap-1.5">
           <span className="relative flex h-2 w-2 items-center justify-center">

@@ -13,8 +13,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "FHIRBuilders - Healthcare AI & FHIR App Marketplace",
-    template: "%s | FHIRBuilders",
+    default: "Healthcare AI Builders - Build Healthcare AI with FHIR",
+    template: "%s | Healthcare AI Builders",
   },
   description:
     "Build, share, and collaborate on agentic AI healthcare applications using FHIR standards. Access sandboxes, sample data, and connect with the community.",
@@ -30,19 +30,19 @@ export const metadata: Metadata = {
     "EHR integration",
     "SMART on FHIR",
   ],
-  authors: [{ name: "FHIRBuilders Community" }],
+  authors: [{ name: "Healthcare AI Builders Community" }],
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://fhirbuilders.com",
-    siteName: "FHIRBuilders",
-    title: "FHIRBuilders - Healthcare AI & FHIR App Marketplace",
+    siteName: "Healthcare AI Builders",
+    title: "Healthcare AI Builders - Build Healthcare AI with FHIR",
     description:
       "Build, share, and collaborate on agentic AI healthcare applications using FHIR standards.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FHIRBuilders - Healthcare AI & FHIR App Marketplace",
+    title: "Healthcare AI Builders - Build Healthcare AI with FHIR",
     description:
       "Build, share, and collaborate on agentic AI healthcare applications using FHIR standards.",
   },
