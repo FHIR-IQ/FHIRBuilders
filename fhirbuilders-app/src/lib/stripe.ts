@@ -47,14 +47,30 @@ export async function createCohortCheckoutSession({
           product_data: {
             name: "Healthcare AI Builders · Cohort 00",
             description:
-              "Introductory rate — supports session planning, tooling, and Cohort 1 (August 2026).",
+              "Cohort membership — supports sessions, tooling, and planning for Cohort 1 (August 2026). Pay what feels right, min $25.",
           },
           unit_amount: Math.round(amount * 100),
         },
         quantity: 1,
       },
     ],
-    metadata: { cohortSlug, amount: String(amount) },
+    // Override what shows on bank statements
+    payment_intent_data: {
+      statement_descriptor: "HEALTHCARE AI BLDR",
+      description: "Healthcare AI Builders · Cohort 00 membership",
+    },
+    // Custom text visible on the hosted checkout page
+    custom_text: {
+      submit: {
+        message:
+          "You're supporting Healthcare AI Builders Cohort 00. Thank you — this directly funds session planning and Cohort 1.",
+      },
+      after_submit: {
+        message:
+          "Questions? Email eugene.vestel@gmail.com",
+      },
+    },
+    metadata: { cohortSlug, amount: String(amount), brand: "Healthcare AI Builders" },
     success_url: successUrl,
     cancel_url: cancelUrl,
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
