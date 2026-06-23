@@ -27,6 +27,8 @@ const NAV = [
   { label: "S1 Study", href: "/session-1/learn", icon: GraduationCap },
   { label: "Session 2", href: "/session-2", icon: BookOpen },
   { label: "S2 Study", href: "/session-2/learn", icon: GraduationCap },
+  { label: "Session 3", href: "/session-3", icon: BookOpen },
+  { label: "S3 Playbook", href: "/session-3/learn", icon: GraduationCap },
   { label: "Bulletin", href: "/bulletin", icon: Newspaper },
   { label: "Reflect", href: "/reflect", icon: NotebookPen },
   { label: "Plan", href: "/plan", icon: Sparkles },
