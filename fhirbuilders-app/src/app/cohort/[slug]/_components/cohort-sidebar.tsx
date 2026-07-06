@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { COHORT_00 } from "@/lib/cohort/cohort-00";
 import {
   BookOpen,
   Calendar,
@@ -49,6 +51,22 @@ export function CohortSidebar() {
   const pathname = usePathname();
   const slug = pathname?.split("/")[2] ?? "cohort-00";
   const base = `/cohort/${slug}`;
+
+  // Real urgency beats a dead streak counter: how many live sessions remain,
+  // and when the next one is. Captured once per mount so render stays pure.
+  const [now] = useState(() => Date.now());
+  const upcoming = COHORT_00.sessions
+    .filter((s) => s.kind !== "intro" && new Date(s.startsAt).getTime() > now)
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+  const sessionsLeft = upcoming.length;
+  const nextSessionLabel = upcoming[0]
+    ? `next: ${new Date(upcoming[0].startsAt).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        timeZone: "America/New_York",
+      })}`
+    : null;
 
   return (
     <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
@@ -112,11 +130,13 @@ export function CohortSidebar() {
           <div className="flex items-center gap-1.5">
             <Flame className="h-3.5 w-3.5 text-amber-600" />
             <span className="font-mono text-[10px] uppercase tracking-widest text-amber-900">
-              Streak
+              Sessions left
             </span>
           </div>
-          <div className="mt-1 text-2xl font-semibold text-slate-900">0</div>
-          <div className="text-[11px] text-slate-500">weeks shipping</div>
+          <div className="mt-1 text-2xl font-semibold text-slate-900">{sessionsLeft}</div>
+          <div className="text-[11px] text-slate-500">
+            {nextSessionLabel ?? "see you at Demo Day"}
+          </div>
         </div>
         <a
           href="mailto:gene@fhiriq.com"
