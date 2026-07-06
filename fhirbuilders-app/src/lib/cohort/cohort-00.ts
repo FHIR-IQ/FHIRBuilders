@@ -365,6 +365,15 @@ export const SUPPORTERS: CohortSupporter[] = [
     addedAt: "2026-06-10",
   },
   {
+    // Gail's second account — she signs in with this Gmail (account created
+    // Jun 23), which the member gate rejected until it was allowlisted here.
+    name: "Gail Hamilton",
+    email: "gailhamilton@gmail.com",
+    affiliation: "Velox Metadata",
+    source: "duplicate account discovered Jul 5 — gate was bouncing her",
+    addedAt: "2026-07-05",
+  },
+  {
     name: "Dr. Gigi Magan",
     email: "yimdriuskam@gmail.com",
     source: "direct invite",
