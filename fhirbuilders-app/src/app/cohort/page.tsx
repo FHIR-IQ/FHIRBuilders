@@ -181,19 +181,19 @@ export default async function CohortIndexPage() {
       <section className="mb-8">
         <Card className="border-fuchsia-200 bg-gradient-to-br from-fuchsia-50/60 to-violet-50/40">
           <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
-            <h2 className="text-xl font-bold text-slate-900">Want in on Cohort 01?</h2>
+            <h2 className="text-xl font-bold text-slate-900">Cohort 01 applications are open.</h2>
             <p className="max-w-md text-sm text-slate-600">
-              Same shape — 6 weeks, hands-on, pod-based. Drop your email and you&apos;ll be first
-              invited when registration opens.
+              The FHIR + AI masterclass. Six weeks, 20 seats, application only. Starts late
+              August.
             </p>
             <Link
-              href="/early-access?from=cohort"
+              href="/cohort-01"
               className="mt-2 inline-flex items-center gap-1 rounded-md bg-fuchsia-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-fuchsia-700"
             >
-              Join the Cohort 01 waitlist <ArrowRight className="h-3.5 w-3.5" />
+              See the program + apply <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <p className="mt-1 text-[11px] text-slate-500">
-              No spam. One email when registration opens. Reply to unsubscribe.
+              Rolling review. Payment only after acceptance.
             </p>
           </CardContent>
         </Card>
