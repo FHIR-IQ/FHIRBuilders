@@ -92,30 +92,34 @@ Ctrl+C          # interrupt the current tool call
       },
       {
         q: "How do I install a skill pack?",
-        a: "Use `claude skills install <url>` where the URL points to a `.md` skill file or a directory of skill files. After install, the skill appears in `.claude/skills/` and you can invoke it immediately with `/skill-name`. For the FHIR IQ pack, Eugene shares the install URL at the start of Session 1.",
+        a: "There is no `claude skills install` command — a skill is a directory with a SKILL.md file, distributed either by committing it to `.claude/skills/` or bundling it in a plugin. The FHIRBuilders pack ships as a plugin: run `claude plugin marketplace add fhir-iq/fhirbuilders` then `claude plugin install fhirbuilders-cohort@fhirbuilders` in your terminal, then invoke it inside Claude Code as `/fhirbuilders-cohort:security-review`.",
       },
       {
         q: "Can I write my own skill?",
-        a: "Yes — create a `.md` file in `.claude/skills/` with a `# skill-name` heading and your instructions. CC reads it automatically. Skills are plain markdown: describe what to do, reference files or tools, and CC follows. Commit the file to git to share skills with your pod.",
+        a: "Yes — create a directory `.claude/skills/<name>/` with a `SKILL.md` file inside. Give it YAML frontmatter (a `name` and a `description` of when to use it) followed by your instructions in markdown. CC discovers it automatically and you invoke it with `/<name>`. Commit `.claude/skills/` to git to share skills with your pod.",
       },
     ],
     examples: [
       {
         title: "Install a skill and invoke it",
         lang: "bash",
-        code: `# Install from a URL (Eugene shares this at Session 1)
-claude skills install https://raw.githubusercontent.com/fhiriq/skills/main/security-review.md
+        code: `# Add the cohort marketplace + install the pack (run in your terminal)
+claude plugin marketplace add fhir-iq/fhirbuilders
+claude plugin install fhirbuilders-cohort@fhirbuilders
 
-# Invoke immediately
-/security-review
+# Then, inside Claude Code, invoke the skill:
+/fhirbuilders-cohort:security-review
 
-# CC runs the skill: scans for secrets, API keys, PII in staged files
+# CC runs the skill: scans for leaked secrets, API keys, and PHI in your changes
 # Output: list of findings with file:line references`,
       },
       {
-        title: "Minimal custom skill file",
+        title: "Minimal custom skill (directory + SKILL.md)",
         lang: "markdown",
-        code: `# fhir-check
+        code: `---
+name: fhir-check
+description: Check that every .json file in the project is a valid FHIR resource. Use before committing FHIR fixtures.
+---
 
 You are checking FHIR resource validity. When invoked:
 
@@ -123,11 +127,11 @@ You are checking FHIR resource validity. When invoked:
 2. For each file, check that it has a resourceType field
 3. Report any files missing resourceType with their path
 4. If all files are valid, print "All FHIR resources valid ✓"`,
-        note: "Save as `.claude/skills/fhir-check.md`. Invoke with `/fhir-check`.",
+        note: "Save as `.claude/skills/fhir-check/SKILL.md`. Invoke with `/fhir-check`.",
       },
     ],
     tryIt:
-      "Run `/security-review` in your project. If it fires without an error, your skill pack is installed correctly. If it fails, check that the skill file exists in `.claude/skills/`.",
+      "Run `/fhirbuilders-cohort:security-review` in your project. If it fires without an error, the plugin is installed correctly. If it's missing, run `claude plugin list` in your terminal to confirm `fhirbuilders-cohort` is enabled.",
     docs: [
       { label: "Claude Code skills", href: "https://docs.anthropic.com/en/docs/claude-code/skills" },
       { label: "Slash commands", href: "https://docs.anthropic.com/en/docs/claude-code/slash-commands" },
