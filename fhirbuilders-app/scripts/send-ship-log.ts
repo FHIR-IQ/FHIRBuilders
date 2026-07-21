@@ -29,6 +29,7 @@ const ISSUE = {
     "Gail Hamilton (Velox Metadata) shipped the most complete build of the cohort so far: a web app that connects to her own Medplum instance and runs PIQI data quality tests against 50 patients she deliberately messed up. Pluggable test architecture, an MCP server on top, all built with Claude Code.",
     "Michael Campbell (Indicina) seeded the shared sandbox everyone builds on - 100 synthetic patients with US Core data - and is now organizing an informal study group on the side. Nobody asked him to. That's the kind of room this is.",
     "This week: Session 4 (Wed Jul 8) is open build time. Demo Day is Wed Jul 15 - live demos of everything Cohort 00 built in six weeks.",
+    "One more thing worth your time: HealthClaw Guardrails is now open for community testing. It's the open-source security layer between AI agents and clinical data - PHI redaction, immutable audit, step-up auth - MIT licensed, 29 MCP tools, and you can try the hosted demo in 60 seconds without installing anything. If you can break it, that's a contribution: https://github.com/aks129/HealthClawGuardrails/issues/184",
     "And the big one: Cohort 01 applications are open. Six weeks, 20 seats, application only, starts late August. The FHIR + AI masterclass nobody else is teaching.",
   ],
   cta: {
