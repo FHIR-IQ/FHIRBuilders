@@ -18,7 +18,7 @@ export function ApplyForm() {
     orgRole: "",
     building: "",
     referredBy: "",
-    demoDayInvite: true,
+    keepMePosted: true,
   });
 
   async function submit(e: React.FormEvent) {
@@ -50,8 +50,8 @@ export function ApplyForm() {
         <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-emerald-600" />
         <p className="font-semibold text-slate-900">Application in.</p>
         <p className="mt-1 text-sm text-slate-600">
-          We review on a rolling basis and reply within a few days. If you asked for a Demo Day
-          invite, the link comes by email before Jul 15.
+          We review on a rolling basis and reply within a few days. If you opted into updates,
+          the weekly ship log starts arriving in your inbox.
         </p>
       </div>
     );
@@ -132,12 +132,12 @@ export function ApplyForm() {
         <input
           type="checkbox"
           className="mt-0.5 h-4 w-4 rounded border-slate-300 text-rose-600"
-          checked={form.demoDayInvite}
-          onChange={(e) => setForm({ ...form, demoDayInvite: e.target.checked })}
+          checked={form.keepMePosted}
+          onChange={(e) => setForm({ ...form, keepMePosted: e.target.checked })}
         />
         <span>
-          Invite me to watch Cohort 00 Demo Day live (Wed Jul 15, 6:30 PM ET) - free, no
-          commitment
+          Send me the weekly ship log while I decide - what the community is actually building,
+          one short email a week
         </span>
       </label>
 

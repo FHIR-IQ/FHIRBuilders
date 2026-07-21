@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, email, orgRole, building, referredBy, demoDayInvite } = body;
+    const { name, email, orgRole, building, referredBy, keepMePosted } = body;
 
     if (!name || !email || !building) {
       return NextResponse.json(
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       `name: ${String(name).slice(0, 120)}`,
       orgRole ? `org/role: ${String(orgRole).slice(0, 200)}` : null,
       referredBy ? `referred by: ${String(referredBy).slice(0, 120)}` : null,
-      `demo day invite (Jul 15): ${demoDayInvite ? "yes" : "no"}`,
+      `ship log opt-in: ${keepMePosted ? "yes" : "no"}`,
     ]
       .filter(Boolean)
       .join("\n");

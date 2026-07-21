@@ -181,12 +181,22 @@ export default function Cohort01Page() {
               <div className="mb-1 flex items-center gap-2">
                 <CalendarClock className="h-4 w-4 text-slate-500" />
                 <span className="font-semibold text-slate-900">
-                  Not sure? Watch Cohort 00 Demo Day first.
+                  Not sure? Try the stack for free first.
                 </span>
               </div>
               <p className="text-sm text-slate-600">
-                Wed Jul 15, 6:30 PM ET. Live demos of what Cohort 00 built in six weeks. Free —
-                check the box in the application and the invite comes by email.
+                HealthClaw Guardrails — the open-source layer this community builds on — has a
+                hosted demo you can test in 60 seconds, no install.{" "}
+                <a
+                  href="https://github.com/aks129/HealthClawGuardrails/issues/184"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-slate-900"
+                >
+                  Take the community test drive
+                </a>
+                , or check the box in the application to get the weekly ship log while you
+                decide.
               </p>
             </div>
           </CardContent>
