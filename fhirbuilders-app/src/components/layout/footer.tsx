@@ -4,74 +4,96 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Github } from "lucide-react";
 
+const COLUMNS = [
+  {
+    label: "Build",
+    links: [
+      { title: "Sandbox", href: "/sandbox/demo" },
+      { title: "Agent Skills", href: "/openclaw" },
+      { title: "MCP", href: "/mcp" },
+      { title: "Projects", href: "/projects" },
+    ],
+  },
+  {
+    label: "Learn",
+    links: [
+      { title: "Wiki", href: "/wiki" },
+      { title: "Problems", href: "/problems" },
+      { title: "Learn", href: "/learn" },
+    ],
+  },
+  {
+    label: "Cohort",
+    links: [
+      { title: "Cohort 01", href: "/cohort-01" },
+      { title: "Enroll", href: "/cohort-01#enroll" },
+    ],
+  },
+];
+
 export function Footer() {
   const pathname = usePathname();
 
-  // Mirror header: cohort routes own their own chrome.
-  if (pathname?.startsWith("/cohort")) return null;
+  // Mirror header: cohort member routes own their own chrome.
+  if (pathname?.startsWith("/cohort/")) return null;
 
   return (
-    <footer className="border-t bg-muted/30">
-      <div className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          {/* Brand */}
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-primary-foreground font-bold text-xs">
-                FB
-              </div>
-              <span className="font-semibold">FHIRBuilders</span>
+    <footer className="ed-surface border-t border-e-line bg-e-paper">
+      <div className="container py-16">
+        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          {/* Masthead + line */}
+          <div>
+            <Link href="/" className="flex items-baseline gap-0.5">
+              <span className="ed-display text-xl text-e-ink">Healthcare AI Builders</span>
+              <span className="text-xl leading-none text-e-accent">.</span>
             </Link>
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              The home for FHIR builders
-            </span>
+            <p className="mt-3 max-w-xs text-sm text-e-ink-soft">
+              A build cohort for healthcare AI on real FHIR data. Twelve weeks, weekly demos, your
+              own agents.
+            </p>
           </div>
 
-          {/* Links — mirror primary nav */}
-          <div className="flex items-center gap-6 text-sm">
-            <Link href="/problems" className="text-muted-foreground hover:text-foreground transition-colors">
-              Problems
-            </Link>
-            <Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
-              Projects
-            </Link>
-            <Link href="/mcp" className="text-muted-foreground hover:text-foreground transition-colors">
-              MCP
-            </Link>
-            <Link href="/openclaw" className="text-muted-foreground hover:text-foreground transition-colors">
-              Agent Skills
-            </Link>
-            <Link href="/sandbox/demo" className="text-muted-foreground hover:text-foreground transition-colors">
-              Sandbox
-            </Link>
-            <Link href="/wiki" className="text-muted-foreground hover:text-foreground transition-colors">
-              Wiki
-            </Link>
-            <Link href="/learn" className="text-muted-foreground hover:text-foreground transition-colors">
-              Learn
-            </Link>
-            <a
-              href="https://github.com/fhirbuilders"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-            >
-              <Github className="h-4 w-4" />
-              <span className="hidden sm:inline">GitHub</span>
-            </a>
-          </div>
+          {COLUMNS.map((col) => (
+            <div key={col.label}>
+              <div className="ed-kicker mb-4">{col.label}</div>
+              <ul className="space-y-2.5">
+                {col.links.map((l) => (
+                  <li key={l.title}>
+                    <Link
+                      href={l.href}
+                      className="text-sm text-e-ink-soft transition-colors hover:text-e-ink"
+                    >
+                      {l.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        {/* Legal links + bottom */}
-        <div className="mt-6 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>Open source under MIT License. Built for the FHIR community.</span>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">
+        {/* Baseline */}
+        <div className="mt-14 flex flex-col items-start justify-between gap-3 border-t border-e-line pt-6 text-xs text-e-ink-faint sm:flex-row sm:items-center">
+          <span className="font-mono">FHIR IQ · Built for the FHIR community · MIT licensed</span>
+          <div className="flex items-center gap-5">
+            <Link href="/privacy" className="transition-colors hover:text-e-ink">
               Privacy
             </Link>
-            <Link href="/security" className="hover:text-foreground transition-colors">
+            <Link href="/terms" className="transition-colors hover:text-e-ink">
+              Terms
+            </Link>
+            <Link href="/security" className="transition-colors hover:text-e-ink">
               Security
             </Link>
+            <a
+              href="https://github.com/aks129/HealthClawGuardrails"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 transition-colors hover:text-e-ink"
+            >
+              <Github className="h-3.5 w-3.5" />
+              GitHub
+            </a>
           </div>
         </div>
       </div>

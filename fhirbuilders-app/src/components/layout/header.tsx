@@ -13,118 +13,90 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  FlaskConical,
-  LogOut,
-  User,
-  LayoutDashboard,
-  Menu,
-  FolderOpen,
-  BookOpen,
-  BookOpenCheck,
-  Lightbulb,
-  Sparkles,
-  Users,
-  Wrench,
-} from "lucide-react";
+import { LogOut, User, LayoutDashboard, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-// Navigation - color-coded by section category
+// Monochrome editorial nav — no icons, no per-item colors. Order = importance.
 const navigation = [
-  { title: "Problems", href: "/problems", icon: Lightbulb, color: "text-rose-600 hover:text-rose-700" },
-  { title: "Projects", href: "/projects", icon: FolderOpen, color: "text-teal-600 hover:text-teal-700" },
-  { title: "MCP", href: "/mcp", icon: Wrench, color: "text-blue-600 hover:text-blue-700" },
-  { title: "Agent Skills", href: "/openclaw", icon: Sparkles, color: "text-amber-600 hover:text-amber-700" },
-  { title: "Sandbox", href: "/sandbox/demo", icon: FlaskConical, color: "text-blue-600 hover:text-blue-700" },
-  { title: "Wiki", href: "/wiki", icon: BookOpenCheck, color: "text-violet-600 hover:text-violet-700" },
-  { title: "Learn", href: "/learn", icon: BookOpen, color: "text-amber-600 hover:text-amber-700" },
-  // Cohort — always visible. Routing handled by /cohort/page.tsx:
-  //   * signed-in cohort member → redirects to /cohort/cohort-00
-  //   * everyone else → public landing page with waitlist
-  { title: "Cohort", href: "/cohort", icon: Users, color: "text-fuchsia-600 hover:text-fuchsia-700" },
+  { title: "Cohort", href: "/cohort-01" },
+  { title: "Sandbox", href: "/sandbox/demo" },
+  { title: "Agent Skills", href: "/openclaw" },
+  { title: "MCP", href: "/mcp" },
+  { title: "Projects", href: "/projects" },
+  { title: "Problems", href: "/problems" },
+  { title: "Wiki", href: "/wiki" },
 ];
 
 export function Header() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
 
-  // Cohort routes own their own chrome (left sidebar shell).
-  if (pathname?.startsWith("/cohort")) return null;
+  // Cohort member routes own their own chrome (left sidebar shell).
+  if (pathname?.startsWith("/cohort/")) return null;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded bg-primary text-primary-foreground font-bold text-sm">
-              HA
-            </div>
-            <span className="font-semibold hidden sm:inline-block">Healthcare AI Builders</span>
-          </Link>
+    <header className="ed-surface sticky top-0 z-50 w-full border-b border-e-line bg-e-paper/85 backdrop-blur supports-[backdrop-filter]:bg-e-paper/70">
+      <div className="container flex h-16 items-center justify-between gap-6">
+        {/* Masthead wordmark */}
+        <Link href="/" className="flex shrink-0 items-baseline gap-0.5">
+          <span className="ed-display text-lg text-e-ink">Healthcare AI Builders</span>
+          <span className="text-lg leading-none text-e-accent">.</span>
+        </Link>
 
-          {/* Desktop Navigation - color-coded by section */}
-          <nav className="hidden md:flex items-center gap-4">
-            {navigation.map((item) => (
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-7 lg:flex">
+          {navigation.map((item) => {
+            const active =
+              item.href === "/cohort-01"
+                ? pathname?.startsWith("/cohort-01")
+                : pathname?.startsWith(item.href);
+            return (
               <Link
                 key={item.title}
                 href={item.href}
-                className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${item.color ?? "text-muted-foreground hover:text-foreground"}`}
+                className={`group relative py-1 text-sm transition-colors ${
+                  active ? "text-e-ink" : "text-e-ink-soft hover:text-e-ink"
+                }`}
               >
-                <item.icon className="h-4 w-4" />
                 {item.title}
+                <span
+                  className={`absolute -bottom-0.5 left-0 h-px bg-e-accent transition-all duration-300 ${
+                    active ? "w-full" : "w-0 group-hover:w-full"
+                  }`}
+                />
               </Link>
-            ))}
-          </nav>
-        </div>
+            );
+          })}
+        </nav>
 
-        {/* Mobile Navigation */}
-        <Sheet>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Menu className="h-4 w-4" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[250px]">
-            <nav className="flex flex-col space-y-4 mt-8">
-              {navigation.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="flex items-center gap-2 py-2 text-foreground"
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.title}
-                </Link>
-              ))}
-            </nav>
-          </SheetContent>
-        </Sheet>
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          <Link
+            href="/cohort-01"
+            className="hidden items-center gap-1.5 bg-e-ink px-4 py-2 text-sm font-medium text-e-paper transition-colors hover:bg-e-accent sm:inline-flex"
+          >
+            Enroll <span aria-hidden>→</span>
+          </Link>
 
-        {/* Auth Section */}
-        <div className="flex items-center gap-2">
           {status === "loading" ? (
-            <div className="h-7 w-7 animate-pulse rounded-full bg-muted" />
+            <div className="h-8 w-8 animate-pulse rounded-full bg-e-line" />
           ) : session?.user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-7 w-7 rounded-full">
-                  <Avatar className="h-7 w-7">
+                <button className="relative h-8 w-8 rounded-full outline-none ring-e-accent focus-visible:ring-2">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
-                    <AvatarFallback className="text-xs">
+                    <AvatarFallback className="bg-e-accent-soft text-xs text-e-accent">
                       {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
-                </Button>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48" align="end">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">{session.user.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {session.user.email}
-                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{session.user.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -148,12 +120,42 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button size="sm" asChild>
-              <Link href="/login">
-                Sign in
-              </Link>
-            </Button>
+            <Link
+              href="/login"
+              className="text-sm text-e-ink-soft transition-colors hover:text-e-ink"
+            >
+              Sign in
+            </Link>
           )}
+
+          {/* Mobile menu */}
+          <Sheet>
+            <SheetTrigger asChild className="lg:hidden">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-e-ink">
+                <Menu className="h-4 w-4" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[260px] border-e-line bg-e-paper">
+              <nav className="mt-10 flex flex-col gap-1">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    className="border-b border-e-line py-3 text-e-ink-soft transition-colors hover:text-e-ink"
+                  >
+                    {item.title}
+                  </Link>
+                ))}
+                <Link
+                  href="/cohort-01"
+                  className="mt-4 inline-flex items-center justify-center gap-1.5 bg-e-ink px-4 py-2.5 text-sm font-medium text-e-paper hover:bg-e-accent"
+                >
+                  Enroll <span aria-hidden>→</span>
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
