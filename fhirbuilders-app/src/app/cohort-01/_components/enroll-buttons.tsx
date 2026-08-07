@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import type { CohortPlan } from "@/lib/stripe";
 
 type Props = { repeat: boolean };
 
+// Rendered on the dark (ink) enroll band, so buttons are light-on-dark.
 export function EnrollButtons({ repeat }: Props) {
   const [loading, setLoading] = useState<CohortPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,46 +34,47 @@ export function EnrollButtons({ repeat }: Props) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button
+        <button
           onClick={() => enroll("full")}
           disabled={loading !== null}
-          className="flex-1"
-          size="lg"
+          className="inline-flex flex-1 items-center justify-center gap-2 bg-e-paper px-6 py-3.5 text-base font-medium text-e-ink transition-colors hover:bg-e-accent hover:text-e-paper disabled:opacity-60"
         >
           {loading === "full" ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Starting checkout…
+              <Loader2 className="h-4 w-4 animate-spin" /> Starting checkout…
             </>
           ) : (
             <>Enroll — pay for all 12 weeks</>
           )}
-        </Button>
-        <Button
+        </button>
+        <button
           onClick={() => enroll("weekly")}
           disabled={loading !== null}
-          variant="outline"
-          className="flex-1"
-          size="lg"
+          className="inline-flex flex-1 items-center justify-center gap-2 border px-6 py-3.5 text-base text-e-paper transition-colors hover:border-e-paper disabled:opacity-60"
+          style={{ borderColor: "var(--e-line-strong)" }}
         >
           {loading === "weekly" ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Starting checkout…
+              <Loader2 className="h-4 w-4 animate-spin" /> Starting checkout…
             </>
           ) : (
             <>Enroll — pay weekly</>
           )}
-        </Button>
+        </button>
       </div>
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+
+      {error && <p className="text-sm text-red-300">{error}</p>}
+
       {repeat && (
-        <p className="text-sm font-medium text-emerald-700">
-          ✓ You&apos;re a Cohort 00 builder — your returning-builder rate is applied automatically
-          at checkout.
+        <p className="text-sm font-medium" style={{ color: "var(--e-accent-2)" }}>
+          You&apos;re a Cohort 00 builder. Your returning-builder rate is applied automatically at
+          checkout.
         </p>
       )}
-      <p className="text-[11px] text-slate-500">
+
+      <p className="text-[11px]" style={{ color: "#8b949a" }}>
         Secure checkout via Stripe. Weekly plan cancels anytime from your receipt. Sign in first if
         you&apos;re a returning builder so your discount applies.
       </p>

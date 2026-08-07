@@ -6,8 +6,24 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-archivo);
+  --font-serif: var(--font-fraunces);
+  --font-mono: var(--font-plex-mono);
+
+  /* Editorial design system (the "e-" scale). Grounded palette: cool paper,
+     cool near-black ink, one deep petrol accent, hairline lines, a rare gold
+     for numeric emphasis. Used across the redesigned marketing surface. */
+  --color-e-paper: var(--e-paper);
+  --color-e-paper-2: var(--e-paper-2);
+  --color-e-ink: var(--e-ink);
+  --color-e-ink-soft: var(--e-ink-soft);
+  --color-e-ink-faint: var(--e-ink-faint);
+  --color-e-line: var(--e-line);
+  --color-e-line-strong: var(--e-line-strong);
+  --color-e-accent: var(--e-accent);
+  --color-e-accent-2: var(--e-accent-2);
+  --color-e-accent-soft: var(--e-accent-soft);
+  --color-e-gold: var(--e-gold);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -50,6 +66,19 @@
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+
+  /* Editorial tokens — light (the committed world; app has no theme toggle). */
+  --e-paper: #f4f5f6;
+  --e-paper-2: #ffffff;
+  --e-ink: #16191c;
+  --e-ink-soft: #51585f;
+  --e-ink-faint: #878f96;
+  --e-line: #e2e6e9;
+  --e-line-strong: #c8cfd4;
+  --e-accent: #0b5a63;
+  --e-accent-2: #094851;
+  --e-accent-soft: #e6f0f0;
+  --e-gold: #8a5e12;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -84,6 +113,19 @@
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+
+  /* Editorial tokens — dark (kept correct for a future theme toggle). */
+  --e-paper: #0e1416;
+  --e-paper-2: #131b1e;
+  --e-ink: #e9edee;
+  --e-ink-soft: #99a4aa;
+  --e-ink-faint: #68737a;
+  --e-line: #212e32;
+  --e-line-strong: #33454b;
+  --e-accent: #5cb6c1;
+  --e-accent-2: #7fccd5;
+  --e-accent-soft: #10262a;
+  --e-gold: #c9a24d;
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -133,5 +175,53 @@
     .container {
       padding-inline: 2.5rem;
     }
+  }
+}
+
+/* ── Editorial primitives ─────────────────────────────────────────────────── */
+
+/* Serif display uses optical-size-friendly settings + tight tracking. */
+.ed-display {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-wrap: balance;
+  font-feature-settings: "liga" 1, "dlig" 1;
+}
+
+/* Mono eyebrow/label used for kickers, data, and FHIR references. */
+.ed-kicker {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--e-ink-faint);
+}
+
+/* Staggered load reveal — one orchestrated moment, not scattered effects. */
+@keyframes edRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ed-rise {
+  animation: edRise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Petrol selection on the editorial surface. */
+.ed-surface ::selection {
+  background: var(--e-accent);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ed-rise {
+    animation: none;
   }
 }

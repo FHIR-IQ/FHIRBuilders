@@ -1,978 +1,212 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { analytics } from "@/lib/analytics";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  FlaskConical,
-  Zap,
-  Clock,
-  Code2,
-  ArrowRight,
-  Loader2,
-  Database,
-  Users,
-  Sparkles,
-  Lightbulb,
-  CheckCircle,
-  Stethoscope,
-  Pill,
-  Activity,
-  Building2,
-  BookOpen,
-  Wand2,
-  Bot,
-  Wrench,
-  Globe,
-  MessageCircle,
-  Rss,
-  Linkedin,
-  ArrowUp,
-  ExternalLink,
-  FolderOpen,
-  Heart,
-} from "lucide-react";
 
-// ── Vega-inspired categorical palette (section-level color coding) ──────────
-// Build with AI → violet  |  Sandbox → blue  |  Projects → teal  |  Learn → amber
-const SECTION_COLORS = {
-  openclaw: {
-    badge: "bg-violet-100 text-violet-700 border-violet-200",
-    accent: "text-violet-600",
-    border: "border-violet-200",
-    bg: "bg-violet-50",
-    icon: "text-violet-500",
-  },
-  sandbox: {
-    badge: "bg-blue-100 text-blue-700 border-blue-200",
-    accent: "text-blue-600",
-    border: "border-blue-200",
-    bg: "bg-blue-50",
-    icon: "text-blue-500",
-  },
-  projects: {
-    badge: "bg-teal-100 text-teal-700 border-teal-200",
-    accent: "text-teal-600",
-    border: "border-teal-200",
-    bg: "bg-teal-50",
-    icon: "text-teal-500",
-  },
-  learn: {
-    badge: "bg-amber-100 text-amber-700 border-amber-200",
-    accent: "text-amber-600",
-    border: "border-amber-200",
-    bg: "bg-amber-50",
-    icon: "text-amber-500",
-  },
+export const metadata: Metadata = {
+  title: "Healthcare AI Builders — Ship healthcare AI on real FHIR",
+  description:
+    "A paid, 12-week build cohort for healthcare AI on real FHIR data. Weekly demos, your own agents, live problem-solving. Starts late August.",
 };
 
-const sampleQueries = [
-  { label: "Get all patients", query: "GET /Patient" },
-  { label: "Search by name", query: "GET /Patient?name=Smith" },
-  { label: "Recent observations", query: "GET /Observation?_sort=-date&_count=10" },
-  { label: "Active medications", query: "GET /MedicationRequest?status=active" },
+const ORGS = [
+  "Bayada Home Health",
+  "Myriad Genetics",
+  "LivMor",
+  "Indicina",
+  "Lanyard Health",
+  "Centric Healthcare",
+  "Virginia Medicaid",
+  "HitPeak Advisors",
+  "Velox Metadata",
 ];
 
-const stats = [
-  { value: "100", label: "Synthetic Patients", icon: Users },
-  { value: "R4", label: "FHIR Version", icon: Database },
-  { value: "30s", label: "Time to First Query", icon: Clock },
-];
-
-const USE_CASES = [
+const BUILT = [
   {
-    problem: "Clinicians waste 20+ minutes per patient gathering scattered data",
-    solution: "Patient Dashboard",
-    description: "Unified view pulling Patient, Observations, Conditions, and Medications into one screen",
-    icon: Activity,
-    resources: ["Patient", "Observation", "Condition", "MedicationRequest"],
-    difficulty: "Beginner",
+    name: "Gail Hamilton",
+    org: "Velox Metadata",
+    body: "Built a FHIR data-quality app on her own Medplum server: 50 patients, 10% deliberately corrupted, pluggable PIQI tests, and an MCP server on top so an agent can query the results in plain language. All with Claude Code.",
   },
   {
-    problem: "Medication errors from incomplete med lists cost $42B/year",
-    solution: "Medication Reconciliation",
-    description: "AI-powered tool that compares meds from different sources and flags conflicts",
-    icon: Pill,
-    resources: ["MedicationRequest", "MedicationStatement", "Patient"],
-    difficulty: "Intermediate",
+    name: "Rick Moore",
+    org: "MTC Group",
+    body: "Went from never opening a terminal in May to three working apps in July, and a security review of an open-source guardrail project sharper than most vendors would write.",
   },
   {
-    problem: "Patients can't access their own health records easily",
-    solution: "Patient Portal",
-    description: "Self-service app for patients to view results, schedule visits, message providers",
-    icon: Users,
-    resources: ["Patient", "Observation", "Appointment", "Communication"],
-    difficulty: "Intermediate",
-  },
-  {
-    problem: "Care teams don't know when high-risk patients are admitted",
-    solution: "ADT Notifications",
-    description: "Real-time alerts when patients are admitted, discharged, or transferred",
-    icon: Building2,
-    resources: ["Encounter", "Patient", "Subscription"],
-    difficulty: "Advanced",
+    name: "Michael Campbell",
+    org: "Indicina",
+    body: "Seeded the shared FHIR sandbox the whole cohort built on, then organized his own study group on the side. Nobody asked him to. That is the kind of room this is.",
   },
 ];
 
-const PERSONAS = [
+const HOW = [
   {
-    title: "Healthcare Leader",
-    description: "Validate your idea with real FHIR data before committing resources",
-    cta: "Learn what FHIR can solve",
-    href: "/learn",
-    icon: Stethoscope,
-    color: SECTION_COLORS.learn,
+    n: "01",
+    title: "A demo every Friday",
+    body: "You show what you shipped this week, live and recorded. Solo or with your team. The best clips go on LinkedIn with your name on them.",
   },
   {
-    title: "Developer",
-    description: "Skip infrastructure setup and start building your integration today",
-    cta: "Create sandbox",
-    href: "/sandbox/demo",
-    icon: Code2,
-    color: SECTION_COLORS.sandbox,
+    n: "02",
+    title: "You and your agents",
+    body: "Bring Claude Code, Codex, your own MCP servers. We build with agents, not despite them. Bring your own LLM account.",
   },
   {
-    title: "AI Builder",
-    description: "Browse reusable Claude agent skills for FHIR — from clinical summarization to quality measure evaluation",
-    cta: "Explore Agent Skills",
-    href: "/openclaw",
-    icon: Sparkles,
-    color: SECTION_COLORS.openclaw,
+    n: "03",
+    title: "Problems solved live",
+    body: "Free-form working sessions, not lectures. Bring what is blocking you and we unblock it in the room. Stuck is part of the format.",
+  },
+  {
+    n: "04",
+    title: "The room stays on",
+    body: "Between Fridays the cohort lives on Buzz, where you share progress, trade fixes, and get unstuck without waiting for the call.",
   },
 ];
-
-const COMMUNITY_LINKS = [
-  {
-    title: "FHIR Zulip Chat",
-    description: "The official FHIR community chat — 6,000+ implementers",
-    href: "https://chat.fhir.org",
-    icon: MessageCircle,
-    color: "text-blue-500",
-  },
-  {
-    title: "FHIR Goats on LinkedIn",
-    description: "LinkedIn group for FHIR practitioners and builders",
-    href: "https://www.linkedin.com/groups/12698335/",
-    icon: Linkedin,
-    color: "text-sky-600",
-  },
-  {
-    title: "FHIR Podcast",
-    description: "Weekly conversations with FHIR builders and healthcare innovators",
-    href: "https://fhircast.org/podcast",
-    icon: Rss,
-    color: "text-orange-500",
-  },
-  {
-    title: "FHIRBuilders Substack",
-    description: "Deep dives, patterns, and lessons from building on FHIR",
-    href: "https://fhirbuilders.substack.com",
-    icon: Globe,
-    color: "text-green-600",
-  },
-];
-
-interface FeaturedProject {
-  id: string;
-  title: string;
-  description: string;
-  artifactType?: string | null;
-  upvoteCount: number;
-  forkCount?: number;
-  verified?: boolean;
-  repoUrl?: string | null;
-  authorName: string;
-}
-
-interface FeaturedProblem {
-  id: string;
-  title: string;
-  category: string;
-  status: string;
-  supportCount: number;
-  postedByRole: string;
-}
-
-interface ActivityStats {
-  projectsThisWeek: number;
-  problemsThisWeek: number;
-  totalUpvotes: number;
-}
-
-const PROBLEM_CATEGORY_COLORS: Record<string, string> = {
-  "Care Coordination": "bg-blue-100 text-blue-800",
-  "Medication Safety": "bg-red-100 text-red-800",
-  "Patient Access": "bg-teal-100 text-teal-800",
-  "Quality Measurement": "bg-purple-100 text-purple-800",
-  "Data Access": "bg-amber-100 text-amber-800",
-  "Workflow Automation": "bg-orange-100 text-orange-800",
-  "Diagnostics": "bg-pink-100 text-pink-800",
-  "Other": "bg-gray-100 text-gray-800",
-};
-
-const ARTIFACT_COLORS: Record<string, string> = {
-  "Agent":        "bg-violet-100 text-violet-800",
-  "MCP Tool":     "bg-blue-100 text-blue-800",
-  "OpenClaw Skill": "bg-amber-100 text-amber-800",
-  "App":          "bg-green-100 text-green-800",
-  "CQL Measure":  "bg-teal-100 text-teal-800",
-  "FHIR IG":      "bg-pink-100 text-pink-800",
-};
-
-// ── OpenClaw mock screenshot (inline SVG-style terminal UI) ──────────────────
-function OpenClawScreenshot() {
-  return (
-    <div className="rounded-xl border shadow-lg overflow-hidden text-left">
-      {/* Window chrome */}
-      <div className="bg-zinc-800 px-4 py-2.5 flex items-center gap-2">
-        <div className="h-3 w-3 rounded-full bg-red-500/80" />
-        <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
-        <div className="h-3 w-3 rounded-full bg-green-500/80" />
-        <span className="ml-3 text-xs text-zinc-400 font-mono">Build with AI — FHIRBuilders</span>
-      </div>
-      {/* Prompt area */}
-      <div className="bg-zinc-900 px-5 py-4 border-b border-zinc-700">
-        <div className="text-xs text-zinc-500 mb-2 font-mono">Prompt</div>
-        <div className="text-sm text-violet-300 font-mono">
-          &quot;Build a medication reconciliation dashboard that flags drug interactions using FHIR MedicationRequest resources&quot;
-        </div>
-      </div>
-      {/* Output area */}
-      <div className="bg-zinc-950 px-5 py-4 space-y-2.5">
-        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
-          <span className="text-green-400">✓</span>
-          <span>Detected FHIR resources:</span>
-          <span className="text-blue-300">MedicationRequest, Patient, AllergyIntolerance</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
-          <span className="text-green-400">✓</span>
-          <span>Generating Next.js app with Medplum SDK...</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
-          <span className="text-green-400">✓</span>
-          <span>Claude analyzed 847 medication interaction patterns</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
-          <span className="text-amber-400">→</span>
-          <span className="text-zinc-300">Generated 12 files · TypeScript + React · Ready to deploy</span>
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-xs font-mono">
-          {["pages/index.tsx", "lib/fhir.ts", "components/MedCard.tsx", "lib/interactions.ts", "api/analyze.ts", "package.json"].map((f) => (
-            <div key={f} className="text-zinc-500 flex items-center gap-1">
-              <span className="text-zinc-600">📄</span> {f}
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Action bar */}
-      <div className="bg-zinc-900 px-5 py-3 flex items-center gap-3 border-t border-zinc-700">
-        <div className="h-6 px-3 rounded bg-violet-600 text-xs text-white font-medium flex items-center">Download .zip</div>
-        <div className="h-6 px-3 rounded bg-zinc-700 text-xs text-zinc-300 font-medium flex items-center">View Code</div>
-        <div className="h-6 px-3 rounded bg-zinc-700 text-xs text-zinc-300 font-medium flex items-center">Deploy to Vercel</div>
-      </div>
-    </div>
-  );
-}
-
-// ── Sandbox mock screenshot ──────────────────────────────────────────────────
-function SandboxScreenshot() {
-  return (
-    <div className="rounded-xl border shadow-md overflow-hidden text-left">
-      <div className="bg-zinc-800 px-4 py-2.5 flex items-center gap-2">
-        <div className="h-3 w-3 rounded-full bg-red-500/80" />
-        <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
-        <div className="h-3 w-3 rounded-full bg-green-500/80" />
-        <span className="ml-3 text-xs text-zinc-400 font-mono">FHIR Sandbox — API Explorer</span>
-      </div>
-      <div className="bg-zinc-900 p-4 font-mono text-sm">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-green-400 text-xs">GET</span>
-          <span className="text-blue-300 text-xs">https://api.medplum.com/fhir/R4/MedicationRequest?status=active</span>
-        </div>
-        <div className="text-zinc-600 text-xs mb-2">Response · 200 OK · 47ms</div>
-        <pre className="text-xs text-zinc-400 overflow-hidden">
-{`{
-  "resourceType": "Bundle",
-  "type": "searchset",
-  "total": 8,
-  "entry": [{
-    "resource": {
-      "resourceType": "MedicationRequest",
-      "id": "med-101",
-      "status": "active",
-      "subject": { "reference": "Patient/john-smith" },
-      "medicationCodeableConcept": {
-        "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
-                     "code": "860975", "display": "Metformin 500mg" }]
-      }
-    }
-  }]
-}`}</pre>
-      </div>
-    </div>
-  );
-}
 
 export default function HomePage() {
-  const router = useRouter();
-  const [isCreating, setIsCreating] = useState(false);
-  const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
-  const [featuredProblems, setFeaturedProblems] = useState<FeaturedProblem[]>([]);
-  const [activity, setActivity] = useState<ActivityStats | null>(null);
-
-  useEffect(() => {
-    fetch("/api/projects?sort=trending")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.projects) setFeaturedProjects(data.projects.slice(0, 3));
-      })
-      .catch(() => {});
-
-    fetch("/api/problems?sort=popular")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.problems) setFeaturedProblems(data.problems.slice(0, 3));
-      })
-      .catch(() => {});
-
-    fetch("/api/activity")
-      .then((r) => r.json())
-      .then((data) => setActivity(data))
-      .catch(() => {});
-  }, []);
-
-  const handleCreateSandbox = async () => {
-    setIsCreating(true);
-    analytics.trackSandboxCreate();
-    analytics.trackCTA("create_sandbox", "homepage");
-    setTimeout(() => router.push("/sandbox/demo"), 1500);
-  };
-
   return (
-    <div className="flex flex-col">
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          HERO — Lead with OpenClaw (the "wow factor")
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden border-b bg-gradient-to-br from-violet-50 via-background to-blue-50">
-        <div className="container py-16 md:py-24">
-          <div className="mx-auto max-w-6xl">
-            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-              {/* Left — headline + CTAs */}
-              <div>
-                <Badge className="mb-5 bg-violet-100 text-violet-700 border-violet-200">
-                  <Sparkles className="mr-1 h-3 w-3" />
-                  The home for FHIR builders
-                </Badge>
-
-                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl leading-tight">
-                  The home for{" "}
-                  <span className="text-violet-600">FHIR builders</span>
-                </h1>
-
-                <p className="mt-4 text-lg text-muted-foreground max-w-xl">
-                  Clinicians post the problems. Builders ship the solutions.
-                  Investors find the teams. All working on the same mission.
-                </p>
-
-                <div className="mt-7 flex flex-col sm:flex-row gap-3 flex-wrap">
-                  <Button size="lg" className="h-12 px-7 bg-rose-600 hover:bg-rose-700 text-white" asChild>
-                    <Link href="/problems">
-                      <Lightbulb className="mr-2 h-5 w-5" />
-                      Browse Problems
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-12 px-7"
-                    onClick={handleCreateSandbox}
-                    disabled={isCreating}
-                  >
-                    {isCreating ? (
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    ) : (
-                      <FlaskConical className="mr-2 h-5 w-5" />
-                    )}
-                    Explore Sandbox
-                  </Button>
-                  <Button size="lg" variant="ghost" className="h-12 px-7 text-teal-700 hover:text-teal-800 hover:bg-teal-50" asChild>
-                    <Link href="/projects">
-                      <FolderOpen className="mr-2 h-5 w-5" />
-                      Browse the Community
-                    </Link>
-                  </Button>
-                </div>
-
-                {/* Live activity signal */}
-                {activity && (
-                  <div className="mt-5 text-sm text-muted-foreground">
-                    <span className="text-teal-600 font-medium">
-                      {activity.projectsThisWeek > 0 ? `↑ ${activity.projectsThisWeek} project${activity.projectsThisWeek !== 1 ? "s" : ""} shared this week` : ""}
-                    </span>
-                    {activity.projectsThisWeek > 0 && activity.problemsThisWeek > 0 && " · "}
-                    <span className="text-rose-500 font-medium">
-                      {activity.problemsThisWeek > 0 ? `${activity.problemsThisWeek} problem${activity.problemsThisWeek !== 1 ? "s" : ""} posted` : ""}
-                    </span>
-                    {(activity.projectsThisWeek > 0 || activity.problemsThisWeek > 0) && activity.totalUpvotes > 0 && " · "}
-                    <span className="text-muted-foreground">
-                      {activity.totalUpvotes > 0 ? `${activity.totalUpvotes} upvotes` : ""}
-                    </span>
-                  </div>
-                )}
-
-                <p className="mt-3 text-sm text-muted-foreground">
-                  No credit card. No signup required for sandbox.
-                </p>
-
-                {/* Section nav color keys */}
-                <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium">
-                  {[
-                    { label: "MCP Tools", color: "bg-blue-100 text-blue-700", href: "/mcp", icon: Wrench },
-                    { label: "Agent Skills", color: "bg-violet-100 text-violet-700", href: "/openclaw", icon: Sparkles },
-                    { label: "Sandbox", color: "bg-blue-100 text-blue-700", href: "/sandbox/demo", icon: FlaskConical },
-                    { label: "Community", color: "bg-teal-100 text-teal-700", href: "/projects", icon: FolderOpen },
-                    { label: "Learn", color: "bg-amber-100 text-amber-700", href: "/learn", icon: BookOpen },
-                  ].map((item) => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${item.color} hover:opacity-80 transition-opacity`}
-                    >
-                      <item.icon className="h-3 w-3" />
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right — OpenClaw mock screenshot */}
-              <div className="hidden lg:block">
-                <OpenClawScreenshot />
-              </div>
-            </div>
+    <div className="ed-surface bg-e-paper text-e-ink">
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="container pt-20 pb-16 lg:pt-28 lg:pb-20">
+        <div className="max-w-4xl">
+          <div className="ed-kicker ed-rise" style={{ animationDelay: "0ms" }}>
+            Cohort 01 · 12 weeks · enrolling now
           </div>
-        </div>
-        <div className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          AGENTIC CALLOUT — violet accent
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="border-b bg-violet-50/50 py-12">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <div className="text-center mb-8">
-              <Badge className="mb-3 bg-violet-100 text-violet-700 border-violet-200">
-                <Bot className="mr-1 h-3 w-3" />
-                Agentic Healthcare
-              </Badge>
-              <h2 className="text-2xl font-bold">The agentic health stack is being built here</h2>
-              <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-                From MCP tools that connect Claude to FHIR APIs, to A2A agents that coordinate care —
-                the community is building the infrastructure for AI-native healthcare.
-              </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                {
-                  icon: Bot,
-                  title: "AI Agents",
-                  desc: "Autonomous agents that query FHIR APIs, execute CQL measures, and coordinate multi-step clinical workflows",
-                  color: "text-violet-500",
-                  bg: "bg-violet-100/60",
-                },
-                {
-                  icon: Wrench,
-                  title: "MCP Tools",
-                  desc: "Model Context Protocol tools that give Claude direct access to FHIR sandboxes, EHRs, and healthcare APIs",
-                  color: "text-blue-500",
-                  bg: "bg-blue-100/60",
-                },
-                {
-                  icon: Sparkles,
-                  title: "Claude Skills",
-                  desc: "Reusable Claude skills for clinical summarization, FHIR resource generation, and quality measure evaluation",
-                  color: "text-amber-500",
-                  bg: "bg-amber-100/60",
-                },
-              ].map((item) => (
-                <div key={item.title} className={`flex items-start gap-3 p-4 rounded-xl border ${item.bg}`}>
-                  <item.icon className={`h-6 w-6 mt-0.5 shrink-0 ${item.color}`} />
-                  <div>
-                    <h3 className="font-semibold text-sm">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center mt-6">
-              <Button variant="outline" className="border-violet-200 text-violet-700 hover:bg-violet-50" asChild>
-                <Link href="/projects">
-                  Browse agentic projects
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          MCP SECTION — blue accent
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="border-b bg-blue-50/40 py-14">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
-              <div>
-                <Badge className="mb-3 bg-blue-100 text-blue-700 border-blue-200">
-                  <Wrench className="mr-1 h-3 w-3" />
-                  Model Context Protocol
-                </Badge>
-                <h2 className="text-2xl font-bold">MCP tools for healthcare AI</h2>
-                <p className="text-muted-foreground mt-2 max-w-lg">
-                  Connect Claude and other AI models directly to FHIR APIs, EHR systems, and clinical databases via the Model Context Protocol.
-                </p>
-              </div>
-              <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50 shrink-0" asChild>
-                <Link href="/mcp">
-                  Browse all MCP tools
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                {
-                  title: "FHIR Server Access",
-                  desc: "Give Claude read/write access to any FHIR R4 server — query patients, create resources, run searches",
-                  badge: "FHIR R4",
-                  color: "border-blue-200 bg-white",
-                  badgeColor: "bg-blue-100 text-blue-700",
-                },
-                {
-                  title: "CQL Measure Evaluation",
-                  desc: "Run HEDIS and CMS quality measures against live patient data directly from a Claude conversation",
-                  badge: "Quality",
-                  color: "border-blue-200 bg-white",
-                  badgeColor: "bg-blue-100 text-blue-700",
-                },
-                {
-                  title: "EHR Integration",
-                  desc: "MCP tools for Epic, Cerner, and SMART on FHIR — launch from EHR context with patient already loaded",
-                  badge: "EHR",
-                  color: "border-blue-200 bg-white",
-                  badgeColor: "bg-blue-100 text-blue-700",
-                },
-              ].map((item) => (
-                <Link key={item.title} href="/mcp" className={`block p-4 rounded-xl border ${item.color} hover:shadow-sm transition-shadow`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-sm">{item.title}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${item.badgeColor}`}>{item.badge}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          FROM THE COMMUNITY — teal accent (C7: live trending feed)
-      ══════════════════════════════════════════════════════════════════════ */}
-      {featuredProjects.length > 0 && (
-        <section className="container py-12 border-b">
-          <div className="mx-auto max-w-5xl">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="h-5 w-1 rounded-full bg-teal-500" />
-                <div>
-                  <h2 className="text-xl font-bold">From the Community</h2>
-                  <p className="text-sm text-muted-foreground">Trending FHIR projects right now</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" className="text-teal-600 hover:text-teal-700" asChild>
-                <Link href="/projects">
-                  See all <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {featuredProjects.map((project) => (
-                <Link key={project.id} href={`/projects/${project.id}`}>
-                  <Card className="hover:border-teal-300 transition-colors cursor-pointer h-full">
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {project.artifactType && (
-                            <Badge variant="secondary" className={`text-xs ${ARTIFACT_COLORS[project.artifactType] ?? ""}`}>
-                              {project.artifactType}
-                            </Badge>
-                          )}
-                          {project.verified && (
-                            <span className="flex items-center gap-0.5 text-xs text-teal-600">
-                              <CheckCircle className="h-3 w-3" />
-                              Verified
-                            </span>
-                          )}
-                        </div>
-                        <span className="flex items-center gap-1 text-sm font-medium text-teal-600 shrink-0">
-                          <ArrowUp className="h-3.5 w-3.5" />
-                          {project.upvoteCount}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold text-sm mb-1 leading-snug">{project.title}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{project.description}</p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{project.authorName}</span>
-                        {(project.forkCount ?? 0) > 0 && (
-                          <span className="flex items-center gap-0.5">
-                            <ExternalLink className="h-3 w-3" />
-                            {project.forkCount} forks
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          PROBLEMS STRIP — rose accent (4A)
-      ══════════════════════════════════════════════════════════════════════ */}
-      {featuredProblems.length > 0 && (
-        <section className="container py-12 border-b">
-          <div className="mx-auto max-w-5xl">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="h-5 w-1 rounded-full bg-rose-500" />
-                <div>
-                  <h2 className="text-xl font-bold">Problems posted by clinicians, waiting for builders</h2>
-                  <p className="text-sm text-muted-foreground">The problems real healthcare workers live with every day</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700 shrink-0" asChild>
-                <Link href="/problems/new">
-                  Post yours <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {featuredProblems.map((problem) => (
-                <Link key={problem.id} href={`/problems/${problem.id}`}>
-                  <Card className="hover:border-rose-200 transition-colors cursor-pointer h-full">
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <Badge variant="secondary" className={`text-xs ${PROBLEM_CATEGORY_COLORS[problem.category] ?? "bg-gray-100 text-gray-700"}`}>
-                          {problem.category}
-                        </Badge>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ml-2 ${
-                          problem.status === "being-built" ? "bg-green-100 text-green-700" :
-                          problem.status === "solved" ? "bg-teal-100 text-teal-700" :
-                          "bg-gray-100 text-gray-600"
-                        }`}>
-                          {problem.status === "being-built" ? "Being Built" :
-                           problem.status === "solved" ? "Solved" : "Unclaimed"}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold text-sm mb-2 leading-snug">{problem.title}</h3>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
-                        <span className="truncate">{problem.postedByRole}</span>
-                        <span className="flex items-center gap-0.5 shrink-0 ml-2 text-rose-500">
-                          <Heart className="h-3 w-3" />
-                          {problem.supportCount}
-                        </span>
-                      </div>
-                      <div className="mt-3">
-                        <span className="text-xs text-rose-600 font-medium hover:underline">
-                          I&apos;m building this →
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-            <div className="text-right mt-4">
-              <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700" asChild>
-                <Link href="/problems">
-                  See all problems <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          SANDBOX SECTION — blue accent
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="border-b py-16">
-        <div className="container">
-          <div className="mx-auto max-w-5xl">
-            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-              <div>
-                <Badge className="mb-4 bg-blue-100 text-blue-700 border-blue-200">
-                  <FlaskConical className="mr-1 h-3 w-3" />
-                  FHIR Sandbox
-                </Badge>
-                <h2 className="text-3xl font-bold mb-4">
-                  FHIR data in{" "}
-                  <span className="text-blue-600">30 seconds</span>
-                </h2>
-                <p className="text-muted-foreground mb-6">
-                  Stop setting up infrastructure. Get a sandbox with 100 synthetic patients
-                  instantly. A real FHIR R4 endpoint you can query immediately.
-                </p>
-                <div className="flex flex-wrap gap-4 mb-6">
-                  {stats.map((stat) => (
-                    <div key={stat.label} className="flex items-center gap-2">
-                      <stat.icon className="h-4 w-4 text-blue-500" />
-                      <span className="font-bold text-blue-700">{stat.value}</span>
-                      <span className="text-sm text-muted-foreground">{stat.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={handleCreateSandbox}
-                  disabled={isCreating}
-                >
-                  {isCreating ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <FlaskConical className="mr-2 h-4 w-4" />
-                  )}
-                  Create Free Sandbox
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <p className="mt-2 text-xs text-muted-foreground">No credit card · No signup</p>
-              </div>
-              <div className="hidden lg:block">
-                <SandboxScreenshot />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          WHO IS THIS FOR — persona cards
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-muted/20 border-b py-16">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl font-bold text-center mb-2">Who is this for?</h2>
-            <p className="text-center text-muted-foreground mb-10">
-              Whether you're building, learning, or leading — we've got you covered
-            </p>
-            <div className="grid gap-6 md:grid-cols-3">
-              {PERSONAS.map((persona) => (
-                <Card key={persona.title} className={`border-2 ${persona.color.border} hover:shadow-md transition-shadow`}>
-                  <CardHeader>
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${persona.color.bg}`}>
-                      <persona.icon className={`h-5 w-5 ${persona.color.icon}`} />
-                    </div>
-                    <CardTitle className="text-lg">{persona.title}</CardTitle>
-                    <CardDescription className="text-sm">{persona.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="outline" className={`w-full border ${persona.color.border} ${persona.color.accent} hover:bg-white`} asChild>
-                      <Link href={persona.href}>
-                        {persona.cta}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          USE CASES — what can you build
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="container py-16 border-b">
-        <div className="mx-auto max-w-4xl">
-          <div className="flex items-center gap-3 mb-2 justify-center">
-            <div className="h-5 w-1 rounded-full bg-violet-500" />
-            <h2 className="text-2xl font-bold text-center">What can you build with FHIR?</h2>
-          </div>
-          <p className="text-center text-muted-foreground mb-10">
-            Real problems being solved by our community
+          <h1
+            className="ed-display ed-rise mt-5 text-[2.75rem] leading-[0.98] sm:text-6xl lg:text-7xl"
+            style={{ animationDelay: "80ms" }}
+          >
+            Ship healthcare AI
+            <br />
+            on <span className="text-e-accent">real FHIR</span>.
+          </h1>
+          <p
+            className="ed-rise mt-7 max-w-2xl text-lg text-e-ink-soft sm:text-xl"
+            style={{ animationDelay: "160ms" }}
+          >
+            A build cohort for people who make things. Twelve weeks on live patient data, your own
+            agents, and a demo every Friday. You leave with deployed work and the reel to prove it.
           </p>
-          <div className="space-y-4">
-            {USE_CASES.map((useCase, index) => (
-              <Card key={index}>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col md:flex-row md:items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Lightbulb className="h-4 w-4 text-amber-500" />
-                        <span className="text-sm font-medium text-amber-600">Problem</span>
-                      </div>
-                      <p className="text-muted-foreground mb-4">{useCase.problem}</p>
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium text-green-600">Solution: {useCase.solution}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{useCase.description}</p>
-                    </div>
-                    <div className="md:w-48 space-y-2 shrink-0">
-                      <Badge variant="outline">{useCase.difficulty}</Badge>
-                      <div className="text-xs text-muted-foreground">
-                        <strong>FHIR Resources:</strong>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {useCase.resources.map((r) => (
-                            <Badge key={r} variant="secondary" className="text-xs">{r}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="mt-8 text-center">
-            <Button variant="outline" className="border-teal-200 text-teal-700 hover:bg-teal-50" asChild>
-              <Link href="/projects">
-                See all community projects
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+          <div
+            className="ed-rise mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
+            style={{ animationDelay: "240ms" }}
+          >
+            <Link
+              href="/cohort-01"
+              className="inline-flex items-center justify-center gap-2 bg-e-ink px-6 py-3.5 text-base font-medium text-e-paper transition-colors hover:bg-e-accent"
+            >
+              Enroll in Cohort 01 <span aria-hidden>→</span>
+            </Link>
+            <a
+              href="#built"
+              className="inline-flex items-center justify-center gap-2 border border-e-line-strong px-6 py-3.5 text-base text-e-ink transition-colors hover:border-e-ink"
+            >
+              See what Cohort 00 built
+            </a>
           </div>
         </div>
-      </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          SAMPLE QUERIES — code preview
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="border-b bg-zinc-900 py-16">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl font-bold text-center text-white mb-2">
-              Start querying immediately
-            </h2>
-            <p className="text-center text-zinc-400 mb-10">
-              Your sandbox comes with sample queries ready to run
-            </p>
-            <Card className="overflow-hidden bg-zinc-950 border-zinc-800">
-              <CardContent className="p-0">
-                <div className="p-4 font-mono text-sm">
-                  <div className="flex items-center gap-2 text-zinc-500 mb-4">
-                    <div className="h-3 w-3 rounded-full bg-red-500" />
-                    <div className="h-3 w-3 rounded-full bg-yellow-500" />
-                    <div className="h-3 w-3 rounded-full bg-green-500" />
-                    <span className="ml-2 text-zinc-400">FHIR API Explorer</span>
-                  </div>
-                  <div className="space-y-3">
-                    {sampleQueries.map((q, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <span className="text-blue-400 text-xs">GET</span>
-                        <span className="text-zinc-300 text-xs">{q.query}</span>
-                        <span className="text-zinc-600 text-xs ml-auto">{q.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-6 pt-4 border-t border-zinc-800">
-                    <div className="text-zinc-500 text-xs mb-2">Response (200 OK)</div>
-                    <pre className="text-xs text-zinc-400 overflow-x-auto">{`{"resourceType":"Bundle","type":"searchset","total":100,"entry":[{"resource":{"resourceType":"Patient","id":"..."}}]}`}</pre>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <div className="mt-8 text-center">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-zinc-600 text-zinc-200 hover:bg-zinc-800"
-                onClick={handleCreateSandbox}
-                disabled={isCreating}
-              >
-                {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-                Try it now — free
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          COMMUNITY LINKS — teal accent
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="container py-16 border-b">
-        <div className="mx-auto max-w-4xl">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="h-5 w-1 rounded-full bg-teal-500" />
-            <h2 className="text-2xl font-bold">Join the FHIR community</h2>
-          </div>
-          <p className="text-center text-muted-foreground mb-10">
-            Connect with thousands of FHIR builders worldwide
-          </p>
-          <div className="grid gap-4 md:grid-cols-2">
-            {COMMUNITY_LINKS.map((link) => (
-              <a
-                key={link.title}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-start gap-4 p-4 rounded-xl border hover:border-teal-300 hover:bg-teal-50/30 transition-colors group"
-              >
-                <link.icon className={`h-6 w-6 mt-0.5 shrink-0 ${link.color}`} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-sm">{link.title}</h3>
-                    <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-0.5">{link.description}</p>
-                </div>
-              </a>
+        {/* Proof strip */}
+        <div className="ed-rise mt-16 border-t border-e-line pt-6" style={{ animationDelay: "320ms" }}>
+          <div className="ed-kicker mb-3">Builders came from</div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-sm text-e-ink-soft">
+            {ORGS.map((org, i) => (
+              <span key={org} className="flex items-center gap-4">
+                {org}
+                {i < ORGS.length - 1 && <span className="text-e-line-strong">·</span>}
+              </span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          FINAL CTA
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-violet-600 text-white py-16">
-        <div className="container text-center">
-          <h2 className="text-2xl font-bold mb-3">Ready to build?</h2>
-          <p className="text-violet-200 mb-8 max-w-md mx-auto">
-            Browse MCP tools and agent skills, or spin up a FHIR sandbox and start experimenting.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50" asChild>
-              <Link href="/mcp">
-                <Wrench className="mr-2 h-5 w-5" />
-                Browse MCP Tools
-              </Link>
-            </Button>
-            <Button size="lg" variant="secondary" className="bg-white/10 text-white hover:bg-white/20 border border-white/20" asChild>
-              <Link href="/openclaw">
-                <Sparkles className="mr-2 h-5 w-5" />
-                Agent Skills
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="border-violet-300 text-white hover:bg-violet-700" onClick={handleCreateSandbox} disabled={isCreating}>
-              {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FlaskConical className="mr-2 h-4 w-4" />}
-              Free Sandbox
-            </Button>
+      {/* ── Thesis ───────────────────────────────────────────────────────── */}
+      <section className="border-t border-e-line">
+        <div className="container grid gap-10 py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-20 lg:py-28">
+          <h2 className="ed-display text-3xl leading-tight sm:text-4xl lg:text-[2.75rem]">
+            AI courses skip healthcare data. FHIR courses skip AI. This is where both get built.
+          </h2>
+          <div className="space-y-5 text-e-ink-soft lg:pt-2">
+            <p className="text-lg">
+              FHIR standardized health data. Agents changed who can build on it. Almost nobody
+              teaches the two together, on real data, with the tools you actually use.
+            </p>
+            <p>
+              Cohort 00 was free, and free made it optional. This one is paid, on purpose. You put
+              money down, you do the work, you ship. The people with something at stake are the
+              ones who finish.
+            </p>
+            <p className="border-l-2 border-e-accent pl-4 text-e-ink">
+              Eighteen people from real health organizations. Three shipped apps, one open-source
+              security collaboration, and a blueprint for a program that works. That was the pilot.
+              This is the build.
+            </p>
           </div>
+        </div>
+      </section>
+
+      {/* ── What Cohort 00 built ─────────────────────────────────────────── */}
+      <section id="built" className="scroll-mt-20 border-t border-e-line">
+        <div className="container py-20 lg:py-28">
+          <div className="ed-kicker mb-3">What Cohort 00 built</div>
+          <h2 className="ed-display mb-14 max-w-2xl text-3xl sm:text-4xl">
+            Real people. Real FHIR. Shipped in six weeks.
+          </h2>
+          <div className="grid gap-px overflow-hidden border border-e-line bg-e-line sm:grid-cols-3">
+            {BUILT.map((b) => (
+              <article key={b.name} className="flex flex-col bg-e-paper p-7 lg:p-9">
+                <p className="flex-1 text-e-ink">{b.body}</p>
+                <div className="mt-8 border-t border-e-line pt-4">
+                  <div className="font-medium text-e-ink">{b.name}</div>
+                  <div className="ed-kicker mt-1">{b.org}</div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it runs ──────────────────────────────────────────────────── */}
+      <section className="border-t border-e-line">
+        <div className="container py-20 lg:py-28">
+          <div className="ed-kicker mb-3">How the cohort runs</div>
+          <h2 className="ed-display mb-14 max-w-2xl text-3xl sm:text-4xl">
+            Twelve weeks, built around the work.
+          </h2>
+          <div className="grid gap-x-16 gap-y-12 sm:grid-cols-2">
+            {HOW.map((item) => (
+              <div key={item.n} className="flex gap-6">
+                <div className="ed-display shrink-0 text-3xl text-e-accent">{item.n}</div>
+                <div>
+                  <h3 className="text-lg font-medium text-e-ink">{item.title}</h3>
+                  <p className="mt-2 text-e-ink-soft">{item.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA band ─────────────────────────────────────────────────────── */}
+      <section className="border-t border-e-line bg-e-ink text-e-paper">
+        <div className="container flex flex-col gap-10 py-20 lg:flex-row lg:items-end lg:justify-between lg:py-24">
+          <div className="max-w-xl">
+            <div
+              className="font-mono text-[11px] uppercase tracking-[0.22em]"
+              style={{ color: "var(--e-accent-2)" }}
+            >
+              Starts late August
+            </div>
+            <h2 className="ed-display mt-4 text-4xl sm:text-5xl">Build the thing this time.</h2>
+            <p className="mt-5 text-lg" style={{ color: "#c9d0d3" }}>
+              <span className="font-mono tabular-nums">$1,000</span> for the full twelve weeks, or{" "}
+              <span className="font-mono tabular-nums">$99</span>/week, cancel anytime. Cohort 00
+              builders enroll at the returning rate.
+            </p>
+          </div>
+          <Link
+            href="/cohort-01"
+            className="inline-flex shrink-0 items-center justify-center gap-2 bg-e-paper px-8 py-4 text-base font-medium text-e-ink transition-colors hover:bg-e-accent hover:text-e-paper"
+          >
+            See the program and enroll <span aria-hidden>→</span>
+          </Link>
         </div>
       </section>
     </div>
