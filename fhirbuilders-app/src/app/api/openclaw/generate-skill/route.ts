@@ -9,6 +9,10 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
+// Streaming SKILL.md generation. Pro allows up to 300s; well above the 60s Hobby cap.
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
 const SYSTEM_PROMPT = `You are a SKILL.md file generator for OpenClaw (https://openclaw.ai), the open-source local AI agent runtime with 310k+ GitHub stars.
 
 OpenClaw skills are SKILL.md files with YAML frontmatter and natural-language instructions that teach the agent how to do something. The instructions are written for the LLM that powers the agent, not for a developer.
