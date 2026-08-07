@@ -1,25 +1,27 @@
 import type { Metadata } from "next";
+import { auth } from "@/lib/auth";
+import { isCohortMember } from "@/lib/cohort/cohort-00";
+import { COHORT_01_PRICING } from "@/lib/stripe";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  BadgeCheck,
+  Bot,
   Building2,
-  CalendarClock,
-  FlaskConical,
+  CalendarDays,
+  KeyRound,
+  MessagesSquare,
   Rocket,
-  ShieldCheck,
-  Users,
+  Video,
 } from "lucide-react";
-import { ApplyForm } from "./_components/apply-form";
+import { EnrollButtons } from "./_components/enroll-buttons";
 
 export const metadata: Metadata = {
-  title: "Cohort 01 — The FHIR + AI Masterclass · Healthcare AI Builders",
+  title: "Cohort 01 — The FHIR + AI Build Cohort · Healthcare AI Builders",
   description:
-    "Six weeks, 20 seats, application only. Build and deploy a real healthcare AI app on FHIR with Claude Code. Starts late August.",
+    "Twelve weeks, paid, build-in-public. Ship healthcare AI on real FHIR with your own agents. Weekly Friday demos. Starts late August.",
 };
 
-// Organizations represented in Cohort 00. Names only, alphabetical — this is
-// social proof about who builds here, not an endorsement claim.
+// Organizations represented in Cohort 00 — social proof about who builds here.
 const COHORT_00_ORGS = [
   "Bayada Home Health Care",
   "Centric Healthcare",
@@ -32,63 +34,59 @@ const COHORT_00_ORGS = [
   "Virginia Medicaid (DMAS)",
 ];
 
-const WEEKS = [
+const HOW = [
   {
-    n: 1,
-    title: "Setup + first real commit",
-    body: "Claude Code fluent in your terminal. FHIR sandbox connected. Your first read of real patient data, deployed by end of week.",
+    icon: Video,
+    title: "Friday demos, every week",
+    body: "The spine of the cohort. You show what you built this week — solo or with your team — live and on camera. Recorded, and the best clips go on LinkedIn with your name on them.",
   },
   {
-    n: 2,
-    title: "MCP servers + retrieval",
-    body: "Give your agent live FHIR hands. Build an MCP server against Medplum, wire semantic search over clinical notes.",
+    icon: Bot,
+    title: "You + your agents",
+    body: "Come with an agent setup, or build one in week one. Claude Code, Codex, your own MCP servers — whatever you drive. We build with agents, not despite them.",
   },
   {
-    n: 3,
-    title: "Your project, scaffolded",
-    body: "Scope locked to one sentence. Repo, CLAUDE.md, first working feature. This is where your app becomes real.",
+    icon: Rocket,
+    title: "Problems solved live",
+    body: "Free-form working sessions, not lectures. Bring what's blocking you and we unblock it in the room. Stuck is a feature of the format, not a failure.",
   },
   {
-    n: 4,
-    title: "Ship one real slice",
-    body: "Deployed URL, real data, one complete user action. Reviewed live, unblocked live.",
-  },
-  {
-    n: 5,
-    title: "Harden + polish",
-    body: "Auth, error states, the parts that make it credible to show your CEO or your customers.",
-  },
-  {
-    n: 6,
-    title: "Demo Day",
-    body: "Public demo in front of the healthcare AI community, Cohort 00 alumni, and the next cohort's waitlist.",
+    icon: MessagesSquare,
+    title: "The room stays on between Fridays",
+    body: "The cohort lives on Buzz — Block's new team chat — where you share progress, trade fixes, and get unstuck without waiting for the call.",
   },
 ];
 
-export default function Cohort01Page() {
+export default async function Cohort01Page() {
+  const session = await auth();
+  const repeat = isCohortMember(session?.user?.email);
+
+  const full = repeat ? COHORT_01_PRICING.full.repeat : COHORT_01_PRICING.full.standard;
+  const weekly = repeat ? COHORT_01_PRICING.weekly.repeat : COHORT_01_PRICING.weekly.standard;
+
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12 lg:px-8 lg:py-16">
       {/* Hero */}
       <header className="mb-12">
         <div className="mb-3 flex flex-wrap gap-2">
           <Badge variant="outline" className="border-rose-300 bg-rose-50 text-rose-700">
-            <Rocket className="mr-1 h-3 w-3" /> Cohort 01 · applications open
+            <Rocket className="mr-1 h-3 w-3" /> Cohort 01 · enrolling now
           </Badge>
           <Badge variant="outline" className="border-slate-300 bg-slate-50 text-slate-600">
-            20 seats · starts late August
+            12 weeks · paid · starts late August
           </Badge>
         </div>
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-          The FHIR + AI masterclass.
+          The FHIR + AI build cohort.
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-600">
-          Six weeks. Real patient data. A deployed healthcare AI app with your name on it. You
-          build with Claude Code on live FHIR from day one, alongside people who run informatics,
-          data, and product inside real health organizations.
+          Twelve weeks. Real patient data. Your own agents. You ship healthcare AI in public,
+          demo it live every Friday, and walk out with deployed work and a reel of it. Solo or
+          bring your team.
         </p>
         <p className="mt-3 max-w-2xl text-sm text-slate-500">
-          Nobody else teaches this. AI courses skip healthcare data. FHIR courses skip AI. This is
-          the room where both get built at once.
+          Cohort 00 was free, and free meant optional. This one is paid on purpose: you put money
+          down, you do the work, you ship. Nobody drifts.
         </p>
       </header>
 
@@ -109,135 +107,134 @@ export default function Cohort01Page() {
         </div>
       </section>
 
-      {/* The six weeks */}
+      {/* How it runs */}
       <section className="mb-12">
         <h2 className="mb-4 border-b border-slate-200 pb-2 text-xl font-semibold text-slate-900">
-          The six weeks
+          How it runs
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          {WEEKS.map((w) => (
-            <Card key={w.n} className="border-slate-200">
+          {HOW.map(({ icon: Icon, title, body }) => (
+            <Card key={title} className="border-slate-200">
               <CardContent className="p-4">
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded bg-slate-900 font-mono text-xs font-bold text-white">
-                    {w.n}
-                  </span>
-                  <span className="font-semibold text-slate-900">{w.title}</span>
-                </div>
-                <p className="text-sm text-slate-600">{w.body}</p>
+                <Icon className="mb-2 h-5 w-5 text-rose-600" />
+                <div className="font-semibold text-slate-900">{title}</div>
+                <p className="mt-1 text-sm text-slate-600">{body}</p>
               </CardContent>
             </Card>
           ))}
         </div>
         <p className="mt-3 text-xs text-slate-500">
-          Live sessions Wednesdays 6:30–8:00 PM ET, recorded. Expect 3–5 hours a week total.
-          Curriculum refined from Cohort 00 — same arc, sharper edges.
+          Live Friday demos, recorded. Free-form working structure — no fixed lecture track. Expect
+          a few focused hours a week; you get out what you put in.
         </p>
       </section>
 
-      {/* Pricing + guarantee */}
-      <section className="mb-12 grid gap-4 sm:grid-cols-2">
-        <Card className="border-rose-200 bg-rose-50/50">
-          <CardContent className="p-5">
-            <div className="mb-2 flex items-center gap-2">
-              <BadgeCheck className="h-4 w-4 text-rose-600" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-rose-700">
-                Founding rate
-              </span>
-            </div>
-            <div className="text-3xl font-bold text-slate-900">
-              $399{" "}
-              <span className="text-base font-normal text-slate-500">until Aug 1 · $599 after</span>
-            </div>
-            <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
-              <li>Employer invoice available — most builders expense it</li>
-              <li>Payment only after acceptance</li>
-              <li>Cost a concern? Apply anyway. We&apos;ll figure something out.</li>
-            </ul>
-          </CardContent>
-        </Card>
-        <Card className="border-emerald-200 bg-emerald-50/50">
-          <CardContent className="p-5">
-            <div className="mb-2 flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-emerald-700">
-                The ship guarantee
-              </span>
-            </div>
-            <p className="text-sm text-slate-700">
-              Attend all six sessions and don&apos;t ship a working app by Demo Day, and we refund
-              every dollar. Everyone in Cohort 00 who kept showing up shipped. That&apos;s not a
-              slogan, it&apos;s why we can offer this.
-            </p>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Free door */}
+      {/* What you bring */}
       <section className="mb-12">
-        <Card className="border-slate-200 bg-slate-50">
-          <CardContent className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="mb-4 border-b border-slate-200 pb-2 text-xl font-semibold text-slate-900">
+          What you bring
+        </h2>
+        <Card className="border-slate-200">
+          <CardContent className="flex items-start gap-3 p-5">
+            <KeyRound className="mt-0.5 h-5 w-5 flex-shrink-0 text-slate-400" />
             <div>
-              <div className="mb-1 flex items-center gap-2">
-                <CalendarClock className="h-4 w-4 text-slate-500" />
-                <span className="font-semibold text-slate-900">
-                  Not sure? Watch Cohort 00 Demo Day first.
-                </span>
-              </div>
-              <p className="text-sm text-slate-600">
-                Wed Jul 15, 6:30 PM ET. Live demos of what Cohort 00 built in six weeks. Free —
-                check the box in the application and the invite comes by email.
+              <div className="font-semibold text-slate-900">Your own LLM account</div>
+              <p className="mt-1 text-sm text-slate-600">
+                Bring your own Claude, ChatGPT, or other LLM subscription and API access — this is
+                a build cohort, and you drive your own tools. We&apos;ll help you get set up in
+                week one if you&apos;re starting fresh, but the accounts are yours. The shared FHIR
+                sandbox and curriculum are included.
               </p>
             </div>
           </CardContent>
         </Card>
       </section>
 
-      {/* Who it's for */}
-      <section className="mb-12">
-        <h2 className="mb-4 border-b border-slate-200 pb-2 text-xl font-semibold text-slate-900">
-          Who this is for
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card className="border-slate-200">
-            <CardContent className="p-4">
-              <Users className="mb-2 h-5 w-5 text-rose-600" />
-              <div className="font-semibold text-slate-900">Healthcare people who want to build</div>
+      {/* Pricing */}
+      <section id="enroll" className="mb-12">
+        <h2 className="mb-1 text-xl font-semibold text-slate-900">Enroll</h2>
+        <p className="mb-5 text-sm text-slate-600">
+          Pay once for the full twelve weeks, or pay week to week. No application, no waiting list —
+          paying is how you claim your seat.
+        </p>
+
+        <div className="mb-5 grid gap-4 sm:grid-cols-2">
+          <Card className="border-rose-200 bg-rose-50/50">
+            <CardContent className="p-5">
+              <div className="text-xs font-semibold uppercase tracking-widest text-rose-700">
+                Full 12 weeks
+              </div>
+              <div className="mt-1 text-3xl font-bold text-slate-900">
+                ${full.toLocaleString()}
+              </div>
               <p className="mt-1 text-sm text-slate-600">
-                Clinicians, informaticists, ops and product leaders. You don&apos;t need to be a
-                developer — Cohort 00 proved that. You need an idea and the will to show up.
+                One payment, whole cohort. Best value — works out under $
+                {Math.round(full / 12)}/week.
+                {repeat && (
+                  <>
+                    {" "}
+                    <span className="font-medium text-emerald-700">
+                      Returning-builder rate applied.
+                    </span>
+                  </>
+                )}
               </p>
             </CardContent>
           </Card>
           <Card className="border-slate-200">
-            <CardContent className="p-4">
-              <FlaskConical className="mb-2 h-5 w-5 text-rose-600" />
-              <div className="font-semibold text-slate-900">Builders who want healthcare depth</div>
+            <CardContent className="p-5">
+              <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Pay weekly
+              </div>
+              <div className="mt-1 text-3xl font-bold text-slate-900">
+                ${weekly}
+                <span className="text-base font-normal text-slate-500">/week</span>
+              </div>
               <p className="mt-1 text-sm text-slate-600">
-                Engineers and data folks who can code but haven&apos;t touched FHIR, US Core, or
-                clinical data. Six weeks here beats six months of reading specs.
+                Cancel anytime. If a week isn&apos;t worth it, don&apos;t pay for the next one —
+                that keeps me honest.
+                {repeat && (
+                  <>
+                    {" "}
+                    <span className="font-medium text-emerald-700">Returning-builder rate.</span>
+                  </>
+                )}
               </p>
             </CardContent>
           </Card>
         </div>
+
+        <EnrollButtons repeat={repeat} />
+
+        {!repeat && (
+          <p className="mt-4 text-sm text-slate-600">
+            <strong className="text-slate-900">Cohort 00 builder or returning?</strong> Sign in
+            with your cohort email before enrolling and your discounted rate applies automatically
+            (${COHORT_01_PRICING.full.repeat.toLocaleString()} full / $
+            {COHORT_01_PRICING.weekly.repeat}/week).
+          </p>
+        )}
       </section>
 
-      {/* Application */}
-      <section id="apply" className="mb-8">
-        <h2 className="mb-1 text-xl font-semibold text-slate-900">Apply</h2>
-        <p className="mb-5 text-sm text-slate-600">
-          20 seats, reviewed on a rolling basis — the earlier you apply, the better your odds.
-          Specific project ideas get priority. So do referrals from Cohort 00 builders.
-        </p>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <ApplyForm />
+      {/* Calendar note */}
+      <section className="mb-12">
+        <Card className="border-slate-200 bg-slate-50">
+          <CardContent className="flex items-start gap-3 p-5">
+            <CalendarDays className="mt-0.5 h-5 w-5 flex-shrink-0 text-slate-500" />
+            <div>
+              <div className="font-semibold text-slate-900">Dates &amp; format</div>
+              <p className="mt-1 text-sm text-slate-600">
+                Twelve weeks starting late August, weekly Friday demo sessions (time confirmed to
+                enrolled builders, recorded either way). Once you enroll you get the Buzz invite,
+                the async materials, and the FHIR sandbox the same day.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </section>
 
       <footer className="mt-12 border-t border-slate-200 pt-6 text-xs text-slate-500">
-        Run by FHIR IQ · Healthcare AI Builders. Questions?{" "}
+        Run by FHIR IQ · Healthcare AI Builders. Questions before you enroll?{" "}
         <a className="underline" href="mailto:eugene.vestel@gmail.com">
           eugene.vestel@gmail.com
         </a>
