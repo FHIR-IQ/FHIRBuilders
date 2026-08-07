@@ -14,6 +14,7 @@ const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
   display: "swap",
+  style: ["normal", "italic"],
 });
 const archivo = Archivo({
   subsets: ["latin"],
@@ -71,6 +72,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Scroll-reveal blocks stay hidden until JS reveals them; with JS off,
+            force them visible so no content is ever lost. */}
+        <noscript>
+          <style>{`.ed-reveal{opacity:1 !important;transform:none !important}`}</style>
+        </noscript>
+      </head>
       <body
         className={`${fraunces.variable} ${archivo.variable} ${plexMono.variable} font-sans antialiased`}
       >

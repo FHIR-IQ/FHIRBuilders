@@ -1,23 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Hero } from "./_components/hero";
+import { Reveal } from "./_components/reveal";
 
 export const metadata: Metadata = {
   title: "Healthcare AI Builders — Ship healthcare AI on real FHIR",
   description:
     "A paid, 12-week build cohort for healthcare AI on real FHIR data. Weekly demos, your own agents, live problem-solving. Starts late August.",
 };
-
-const ORGS = [
-  "Bayada Home Health",
-  "Myriad Genetics",
-  "LivMor",
-  "Indicina",
-  "Lanyard Health",
-  "Centric Healthcare",
-  "Virginia Medicaid",
-  "HitPeak Advisors",
-  "Velox Metadata",
-];
 
 const BUILT = [
   {
@@ -63,67 +53,19 @@ const HOW = [
 export default function HomePage() {
   return (
     <div className="ed-surface bg-e-paper text-e-ink">
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="container pt-20 pb-16 lg:pt-28 lg:pb-20">
-        <div className="max-w-4xl">
-          <div className="ed-kicker ed-rise" style={{ animationDelay: "0ms" }}>
-            Cohort 01 · 12 weeks · enrolling now
-          </div>
-          <h1
-            className="ed-display ed-rise mt-5 text-[2.75rem] leading-[0.98] sm:text-6xl lg:text-7xl"
-            style={{ animationDelay: "80ms" }}
-          >
-            Ship healthcare AI
-            <br />
-            on <span className="text-e-accent">real FHIR</span>.
-          </h1>
-          <p
-            className="ed-rise mt-7 max-w-2xl text-lg text-e-ink-soft sm:text-xl"
-            style={{ animationDelay: "160ms" }}
-          >
-            A build cohort for people who make things. Twelve weeks on live patient data, your own
-            agents, and a demo every Friday. You leave with deployed work and the reel to prove it.
-          </p>
-          <div
-            className="ed-rise mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
-            style={{ animationDelay: "240ms" }}
-          >
-            <Link
-              href="/cohort-01"
-              className="inline-flex items-center justify-center gap-2 bg-e-ink px-6 py-3.5 text-base font-medium text-e-paper transition-colors hover:bg-e-accent"
-            >
-              Enroll in Cohort 01 <span aria-hidden>→</span>
-            </Link>
-            <a
-              href="#built"
-              className="inline-flex items-center justify-center gap-2 border border-e-line-strong px-6 py-3.5 text-base text-e-ink transition-colors hover:border-e-ink"
-            >
-              See what Cohort 00 built
-            </a>
-          </div>
-        </div>
-
-        {/* Proof strip */}
-        <div className="ed-rise mt-16 border-t border-e-line pt-6" style={{ animationDelay: "320ms" }}>
-          <div className="ed-kicker mb-3">Builders came from</div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-sm text-e-ink-soft">
-            {ORGS.map((org, i) => (
-              <span key={org} className="flex items-center gap-4">
-                {org}
-                {i < ORGS.length - 1 && <span className="text-e-line-strong">·</span>}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       {/* ── Thesis ───────────────────────────────────────────────────────── */}
       <section className="border-t border-e-line">
-        <div className="container grid gap-10 py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-20 lg:py-28">
-          <h2 className="ed-display text-3xl leading-tight sm:text-4xl lg:text-[2.75rem]">
-            AI courses skip healthcare data. FHIR courses skip AI. This is where both get built.
+        <Reveal className="container grid gap-10 py-24 lg:grid-cols-[1.15fr_1fr] lg:gap-24 lg:py-36">
+          <h2
+            className="ed-display"
+            style={{ fontSize: "clamp(2.1rem, 5vw, 4rem)", lineHeight: 1.02 }}
+          >
+            AI courses skip healthcare data. FHIR courses skip AI. This is where{" "}
+            <span style={{ fontStyle: "italic", color: "var(--e-accent)" }}>both</span> get built.
           </h2>
-          <div className="space-y-5 text-e-ink-soft lg:pt-2">
+          <div className="space-y-5 text-e-ink-soft lg:pt-3">
             <p className="text-lg">
               FHIR standardized health data. Agents changed who can build on it. Almost nobody
               teaches the two together, on real data, with the tools you actually use.
@@ -133,79 +75,123 @@ export default function HomePage() {
               money down, you do the work, you ship. The people with something at stake are the
               ones who finish.
             </p>
-            <p className="border-l-2 border-e-accent pl-4 text-e-ink">
+            <p className="border-l-2 border-e-accent pl-5 text-e-ink">
               Eighteen people from real health organizations. Three shipped apps, one open-source
               security collaboration, and a blueprint for a program that works. That was the pilot.
               This is the build.
             </p>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* ── What Cohort 00 built ─────────────────────────────────────────── */}
       <section id="built" className="scroll-mt-20 border-t border-e-line">
-        <div className="container py-20 lg:py-28">
-          <div className="ed-kicker mb-3">What Cohort 00 built</div>
-          <h2 className="ed-display mb-14 max-w-2xl text-3xl sm:text-4xl">
-            Real people. Real FHIR. Shipped in six weeks.
-          </h2>
-          <div className="grid gap-px overflow-hidden border border-e-line bg-e-line sm:grid-cols-3">
-            {BUILT.map((b) => (
-              <article key={b.name} className="flex flex-col bg-e-paper p-7 lg:p-9">
-                <p className="flex-1 text-e-ink">{b.body}</p>
-                <div className="mt-8 border-t border-e-line pt-4">
+        <div className="container py-24 lg:py-36">
+          <Reveal className="mb-16 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="ed-kicker mb-4">What Cohort 00 built</div>
+              <h2
+                className="ed-display max-w-2xl"
+                style={{ fontSize: "clamp(2rem, 4.5vw, 3.5rem)", lineHeight: 1.02 }}
+              >
+                Real people. Real FHIR. Shipped in six weeks.
+              </h2>
+            </div>
+          </Reveal>
+          <Reveal className="grid gap-px overflow-hidden border border-e-line bg-e-line lg:grid-cols-3">
+            {BUILT.map((b, i) => (
+              <article
+                key={b.name}
+                className="group flex flex-col bg-e-paper p-8 transition-colors hover:bg-e-paper-2 lg:p-10"
+              >
+                <div
+                  className="ed-display mb-6 text-e-line-strong transition-colors group-hover:text-e-accent"
+                  style={{ fontSize: "2.5rem", lineHeight: 1 }}
+                >
+                  0{i + 1}
+                </div>
+                <p className="flex-1 text-[1.05rem] leading-relaxed text-e-ink">{b.body}</p>
+                <div className="mt-10 border-t border-e-line pt-4">
                   <div className="font-medium text-e-ink">{b.name}</div>
                   <div className="ed-kicker mt-1">{b.org}</div>
                 </div>
               </article>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ── How it runs ──────────────────────────────────────────────────── */}
       <section className="border-t border-e-line">
-        <div className="container py-20 lg:py-28">
-          <div className="ed-kicker mb-3">How the cohort runs</div>
-          <h2 className="ed-display mb-14 max-w-2xl text-3xl sm:text-4xl">
-            Twelve weeks, built around the work.
-          </h2>
-          <div className="grid gap-x-16 gap-y-12 sm:grid-cols-2">
+        <div className="container py-24 lg:py-36">
+          <Reveal className="mb-16">
+            <div className="ed-kicker mb-4">How the cohort runs</div>
+            <h2
+              className="ed-display max-w-2xl"
+              style={{ fontSize: "clamp(2rem, 4.5vw, 3.5rem)", lineHeight: 1.02 }}
+            >
+              Twelve weeks, built around the work.
+            </h2>
+          </Reveal>
+          <Reveal className="grid gap-x-16 gap-y-16 sm:grid-cols-2">
             {HOW.map((item) => (
-              <div key={item.n} className="flex gap-6">
-                <div className="ed-display shrink-0 text-3xl text-e-accent">{item.n}</div>
-                <div>
-                  <h3 className="text-lg font-medium text-e-ink">{item.title}</h3>
-                  <p className="mt-2 text-e-ink-soft">{item.body}</p>
+              <div key={item.n} className="flex flex-col gap-4 border-t border-e-line pt-6 sm:flex-row sm:gap-8">
+                <div
+                  className="ed-display shrink-0 tabular-nums text-e-accent"
+                  style={{ fontSize: "clamp(2.5rem, 5vw, 4.5rem)", lineHeight: 0.9 }}
+                >
+                  {item.n}
+                </div>
+                <div className="max-w-md">
+                  <h3 className="ed-display text-2xl text-e-ink">{item.title}</h3>
+                  <p className="mt-3 text-e-ink-soft">{item.body}</p>
                 </div>
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ── CTA band ─────────────────────────────────────────────────────── */}
-      <section className="border-t border-e-line bg-e-ink text-e-paper">
-        <div className="container flex flex-col gap-10 py-20 lg:flex-row lg:items-end lg:justify-between lg:py-24">
-          <div className="max-w-xl">
-            <div
-              className="font-mono text-[11px] uppercase tracking-[0.22em]"
-              style={{ color: "var(--e-accent-2)" }}
-            >
+      <section className="ed-grain relative isolate border-t border-e-line" style={{ background: "#080b0d", color: "#eef2f2" }}>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(100% 100% at 85% 0%, rgba(92,199,209,0.12), transparent 60%)" }}
+        />
+        <div className="container relative z-10 flex flex-col gap-12 py-24 lg:flex-row lg:items-end lg:justify-between lg:py-32">
+          <div className="max-w-2xl">
+            <div className="font-mono text-[11px] uppercase tracking-[0.28em]" style={{ color: "#5cc7d1" }}>
               Starts late August
             </div>
-            <h2 className="ed-display mt-4 text-4xl sm:text-5xl">Build the thing this time.</h2>
-            <p className="mt-5 text-lg" style={{ color: "#c9d0d3" }}>
-              <span className="font-mono tabular-nums">$1,000</span> for the full twelve weeks, or{" "}
-              <span className="font-mono tabular-nums">$99</span>/week, cancel anytime. Cohort 00
-              builders enroll at the returning rate.
+            <h2
+              className="ed-display mt-5"
+              style={{ fontSize: "clamp(2.5rem, 7vw, 6rem)", lineHeight: 0.95, letterSpacing: "-0.02em" }}
+            >
+              Build the thing
+              <br />
+              this <span style={{ fontStyle: "italic", color: "#5cc7d1" }}>time</span>.
+            </h2>
+            <p className="mt-7 text-lg" style={{ color: "#aeb9bb" }}>
+              <span className="font-mono tabular-nums" style={{ color: "#eef2f2" }}>
+                $1,000
+              </span>{" "}
+              for the full twelve weeks, or{" "}
+              <span className="font-mono tabular-nums" style={{ color: "#eef2f2" }}>
+                $99
+              </span>
+              /week, cancel anytime. Cohort 00 builders enroll at the returning rate.
             </p>
           </div>
           <Link
             href="/cohort-01"
-            className="inline-flex shrink-0 items-center justify-center gap-2 bg-e-paper px-8 py-4 text-base font-medium text-e-ink transition-colors hover:bg-e-accent hover:text-e-paper"
+            className="group inline-flex shrink-0 items-center justify-center gap-2 px-8 py-4 text-base font-medium transition-transform hover:-translate-y-0.5"
+            style={{ background: "#5cc7d1", color: "#06282c" }}
           >
-            See the program and enroll <span aria-hidden>→</span>
+            See the program and enroll
+            <span className="transition-transform group-hover:translate-x-1" aria-hidden>
+              →
+            </span>
           </Link>
         </div>
       </section>
