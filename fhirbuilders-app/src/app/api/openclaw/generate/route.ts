@@ -14,6 +14,10 @@ import { createAIClient, type AIProvider } from '@/lib/openclaw/ai-client'
 import { startGeneration, processGeneration } from '@/lib/openclaw/orchestrator'
 import { ensureDemoUser } from '@/lib/demo-user'
 
+// LLM app generation can run well past the 60s Hobby cap. Pro allows up to 300s.
+export const runtime = 'nodejs'
+export const maxDuration = 300
+
 export async function POST(request: NextRequest) {
   const session = await auth()
   const isAuthenticated = !!session?.user?.id

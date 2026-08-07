@@ -4,6 +4,10 @@ import { applyRateLimit } from "@/lib/rate-limit";
 import { analyzeMedicationsWithClaude } from "@/lib/ai-service";
 import { MedicationResource, MedConflict } from "@/lib/medplum";
 
+// One Claude call for medication analysis. 120s is ample and Pro-safe.
+export const runtime = "nodejs";
+export const maxDuration = 120;
+
 /**
  * Generate mock conflicts for demo when no API key is configured
  * or when user is not authenticated.
