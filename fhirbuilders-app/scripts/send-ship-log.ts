@@ -23,16 +23,16 @@ const CC = "eugene.vestel@gmail.com";
 
 const ISSUE = {
   number: 1,
-  subject: "Ship log #001 — a data quality app, a study group, and 20 seats",
+  subject: "Ship log #001 — what Cohort 00 built",
   paragraphs: [
-    "First edition of the ship log: one short note a week on what's actually getting built in the Healthcare AI Builders cohort.",
-    "Gail Hamilton (Velox Metadata) shipped the most complete build of the cohort so far: a web app that connects to her own Medplum instance and runs PIQI data quality tests against 50 patients she deliberately messed up. Pluggable test architecture, an MCP server on top, all built with Claude Code.",
-    "Michael Campbell (Indicina) seeded the shared sandbox everyone builds on - 100 synthetic patients with US Core data - and is now organizing an informal study group on the side. Nobody asked him to. That's the kind of room this is.",
-    "This week: Session 4 (Wed Jul 8) is open build time. Demo Day is Wed Jul 15 - live demos of everything Cohort 00 built in six weeks.",
-    "And the big one: Cohort 01 applications are open. Six weeks, 20 seats, application only, starts late August. The FHIR + AI masterclass nobody else is teaching.",
+    "First edition of the ship log: one short note a week on what's actually getting built in the Healthcare AI Builders community.",
+    "Gail Hamilton (Velox Metadata) shipped the most complete build of the cohort: a web app that connects to her own Medplum instance and runs PIQI data quality tests against 50 patients she deliberately messed up. Pluggable test architecture, an MCP server on top, all built with Claude Code.",
+    "Michael Campbell (Indicina) seeded the shared sandbox everyone built on - 100 synthetic patients with US Core data - then organized an informal study group where Max demoed his open-source ProxySmart and its possible integration with Rick Moore's record locator. Nobody asked him to. That's the kind of room this is.",
+    "The engine under it is open for community testing now. HealthClaw Guardrails is the open-source security layer between AI agents and clinical data - PHI redaction, immutable audit, step-up auth, human-in-the-loop writes. MIT licensed, 29 MCP tools, and you can try the hosted demo in 60 seconds without installing anything. If you can break it, that's a contribution: https://github.com/aks129/HealthClawGuardrails/issues/184",
+    "And the big one: Cohort 01 is open for enrollment. Twelve weeks, paid, weekly Friday demos, build with your own agents on real FHIR. Starts late August. Cohort 00 builders enroll at the returning rate.",
   ],
   cta: {
-    label: "Apply for Cohort 01 (or grab a free Demo Day invite)",
+    label: "Enroll in Cohort 01",
     url: "https://fhirbuilders.com/cohort-01",
   },
 };
