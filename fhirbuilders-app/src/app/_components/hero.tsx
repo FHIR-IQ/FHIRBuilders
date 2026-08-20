@@ -9,7 +9,6 @@ const ORGS = [
   "LivMor",
   "Indicina",
   "Lanyard Health",
-  "Virginia Medicaid",
   "Velox Metadata",
 ];
 

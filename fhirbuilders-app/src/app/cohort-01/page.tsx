@@ -17,7 +17,6 @@ const ORGS = [
   "Indicina",
   "Lanyard Health",
   "Centric Healthcare",
-  "Virginia Medicaid",
   "HitPeak Advisors",
   "Velox Metadata",
 ];
