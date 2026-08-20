@@ -77,7 +77,7 @@ export default function HomePage() {
               ones who finish.
             </p>
             <p className="border-l-2 border-e-accent pl-5 text-e-ink">
-              Eighteen people from real health organizations. Three shipped apps, one open-source
+              Seventeen people from real health organizations. Three shipped apps, one open-source
               security collaboration, and a blueprint for a program that works. That was the pilot.
               This is the build.
             </p>

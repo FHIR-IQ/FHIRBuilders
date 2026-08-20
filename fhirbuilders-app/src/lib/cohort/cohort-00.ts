@@ -186,10 +186,9 @@ export const COHORT_00: Cohort = {
       mandatory: true,
     },
   ],
-  // 18 confirmed Cohort 00 signups as of Jun 10, 2026 (2 seats remaining).
+  // 17 confirmed Cohort 00 signups as of Jun 10, 2026 (3 seats remaining).
   // Adam Carewe + Benji Graham moved to observer Jun 8 — not participating as builders.
   // Matt Lanphier → Cohort 01 (was traveling, missed Session 1; Eugene confirmed Jun 7).
-  // Greg Barabell (Virginia DMAS) added Jun 8 via workshop.
   // Joel Sathiyendra (joelsathiyendra@gmail.com) confirmed for Cohort 01
   // after schedule conflict — see DEFERRED_TO_NEXT_COHORT.
   signups: [
@@ -215,8 +214,6 @@ export const COHORT_00: Cohort = {
     { name: "Matt (studiolab)",  email: "matt@studiolab.io",            building: "AI + healthcare exploration",            podId: "pod-5" },
     { name: "Eslam Elgebaly",    email: "eslamelgebaly11@outlook.com",  building: "Open scope — joining late, ramping up",  podId: "pod-5" },
     { name: "Erez S.",           email: "medtec1@gmail.com",            building: "(scoping — direct outreach, late add)",  podId: "pod-5" },
-    // Added Jun 8 via workshop signups — pod assignments TBD after Session 1
-    { name: "Greg Barabell",   email: "greg.barabell@dmas.virginia.gov",  building: "(scoping — Virginia DMAS)" },
   ],
   // Pod assignments — 5 pods of 3–4, themed by building intent. NO per-pod
   // Slack channels (deliberate — fewer channels, more signal). Pods coordinate
