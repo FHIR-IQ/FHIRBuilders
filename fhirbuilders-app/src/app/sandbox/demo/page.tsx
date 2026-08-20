@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmailCapture } from "@/app/_components/email-capture";
 import {
   Copy,
   Check,
@@ -1281,6 +1282,7 @@ print(patients['entry'])`}
         </div>
       )}
 
+      <EmailCapture source="sandbox-demo" />
     </div>
   );
 }

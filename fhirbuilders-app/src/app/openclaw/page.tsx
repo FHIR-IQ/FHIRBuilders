@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { EmailCapture } from "@/app/_components/email-capture";
 import {
   Sparkles, Copy, Check, Download, ExternalLink, ChevronDown, ChevronUp,
   Github, Search, ArrowRight, MessageCircle, Smartphone, Terminal,
@@ -1157,6 +1158,8 @@ export default function OpenClawSkillsPage() {
           </div>
         </div>
       </section>
+
+      <EmailCapture source="openclaw" />
     </div>
   );
 }

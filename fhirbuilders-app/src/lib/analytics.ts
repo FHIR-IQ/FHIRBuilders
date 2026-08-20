@@ -14,6 +14,11 @@ export const analytics = {
     });
   },
 
+  // Track lightweight email capture (lead magnet), tagged by placement
+  trackLeadCapture: (source: string) => {
+    track("lead_capture", { source });
+  },
+
   // Track feedback submission
   trackFeedbackSubmit: (nps?: number) => {
     track("feedback_submit", {

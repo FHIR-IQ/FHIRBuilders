@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Hero } from "./_components/hero";
 import { Reveal } from "./_components/reveal";
+import { EmailCapture } from "./_components/email-capture";
 
 export const metadata: Metadata = {
   title: "Healthcare AI Builders — Ship healthcare AI on real FHIR",
@@ -151,6 +152,9 @@ export default function HomePage() {
           </Reveal>
         </div>
       </section>
+
+      {/* ── Email capture (light) ────────────────────────────────────────── */}
+      <EmailCapture variant="light" source="home" />
 
       {/* ── CTA band ─────────────────────────────────────────────────────── */}
       <section className="ed-grain relative isolate border-t border-e-line" style={{ background: "#080b0d", color: "#eef2f2" }}>
